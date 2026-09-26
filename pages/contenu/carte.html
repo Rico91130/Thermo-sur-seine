@@ -6,7 +6,7 @@ options: leaflet
     <section id="carte" class="bloc">
       <div class="conteneur">
         <h1>La carte du détour</h1>
-        <p class="intro">Chaque carré est un point de départ possible, dans le rayon d'approvisionnement de 300 km. Sa couleur indique combien de kilomètres en plus (en rouge) ou en moins (en bleu) il faut parcourir pour livrer Ris-Orangis au lieu de Vitry. Cliquez sur un carré pour le vérifier sur Google Maps, ou sur un site pour voir les trajets. <span data-lie="grille-masque"></span> (<a href="methode.html">voir la méthode</a>).</p>
+        <p class="intro">Chaque carré est un point de départ possible, dans le rayon d'approvisionnement de 300 km. Sa couleur indique combien de kilomètres en plus (en rouge) ou en moins (en bleu) il faut parcourir pour livrer Ris-Orangis au lieu de Vitry. Cliquez sur un carré pour afficher ses distances et les liens de vérification sur Google Maps, ou sur un site pour voir ses trajets. <span data-lie="grille-masque"></span> (<a href="methode.html">voir la méthode</a>).</p>
         <div class="controles" role="group" aria-label="Itinéraire vers Ris-Orangis">
           <span class="controles-label">Itinéraire vers Ris-Orangis :</span>
           <button type="button" class="segment" data-variante="acces" aria-pressed="true">Accès final imposé <span class="segment-note">(le plus favorable au projet)</span></button>
@@ -24,6 +24,7 @@ options: leaflet
           </div>
         </div>
         <aside class="panneau" id="panneau" aria-live="polite">
+          <div id="encart" class="encart" hidden></div>
           <div id="legende-grille"></div>
           <div id="legende-points"></div>
           <div id="detail-point" hidden></div>

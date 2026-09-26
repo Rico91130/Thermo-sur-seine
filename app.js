@@ -209,7 +209,7 @@ function urlGoogleMaps(orig, dest, passages) {
 
   /* ---------------- La carte du détour ---------------- */
   function carteDuDetour() {
-    const etat = { variante: 'acces', selection: null };
+    const etat = { variante: 'acces', selection: null, carre: null };
     let carte = null, calqueTrajets = null, calquePassages = null;
     const rectangles = [], marqueursPassage = {};
     const legendeGrille = document.getElementById('legende-grille');
@@ -252,36 +252,63 @@ function urlGoogleMaps(orig, dest, passages) {
         el('li', {}, el('span', { class: 'pastille entree' }), 'Entrée d\'autoroute en Île-de-France'),
         el('li', {}, el('span', { class: 'pastille passage-point' }),
           el('span', {}, 'Point de passage obligé de l\'itinéraire choisi (', el('a', { href: 'itineraires.html' }, 'voir les règles'), ')'))),
-      el('p', { class: 'note' }, 'Cliquez sur un point pour afficher ses trajets.'));
+      el('p', { class: 'note' }, 'Cliquez sur un carré, un site ou un point de passage pour en afficher le détail.'));
     lier('grille-masque', `Les ${GM.en_mer + GM.royaume_uni} carrés dont le centre est en mer ou au Royaume-Uni ne sont pas affichés`);
 
-    function texteCellule(g, v) {
-      const kmRis = v === 'acces' ? g[5] : g[6];
-      const det = kmRis - g[3];
-      return { det, lignes: [`Vers Vitry : ${fmt1(g[3])} km`, `Vers Ris-Orangis : ${fmt1(kmRis)} km`] };
+    // Encadré en haut du panneau : détail du carré ou du point de passage cliqué (aucune bulle sur la carte)
+    const encart = document.getElementById('encart');
+    const teteEncart = titre => el('div', { class: 'encart-tete' }, el('h2', {}, titre),
+      el('button', { type: 'button', class: 'encart-fermer', onclick: () => fermerEncart() }, 'Fermer'));
+    function marquerCarre(rect) {
+      if (etat.carre) etat.carre.rect.setStyle({ stroke: false });
+      if (rect) rect.setStyle({ stroke: true, color: cssVar('--encre'), weight: 2.5, opacity: 1 });
     }
-    function contenuBulle(g) {
-      const { det, lignes } = texteCellule(g, etat.variante);
-      return el('div', {}, el('div', { class: 'bulle-valeur' }, `${signe1(det)} km`),
-        lignes.map(l => el('div', { class: 'bulle-texte' }, l)));
+    function montrerEncart(defiler, ...contenu) {
+      encart.replaceChildren(...contenu);
+      encart.hidden = false;
+      if (defiler) encart.scrollIntoView({ block: 'nearest' });
     }
-    function contenuPopup(g) {
+    function fermerEncart() {
+      marquerCarre(null);
+      etat.carre = null;
+      encart.hidden = true;
+    }
+    function afficherCarre(g, rect, defiler = true) {
+      marquerCarre(rect);
+      etat.carre = { g, rect };
       const orig = { lat: g[0], lon: g[1] };
       const branche = g[7] || 'est';
       const cellule = { branche_dossier: 'impose_' + branche };
-      const { det } = texteCellule(g, etat.variante);
-      const ligne = (libelle, etapes, kmVal, url) => el('tr', {},
-        el('td', {}, libelle, el('span', { class: 'etapes' }, etapes)),
+      const det = (etat.variante === 'acces' ? g[5] : g[6]) - g[3];
+      const ligne = (couleur, libelle, etapes, kmVal, ecart, url) => el('tr', {},
+        el('td', {}, couleur ? el('span', { class: 'cle-ligne', style: `background:var(${couleur})` }) : null, libelle, el('span', { class: 'etapes' }, etapes)),
         el('td', { class: 'nombre' }, `${fmt1(kmVal)} km`),
+        el('td', { class: 'nombre' }, ecart != null ? `${signe1(ecart)} km` : '—'),
         el('td', {}, el('a', { class: 'verifier', href: url, target: '_blank', rel: 'noopener' }, 'Vérifier')));
-      return el('div', {},
-        el('div', { class: 'bulle-valeur' }, `${signe1(det)} km pour Ris-Orangis`),
-        el('div', { class: 'bulle-texte' }, etat.variante === 'acces' ? 'avec l\'accès final imposé' : `avec l'itinéraire du dossier (RN104 ${branche})`),
-        el('table', { class: 'trajets trajets-bulle' }, el('tbody', {},
-          ligne('Vers Vitry', 'sans point de passage', g[3], urlGoogleMaps(orig, V)),
-          ligne('Vers Ris-Orangis, accès final imposé', 'étape : D310', g[5], urlGoogleMaps(orig, R, passagesVariante(cellule, 'acces'))),
-          ligne('Vers Ris-Orangis, itinéraire du dossier', `étapes : RN104 ${branche}, puis D310`, g[6], urlGoogleMaps(orig, R, passagesVariante(cellule, 'dossier'))))),
-        el('p', { class: 'note bulle-note' }, `« Vérifier » ouvre Google Maps avec les mêmes points de passage, sous forme d'étapes. Google Maps s'arrête à l'entrée du Chemin Latéral : ajoutez ${forfaitRis} jusqu'au portail.`));
+      montrerEncart(defiler,
+        teteEncart('Carré sélectionné'),
+        el('p', { class: 'detail-sous' }, `Point de départ de la grille (un point tous les ${g[2]} km), centre : ${g[0]}, ${g[1]}`),
+        el('p', { class: 'encart-valeur' }, `${signe1(det)} km`),
+        el('p', { class: 'detail-sous' }, `pour livrer Ris-Orangis plutôt que Vitry, avec ${etat.variante === 'acces' ? 'l\'accès final imposé' : `l'itinéraire du dossier (RN104 ${branche})`}`),
+        el('table', { class: 'trajets' },
+          el('thead', {}, el('tr', {}, el('th', {}, 'Trajet'), el('th', { class: 'nombre' }, 'Distance'), el('th', { class: 'nombre' }, 'Écart'), el('th', {}, ''))),
+          el('tbody', {},
+            ligne('--serie-1', 'Vitry', 'sans point de passage', g[3], null, urlGoogleMaps(orig, V)),
+            ligne('--serie-2', 'Ris-Orangis, accès final imposé', 'étape : D310', g[5], g[5] - g[3], urlGoogleMaps(orig, R, passagesVariante(cellule, 'acces'))),
+            ligne('--serie-3', 'Ris-Orangis, itinéraire du dossier', `étapes : RN104 ${branche}, puis D310`, g[6], g[6] - g[3], urlGoogleMaps(orig, R, passagesVariante(cellule, 'dossier'))))),
+        el('p', { class: 'note' }, `« Vérifier » ouvre Google Maps avec les mêmes points de passage, sous forme d'étapes. Google Maps s'arrête à l'entrée du Chemin Latéral : ajoutez ${forfaitRis} jusqu'au portail.`));
+    }
+    function afficherPassage(k) {
+      marquerCarre(null);
+      etat.carre = null;
+      montrerEncart(true,
+        teteEncart('Point de passage obligé'),
+        el('p', { style: 'margin:0 0 4px' }, el('strong', {}, PASSAGES[k].long)),
+        el('p', { class: 'detail-sous' }, `${PP[k].lat}, ${PP[k].lon}`),
+        el('p', { style: 'margin:0' }, k === 'ACCES_D310'
+          ? 'Imposé par l\'accès final imposé et par l\'itinéraire du dossier.'
+          : 'Imposé par l\'itinéraire du dossier, qui passe par la branche est ou ouest de la RN104 (la plus courte des deux).',
+          ' ', el('a', { href: 'itineraires.html' }, 'Voir les règles des itinéraires'), '.'));
     }
 
     function styleGrille() {
@@ -308,8 +335,7 @@ function urlGoogleMaps(orig, dest, passages) {
         const [lat, lon, pas] = g;
         const dLat = (pas * 0.46) / 110.54, dLon = (pas * 0.46) / (111.32 * Math.cos(lat * Math.PI / 180));
         const rect = L.rectangle([[lat - dLat, lon - dLon], [lat + dLat, lon + dLon]], { stroke: false, fillOpacity: 0.8 });
-        rect.bindTooltip(() => contenuBulle(g), { sticky: true, direction: 'top', opacity: 1 });
-        rect.on('click', e => L.popup({ maxWidth: Math.min(320, carte.getSize().x - 30), autoPanPaddingTopLeft: [10, 100] }).setLatLng(e.latlng).setContent(contenuPopup(g)).openOn(carte));
+        rect.on('click', () => { if (!etat.selection) afficherCarre(g, rect); });   // grille masquée pendant l'affichage d'un site
         rect.addTo(calqueGrille);
         rectangles.push({ rect, g });
       }
@@ -323,18 +349,17 @@ function urlGoogleMaps(orig, dest, passages) {
       }
       calquePassages = L.layerGroup().addTo(carte);
       for (const [k, texte] of Object.entries(PASSAGES)) {
-        marqueursPassage[k] = L.marker([PP[k].lat, PP[k].lon], { keyboard: false, zIndexOffset: 500,
+        marqueursPassage[k] = L.marker([PP[k].lat, PP[k].lon], { keyboard: true, zIndexOffset: 500,
           icon: L.divIcon({ className: '', html: `<span class="passage"><span class="passage-point"></span>${texte.court}</span>`, iconSize: [0, 0] }) })
-          .bindTooltip(() => el('div', {}, el('div', { class: 'bulle-texte' }, 'Point de passage obligé'), el('div', {}, texte.long)), { direction: 'top', opacity: 1 });
+          .on('click', () => afficherPassage(k));
       }
       majPassages();
       for (const p of D.points) {
-        const m = L.marker([p.lat, p.lon], { keyboard: true, title: p.nom, alt: p.nom,
+        const m = L.marker([p.lat, p.lon], { keyboard: true,
           icon: L.divIcon({ className: '', html: `<div class="marqueur ${categorie(p)}"></div>`, iconSize: [12, 12], iconAnchor: [6, 6] }) });
-        m.bindTooltip(() => el('div', {}, el('div', { class: 'bulle-texte' }, p.nom),
-          el('div', { class: 'bulle-valeur' }, `${signe1(detour(p, etat.variante))} km pour Ris-Orangis`)), { direction: 'top', opacity: 1 });
         m.on('click', () => selectionner(p.id, true));
         m.addTo(carte);
+        m.getElement().setAttribute('aria-label', p.nom);   // nom lu par les lecteurs d'écran, sans infobulle au survol
       }
       document.getElementById('btn-ile-de-france').addEventListener('click', () => carte.setView([48.72, 2.42], 9));
       document.getElementById('btn-300km').addEventListener('click', () => carte.setView([48.79, 2.42], 7));
@@ -373,7 +398,7 @@ function urlGoogleMaps(orig, dest, passages) {
       if (k !== 'ACCES_D310' && etat.variante !== 'dossier') choisirVariante('dossier');
       cadre.scrollIntoView({ block: 'nearest' });
       carte.setView([PP[k].lat, PP[k].lon], 13);
-      marqueursPassage[k].openTooltip();
+      afficherPassage(k);
     }
 
     function remplirDetail(p) {
@@ -412,7 +437,7 @@ function urlGoogleMaps(orig, dest, passages) {
         majPassages();
         if (p) dessinerTrajets(p); else calqueTrajets.clearLayers();
       }
-      if (p) remplirDetail(p);
+      if (p) { fermerEncart(); remplirDetail(p); }
       if (p && !depuisCarte) cadre.scrollIntoView({ block: 'nearest' });
       // Lien partageable : carte.html#point=IDF1 ouvre directement les trajets de ce point
       if (p) history.replaceState(null, '', '#point=' + p.id);
@@ -425,6 +450,7 @@ function urlGoogleMaps(orig, dest, passages) {
       dessinerLegende();
       styleGrille();
       majPassages();
+      if (etat.carre) afficherCarre(etat.carre.g, etat.carre.rect, false);
     }
     document.querySelectorAll('.segment[data-variante]').forEach(b => b.addEventListener('click', () => choisirVariante(b.dataset.variante)));
 
@@ -442,6 +468,7 @@ function urlGoogleMaps(orig, dest, passages) {
 
     return () => {
       dessinerLegende(); styleGrille();
+      if (etat.carre) afficherCarre(etat.carre.g, etat.carre.rect, false);
       if (etat.selection) { dessinerTrajets(parId[etat.selection]); remplirDetail(parId[etat.selection]); }
     };
   }

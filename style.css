@@ -213,15 +213,19 @@ a.segment { display: inline-block; text-decoration: none; }
 .trajets td.nombre, .trajets th.nombre { text-align: right; white-space: nowrap; }
 .cle-ligne { display: inline-block; width: 16px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
 .verifier { font-size: 0.82rem; white-space: nowrap; }
-.leaflet-tooltip, .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-  background: var(--surface); color: var(--encre); border: 1px solid var(--bordure); box-shadow: 0 2px 8px rgba(0,0,0,.15);
+.trajets .etapes { display: block; color: var(--encre-attenuee); font-size: 0.78rem; }
+
+/* Encadré du carré ou du point de passage cliqué, en haut du panneau de la carte */
+.encart { margin: 0 0 16px; padding: 0 0 14px; border-bottom: 1px solid var(--grille); }
+.encart-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.encart-tete h2 { margin: 0; font-size: 1rem; }
+.encart-fermer {
+  font: inherit; font-size: 0.85rem; padding: 3px 10px; border-radius: 8px; cursor: pointer; flex: none;
+  background: var(--surface); color: var(--encre); border: 1px solid var(--base);
 }
-.leaflet-popup-content { margin: 12px 14px; font-size: 0.9rem; }
-.bulle-valeur { font-weight: 600; font-size: 1.05rem; }
-.bulle-texte { color: var(--encre-2); }
-.trajets-bulle { margin-top: 8px; font-size: 0.85rem; }
-.trajets-bulle .etapes { display: block; color: var(--encre-attenuee); font-size: 0.78rem; }
-.bulle-note { font-size: 0.8rem; margin: 8px 0 0; }
+.encart-valeur { margin: 6px 0 0; font-size: 1.6rem; font-weight: 600; line-height: 1.1; }
+.encart .detail-sous { margin-bottom: 8px; }
+.encart .note { margin-bottom: 0; }
 
 /* Graphique heure par heure */
 .filtres { display: flex; flex-wrap: wrap; gap: 12px 20px; margin: 8px 0 16px; }
