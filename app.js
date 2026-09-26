@@ -140,12 +140,11 @@ function urlGoogleMaps(orig, dest, passages) {
     const heuresAn = camionsDossier * 2 * ref.ecart_min_median.acces / 60;
     const b = bilan(kmAn, heuresAn);
     const tours = Math.round(kmAn / F.tour_terre.valeur), emplois = Math.round(heuresAn / F.duree_legale.valeur);
+    const vols = arrondi(b.co2 / F.avion_paris_new_york.valeur, 10);   // allers-retours Paris–New York en avion (ADEME, Impact CO2)
     const ecarts = cells => cells.map(g => g[5] - g[3]);
-    const nord = ecarts(D.grille.filter(g => g[0] > V.lat)), sud = ecarts(D.grille.filter(g => g[0] < R.lat));
+    const nord = ecarts(D.grille.filter(g => g[0] > V.lat));
     const pct = (arr, test) => Math.round(100 * arr.filter(test).length / arr.length);
-    const arqp = Object.entries(M.poids_arqp), totalArqp = arqp.reduce((a, [, w]) => a + w, 0);
-    const detourArqp = arqp.reduce((a, [e, w]) => a + w * detour(parId['E_' + e], 'acces'), 0) / totalArqp;
-    const note = (id, ...contenu) => document.getElementById(id).replaceChildren(...contenu);
+    const note =(id, ...contenu) => document.getElementById(id).replaceChildren(...contenu);
 
     // Compteurs : la valeur finale est écrite tout de suite (lecture sans animation), l'animation la refait défiler depuis 0.
     // Les lecteurs d'écran lisent la valeur finale (texte masqué), pas le compteur animé.
@@ -164,15 +163,14 @@ function urlGoogleMaps(orig, dest, passages) {
     compteur('co2', b.co2, v => `${fmt0(arrondi(v, 10))} tonnes`);
     compteur('cout', b.cout, v => `${fmt0(arrondi(v, 1000))} €`);
     compteur('nord', pct(nord, d => d > 0), v => `${fmt0(v)} %`);
-    compteur('sud', pct(sud, d => d < 0), v => `${fmt0(v)} %`);
 
     lier('detour-aller-retour', `${signe0(2 * detourRef)} km`);
     lier('tours-terre', `${fmt0(tours)} fois le tour de la Terre`);
     lier('emplois', `${fmt0(emplois)} emplois à temps plein`);
     lier('litres', `${fmt0(arrondi(b.litres, 1000))} litres`);
+    lier('vols', `environ ${fmt0(vols)} allers-retours`);
     lier('carburant', `${fmt0(arrondi(b.carburant, 10000))} €`);
     lier('nord-mediane', `${fmt0(mediane(nord))} km`);
-    lier('sud-mediane', `${fmt0(-mediane(sud))} km de moins`);
 
     // Deux barres : distance vers Vitry et vers Ris-Orangis, depuis le Plessis-Gassot
     const kmMax = Math.max(ref.km.vitry, ref.km.acces_impose);
@@ -197,6 +195,8 @@ function urlGoogleMaps(orig, dest, passages) {
     const silhouette = () => picto([['circle', { cx: 12, cy: 6.5, r: 4, class: 'plein' }], ['path', { d: 'M4 22c0-5 3.6-8.5 8-8.5s8 3.5 8 8.5z', class: 'plein' }]]);
     document.getElementById('pictos-terre').replaceChildren(...Array.from({ length: tours }, globe));
     document.getElementById('pictos-emplois').replaceChildren(...Array.from({ length: emplois }, silhouette));
+    const avion = () => picto([['path', { d: 'M12 2c.8 0 1.3.9 1.3 2v5.2l8.2 4.6v2l-8.2-2.4v4.8l2.2 1.6V22L12 21l-3.5 1v-2.2l2.2-1.6v-4.8l-8.2 2.4v-2l8.2-4.6V4c0-1.1.5-2 1.3-2z', class: 'plein' }]]);
+    document.getElementById('pictos-co2').replaceChildren(...Array.from({ length: vols }, avion));   // un avion par aller-retour
 
     // Calculs et sources, étape par étape
     note('note-camions', `Calcul : ${fmt0(F.tonnage.valeur)} t ÷ ${fmt1(CHARGE_DOSSIER)} t par camion (une barge de 2 500 m³ vaut 28 camions, densité de 0,20 t/m³) : `,
@@ -207,31 +207,41 @@ function urlGoogleMaps(orig, dest, passages) {
       lien({ texte: 'service-public.gouv.fr', url: F.duree_legale.source.url }), '). Ce sont des temps de voiture : un camion ne peut qu\'être plus lent.');
     note('note-co2', `Calcul : ${fmt0(arrondi(kmAn, 1000))} km × ${fmt1(F.consommation.valeur)} litres aux 100 km (`, ...lienCnr('CNR'),
       `) × ${fmt1(F.co2_gazole.valeur)} kg de CO₂ par litre, de l'extraction du pétrole au pot d'échappement (`, lien({ texte: 'ADEME', url: F.co2_gazole.source.url }),
-      '). Les camions à fond mouvant prévus consomment sans doute davantage : ce chiffre est prudent.');
+      `). Un aller-retour Paris–New York en avion émet ${fmt2(F.avion_paris_new_york.valeur)} t de CO₂ par passager (`, lien({ texte: 'ADEME, Impact CO₂', url: F.avion_paris_new_york.source.url }),
+      `), soit ${fmt0(arrondi(b.co2, 10))} ÷ ${fmt2(F.avion_paris_new_york.valeur)} ≈ ${fmt0(vols)} allers-retours. Les camions à fond mouvant prévus consomment sans doute davantage : ce chiffre est prudent.`);
     note('note-cout', `Calcul : ${fmt0(arrondi(kmAn, 1000))} km × ${fmtBrut(F.cout_km.valeur)} €/km + ${fmt0(arrondi(heuresAn, 100))} h × ${fmt2(F.cout_heure.valeur)} €/h ; gazole : ${fmt0(arrondi(b.litres, 1000))} litres × ${fmt2(F.prix_gazole.valeur)} € (`,
       ...lienCnr('CNR, décembre 2025'), '). Hors péages et hors TVA. Le gazole a fortement augmenté en 2026 : ces montants sont sous-estimés.');
     note('note-nord', 'Le dossier prévoit des livraisons « ', F.nord.citation, ' » (', lien(F.nord.source), ').');
-    note('note-sud', 'Tout dépend donc de l\'origine du combustible, que le maître d\'ouvrage ne connaîtra qu\'en 2027 (', lien({ texte: 'question n° 46', url: F.fournisseurs.source.url }),
-      `). Avec la répartition par autoroute proposée par l'ARQP, par exemple, le détour tombe à ≈ ${millions(camionsDossier * 2 * detourArqp)} de km par an.`);
     note('essentiel-sources', 'Sources : nombre de camions calculé d\'après le dossier (', lien(F.tonnage.source), ' ; ', lien(F.barge.source),
       ') ; tour de la Terre : ', lien({ texte: 'NGA, WGS 84', url: F.tour_terre.source.url }),
       ' ; durée légale du travail : ', lien({ texte: 'service-public.gouv.fr', url: F.duree_legale.source.url }),
       ' ; consommation et coûts : ', ...lienCnr('CNR, référentiel régional'), ' ; CO₂ du gazole : ', lien({ texte: 'ADEME, Base Carbone', url: F.co2_gazole.source.url }),
-      ' ; distances et temps : mesures Google du 26 septembre 2026 (', el('a', { href: 'methode.html' }, 'méthode'), '). Toutes les étapes supposent un combustible venant du Plessis-Gassot, sauf les deux dernières, qui portent sur tous les points de départ possibles.');
+      ' ; distances et temps : mesures Google du 26 septembre 2026 (', el('a', { href: 'methode.html' }, 'méthode'), '). Toutes les étapes supposent un combustible venant du Plessis-Gassot, sauf la dernière, qui porte sur tous les points de départ situés au nord de Vitry. Les fournisseurs ne seront choisis qu\'en 2027 (',
+      lien({ texte: 'question n° 46', url: F.fournisseurs.source.url }), ').');
 
     animerRecit(compteurs);
   }
 
-  // Animations du récit (GSAP + ScrollTrigger, chargés par index.html). Sans GSAP ou avec « réduire les animations »,
+  // Animations du récit (GSAP + ScrollTrigger, chargés par index.html). Chaque étape se joue en entier, toute seule,
+  // dès qu'elle apparaît à l'écran : pas besoin de continuer à faire défiler. Sans GSAP ou avec « réduire les animations »,
   // rien n'est masqué : les valeurs finales restent affichées.
   function animerRecit(compteurs) {
     const G = window.gsap, ST = window.ScrollTrigger;
     if (!G || !ST || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     G.registerPlugin(ST);
     document.documentElement.classList.add('recit-anime');
+
+    // Le nombre de tours de la Terre suit le compteur de kilomètres
+    const spanTours = document.querySelector('[data-lie="tours-terre"]'), toursFin = kmFin => kmFin / F.tour_terre.valeur;
+    const suivis = new Map([[document.querySelector('[data-compteur="km-an"]'), (v, fin) => {
+      spanTours.textContent = `${fmt0(v >= fin ? Math.round(toursFin(fin)) : Math.floor(toursFin(v)))} fois le tour de la Terre`;
+    }]]);
     const compter = (span, duree, ease) => {
-      const { valeur, format } = compteurs.get(span), o = { v: 0 };
-      return G.fromTo(o, { v: 0 }, { v: valeur, duration: duree, ease, onUpdate: () => { span.textContent = format(o.v); } });
+      const { valeur, format } = compteurs.get(span), o = { v: 0 }, suivi = suivis.get(span);
+      return G.fromTo(o, { v: 0 }, { v: valeur, duration: duree, ease, onUpdate: () => {
+        span.textContent = format(o.v);
+        if (suivi) suivi(o.v, valeur);
+      } });
     };
 
     // Barre de progression de la lecture
@@ -242,34 +252,20 @@ function urlGoogleMaps(orig, dest, passages) {
     // Ouverture
     G.from('.etape-ouverture .etape-contenu > *', { y: 30, opacity: 0, duration: 0.9, stagger: 0.15, ease: 'power3.out' });
 
-    // Étapes ordinaires : apparition en cascade, puis compteurs, barres et pictogrammes
-    document.querySelectorAll('.etape:not(.etape-ouverture):not(.etape-epinglee)').forEach(etape => {
-      const tl = G.timeline({ scrollTrigger: { trigger: etape, start: 'top 70%', toggleActions: 'play none none none' } });
-      tl.from(etape.querySelectorAll('.etape-contenu > *'), { y: 40, opacity: 0, duration: 0.8, stagger: 0.12, ease: 'power3.out' });
-      etape.querySelectorAll('[data-compteur]').forEach(s => tl.add(compter(s, 1.6, 'power2.out'), 0.2));
+    // Étapes : apparition en cascade, puis compteur, barres et pictogrammes, joués d'un seul tenant
+    document.querySelectorAll('.etape:not(.etape-ouverture)').forEach(etape => {
+      const contenu = etape.querySelector('.etape-contenu');
+      const tl = G.timeline({ paused: true });
+      ST.create({ trigger: contenu, start: 'top 80%', once: true, onEnter: () => tl.play() });
+      tl.from(contenu.children, { y: 40, opacity: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out' });
+      const pictos = etape.querySelectorAll('.picto');
+      // Avec des pictogrammes, le compteur avance au même rythme qu'eux (un globe par tour de la Terre, etc.)
+      const duree = pictos.length ? Math.min(3, 1.2 + pictos.length * 0.03) : 1.6;
+      etape.querySelectorAll('[data-compteur]').forEach(s => tl.add(compter(s, duree, pictos.length ? 'none' : 'power2.out'), 0.3));
+      if (pictos.length) tl.from(pictos, { scale: 0, opacity: 0, duration: 0.35, ease: 'back.out(2.5)', stagger: duree / pictos.length }, 0.3);
       const barres = etape.querySelectorAll('.barre-remplie');
       if (barres.length) tl.from(barres, { scaleX: 0, transformOrigin: 'left center', duration: 1.3, stagger: 0.3, ease: 'power2.out' }, 0.3);
-      const pictos = etape.querySelectorAll('.picto');
-      if (pictos.length) tl.from(pictos, { scale: 0, opacity: 0, duration: 0.45, stagger: 0.08, ease: 'back.out(2.5)' }, 0.6);
     });
-
-    // Étape épinglée : les kilomètres et les tours de la Terre avancent au rythme du défilement
-    const epinglee = document.querySelector('.etape-epinglee');
-    if (epinglee) {
-      // Le texte apparaît dès l'entrée dans l'écran ; le compteur et les globes suivent ensuite le défilement pendant l'épinglage
-      G.from(epinglee.querySelectorAll('.etape-contenu > :not(.pictos)'), { y: 40, opacity: 0, duration: 0.8, stagger: 0.12, ease: 'power3.out',
-        scrollTrigger: { trigger: epinglee, start: 'top 70%', toggleActions: 'play none none none' } });
-      // Le nombre de tours de la Terre suit le compteur de kilomètres
-      const spanKm = epinglee.querySelector('[data-compteur]'), spanTours = epinglee.querySelector('[data-lie="tours-terre"]');
-      const toursFin = compteurs.get(spanKm).valeur / F.tour_terre.valeur, tours = { v: 0 };
-      G.timeline({ scrollTrigger: { trigger: epinglee, start: 'top top', end: '+=140%', pin: true, scrub: 0.6 } })
-        .add(compter(spanKm, 1, 'none'), 0)
-        .fromTo(tours, { v: 0 }, { v: toursFin, duration: 1, ease: 'none', onUpdate: () => {
-          spanTours.textContent = `${fmt0(tours.v >= toursFin ? Math.round(toursFin) : Math.floor(tours.v))} fois le tour de la Terre`;
-        } }, 0)
-        .from(epinglee.querySelectorAll('.picto'), { scale: 0, opacity: 0, rotation: -90, stagger: 0.035, duration: 0.15, ease: 'back.out(2)' }, 0)
-        .to({}, { duration: 0.2 });   // courte pause en fin d'épinglage
-    }
   }
 
   /* ---------------- Le dossier et les données ---------------- */

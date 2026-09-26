@@ -145,6 +145,8 @@ main > .bloc:first-child { padding-top: 32px; }
 .pictos { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 0; max-width: 560px; }
 .picto { width: 28px; height: 28px; fill: none; stroke: var(--serie-1); stroke-width: 1.6; }
 .picto .plein { fill: var(--serie-2); stroke: none; }
+.pictos-denses { gap: 3px; max-width: 660px; }
+.pictos-denses .picto { width: 15px; height: 15px; }
 .recit-progression { position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 2000; background: var(--serie-2); transform: scaleX(0); transform-origin: left center; pointer-events: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 @media (prefers-reduced-motion: reduce) { .defiler-fleche { animation: none; } }
