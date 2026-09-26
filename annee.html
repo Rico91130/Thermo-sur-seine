@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sur une année · Le détour des camions</title>
+  <meta name="description" content="Thermo-sur-Seine : kilomètres et heures de conduite en plus sur une année, selon l'origine du combustible.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="annee">
+  <header class="entete">
+    <div class="conteneur">
+      <p class="surtitre"><a class="marque" href="./">Le détour des camions</a> <span class="surtitre-suite">Thermo-sur-Seine · concertation préalable jusqu'au 1er novembre 2026</span></p>
+      <nav class="sommaire" aria-label="Pages du site">
+        <a href="./">L'essentiel</a>
+        <a href="dossier.html">Le dossier et les données</a>
+        <a href="itineraires.html">Les itinéraires</a>
+        <a href="carte.html">La carte</a>
+        <a href="heures.html">Heure par heure</a>
+        <a href="annee.html" aria-current="page">Sur une année</a>
+        <a href="methode.html">Méthode et sources</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="calculateur" class="conteneur bloc">
+      <h1>Sur une année</h1>
+      <p class="intro">L'origine du combustible n'est pas connue. Choisissez une hypothèse : le calcul et toutes ses données s'affichent en dessous.</p>
+      <div class="filtres">
+        <label>Origine du combustible
+          <select id="calc-scenario"></select>
+        </label>
+        <label>Tonnage annuel (t)
+          <input type="number" id="calc-tonnage" min="0" step="10000">
+        </label>
+        <label>Tonnes par camion
+          <input type="number" id="calc-charge" min="1" step="0.1">
+        </label>
+      </div>
+      <p class="rappel-variante" id="calc-variante"></p>
+      <div class="tuiles resultat" id="calc-resultats"></div>
+      <p class="formule" id="calc-formule"></p>
+      <details class="tableau-vue" open>
+        <summary>Origines prises en compte</summary>
+        <div id="calc-tableau"></div>
+      </details>
+      <p class="note">Émissions de CO<sub>2</sub> : ce calcul sera ajouté quand le facteur d'émission d'un poids lourd aura été sourcé (Base Empreinte de l'ADEME).</p>
+    </section>
+
+    <nav class="conteneur pages-voisines" aria-label="Pages précédente et suivante">
+      <a href="heures.html" rel="prev"><span>Page précédente</span>Heure par heure</a>
+      <a href="methode.html" rel="next"><span>Page suivante</span>Méthode et sources</a>
+    </nav>
+  </main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <p>Site citoyen indépendant, sans lien avec la SEMOP, la Ville de Paris ou Google. Éditeur non professionnel ayant choisi de rester anonyme (article 6-III-2 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique). Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</p>
+      <p>Itinéraires calculés avec Google Maps Platform (collecte du 26 septembre 2026). Fond de carte © IGN – Géoplateforme. Frontières et trait de côte : Natural Earth (domaine public). Bibliothèque cartographique Leaflet. <a href="https://github.com/Rico91130/Thermo-sur-seine">Code source et données</a> : code sous licence MIT, données et textes sous licence <a href="LICENCE-DONNEES.md">CC BY 4.0</a>, hors résultats bruts de Google, fond de carte et citations.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -5,31 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Le détour des camions</title>
   <meta name="description" content="Thermo-sur-Seine : ce que coûte, en kilomètres et en temps, le choix de livrer le combustible à Ris-Orangis plutôt qu'à Vitry-sur-Seine. Mesures Google, sources citées, données téléchargeables.">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <script>
+    // Anciennes adresses de la version en une seule page (#carte, #point=IDF1…) : redirection vers la bonne page
+    (function () {
+      var h = location.hash, pages = { '#confrontation': 'dossier.html', '#itineraires': 'itineraires.html', '#carte': 'carte.html',
+        '#heures': 'heures.html', '#calculateur': 'annee.html', '#methode': 'methode.html' };
+      if (/^#point=/.test(h)) location.replace('carte.html' + h);
+      else if (pages[h]) location.replace(pages[h]);
+    })();
+  </script>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="essentiel">
   <header class="entete">
     <div class="conteneur">
-      <p class="surtitre">Thermo-sur-Seine · concertation préalable jusqu'au 1er novembre 2026</p>
-      <h1>Le détour des camions</h1>
-      <p class="chapeau">Le combustible de la future chaufferie de Vitry-sur-Seine sera livré par camion à Ris-Orangis, puis remontera la Seine en barge. Ce site mesure, avec Google Maps, ce que coûte ce détour, et publie toutes ses données et ses sources.</p>
-      <nav class="sommaire" aria-label="Sommaire">
-        <a href="#essentiel">L'essentiel</a>
-        <a href="#confrontation">Le dossier et les données</a>
-        <a href="#itineraires">Les itinéraires</a>
-        <a href="#carte">La carte</a>
-        <a href="#heures">Heure par heure</a>
-        <a href="#calculateur">Sur une année</a>
-        <a href="#methode">Méthode et sources</a>
+      <p class="surtitre"><a class="marque" href="./">Le détour des camions</a> <span class="surtitre-suite">Thermo-sur-Seine · concertation préalable jusqu'au 1er novembre 2026</span></p>
+      <nav class="sommaire" aria-label="Pages du site">
+        <a href="./" aria-current="page">L'essentiel</a>
+        <a href="dossier.html">Le dossier et les données</a>
+        <a href="itineraires.html">Les itinéraires</a>
+        <a href="carte.html">La carte</a>
+        <a href="heures.html">Heure par heure</a>
+        <a href="annee.html">Sur une année</a>
+        <a href="methode.html">Méthode et sources</a>
       </nav>
     </div>
   </header>
 
   <main>
-    <!-- 1. L'essentiel -->
     <section id="essentiel" class="conteneur bloc">
-      <h2>L'essentiel</h2>
+      <h1>Le détour des camions</h1>
+      <p class="chapeau">Le combustible de la future chaufferie de Vitry-sur-Seine sera livré par camion à Ris-Orangis, puis remontera la Seine en barge. Ce site mesure, avec Google Maps, ce que coûte ce détour, et publie toutes ses données et ses sources.</p>
       <div class="heros">
         <div class="hero">
           <p class="hero-valeur" data-lie="hero-km">…</p>
@@ -53,141 +59,18 @@
           </div>
         </div>
       </div>
-      <p class="encadre"><strong>À savoir :</strong> depuis le sud de l'Île-de-France (A5, A6, A10, A11, Essonne), Ris-Orangis est <em>plus proche</em> que Vitry. Tout dépend donc de l'origine du combustible, que le maître d'ouvrage ne connaîtra qu'en 2027. La <a href="#carte">carte</a> montre le détour pour toutes les origines possibles, et le <a href="#calculateur">calculateur</a> permet de tester différentes hypothèses.</p>
+      <p class="encadre"><strong>À savoir :</strong> depuis le sud de l'Île-de-France (A5, A6, A10, A11, Essonne), Ris-Orangis est <em>plus proche</em> que Vitry. Tout dépend donc de l'origine du combustible, que le maître d'ouvrage ne connaîtra qu'en 2027. La <a href="carte.html">carte</a> montre le détour pour toutes les origines possibles, et le <a href="annee.html">calculateur</a> permet de tester différentes hypothèses.</p>
     </section>
 
-    <!-- 2. Confrontation -->
-    <section id="confrontation" class="conteneur bloc">
-      <h2>Ce que dit le dossier, ce que montrent les données</h2>
-      <p class="intro">Chaque citation renvoie à la page exacte du dossier de concertation ou à la question publiée sur la plateforme de la concertation.</p>
-      <div class="cartes-confrontation" id="cartes-confrontation"></div>
-    </section>
-
-    <!-- 3. Règles des itinéraires -->
-    <section id="itineraires" class="conteneur bloc">
-      <h2>Les règles des itinéraires</h2>
-      <p class="intro">Le trajet vers Ris-Orangis est mesuré de trois façons, pour distinguer ce que le maître d'ouvrage impose de ce qu'il décrit seulement. Chaque règle est traduite en points de passage obligés, transmis à Google avec leur sens de circulation, puis contrôlée sur les tracés obtenus.</p>
-      <div class="regles" id="regles-itineraires"></div>
-      <p class="note" id="regles-opposable"></p>
-    </section>
-
-    <!-- 4. Carte -->
-    <section id="carte" class="bloc">
-      <div class="conteneur">
-        <h2>La carte du détour</h2>
-        <p class="intro">Chaque carré est un point de départ possible, dans le rayon d'approvisionnement de 300 km. Sa couleur indique combien de kilomètres en plus (en rouge) ou en moins (en bleu) il faut parcourir pour livrer Ris-Orangis au lieu de Vitry. Cliquez sur un carré pour le vérifier sur Google Maps, ou sur un site pour voir les trajets. <span data-lie="grille-masque"></span></p>
-        <div class="controles" role="group" aria-label="Itinéraire vers Ris-Orangis">
-          <span class="controles-label">Itinéraire vers Ris-Orangis :</span>
-          <button type="button" class="segment" data-variante="acces" aria-pressed="true">Accès final imposé <span class="segment-note">(le plus favorable au projet)</span></button>
-          <button type="button" class="segment" data-variante="dossier" aria-pressed="false">Itinéraire du dossier <span class="segment-note">(par la RN104)</span></button>
-          <a href="#itineraires" class="controles-aide">Quelles règles ?</a>
-        </div>
-      </div>
-      <div class="conteneur carte-disposition">
-        <div class="carte-cadre">
-          <div id="map" role="region" aria-label="Carte du détour"></div>
-          <div class="carte-boutons">
-            <button type="button" id="btn-ile-de-france">Île-de-France</button>
-            <button type="button" id="btn-300km">Rayon de 300 km</button>
-            <button type="button" id="btn-retour" hidden>Revenir à la carte du détour</button>
-          </div>
-        </div>
-        <aside class="panneau" id="panneau" aria-live="polite">
-          <div id="legende-grille"></div>
-          <div id="legende-points"></div>
-          <div id="detail-point" hidden></div>
-        </aside>
-      </div>
-    </section>
-
-    <!-- 5. Heure par heure -->
-    <section id="heures" class="conteneur bloc">
-      <h2>Heure par heure</h2>
-      <p class="intro">Temps de trajet prévus par Google pour chaque heure de livraison autorisée (du lundi au vendredi, de 8 h à 20 h), semaine du 28 septembre au 2 octobre 2026. Ce sont des temps de voiture : un camion ne peut qu'être plus lent.</p>
-      <div class="filtres">
-        <label>Point de départ
-          <select id="choix-origine"></select>
-        </label>
-        <label>Jour
-          <select id="choix-jour"></select>
-        </label>
-      </div>
-      <figure class="graphique">
-        <figcaption id="titre-graphique"></figcaption>
-        <div id="legende-graphique" class="legende-series"></div>
-        <div class="graphique-zone" id="graphique"></div>
-        <details class="tableau-vue">
-          <summary>Voir les données en tableau</summary>
-          <div id="tableau-heures"></div>
-        </details>
-      </figure>
-    </section>
-
-    <!-- 6. Calculateur -->
-    <section id="calculateur" class="conteneur bloc">
-      <h2>Sur une année</h2>
-      <p class="intro">L'origine du combustible n'est pas connue. Choisissez une hypothèse : le calcul et toutes ses données s'affichent en dessous.</p>
-      <div class="filtres">
-        <label>Origine du combustible
-          <select id="calc-scenario"></select>
-        </label>
-        <label>Tonnage annuel (t)
-          <input type="number" id="calc-tonnage" min="0" step="10000">
-        </label>
-        <label>Tonnes par camion
-          <input type="number" id="calc-charge" min="1" step="0.1">
-        </label>
-      </div>
-      <p class="rappel-variante" id="calc-variante"></p>
-      <div class="tuiles resultat" id="calc-resultats"></div>
-      <p class="formule" id="calc-formule"></p>
-      <details class="tableau-vue" open>
-        <summary>Origines prises en compte</summary>
-        <div id="calc-tableau"></div>
-      </details>
-      <p class="note">Émissions de CO<sub>2</sub> : ce calcul sera ajouté quand le facteur d'émission d'un poids lourd aura été sourcé (Base Empreinte de l'ADEME).</p>
-    </section>
-
-    <!-- 7. Méthode -->
-    <section id="methode" class="conteneur bloc">
-      <h2>Méthode, sources et données</h2>
-      <div class="methode-grille">
-        <div>
-          <h3>Comment les trajets ont été mesurés</h3>
-          <ol class="etapes">
-            <li><strong>Points d'arrivée.</strong> <span data-lie="dest-vitry"></span> <span data-lie="dest-ris"></span></li>
-            <li><strong>Points de départ.</strong> 8 entrées d'autoroute en limite de l'Île-de-France, 28 installations de préparation de CSR ou de tri de déchets (chacune sourcée), et une grille de points dans un rayon de 300 km autour de Vitry : un point tous les 5 km jusqu'à 60 km, puis tous les 20 km. <span data-lie="masque-methode"></span></li>
-            <li><strong>Itinéraires vers Ris-Orangis.</strong> Trois itinéraires sont mesurés : le plus rapide (non autorisé), l'accès final imposé et l'itinéraire du dossier. Leurs règles, leurs sources et leurs points de passage sont détaillés dans <a href="#itineraires">Les règles des itinéraires</a>. Chaque tracé obtenu est contrôlé.</li>
-            <li><strong>Calcul.</strong> Google Maps Platform (API Routes), le 26 septembre 2026. Distances sans trafic ; temps prévus avec trafic pour chaque heure de livraison de la semaine du 28 septembre. Chaque requête envoyée est publiée.</li>
-          </ol>
-          <h3>Limites</h3>
-          <ul class="limites">
-            <li><strong>Voiture, pas camion.</strong> Google ne calcule pas d'itinéraire poids lourd en France. Les temps sont donc des minimums pour un camion. Les distances restent valables sur le même itinéraire.</li>
-            <li><strong>Itinéraire le plus rapide, pas le plus court.</strong> Google choisit le trajet le plus rapide ; les distances sont celles de ce trajet.</li>
-            <li><strong>Vitry sans contrainte.</strong> Aucun itinéraire n'est imposé vers Vitry, puisque le dossier n'en prévoit aucun. Les trajets obtenus empruntent tous des grands axes (A86, A4, A1, A6, A10, A13).</li>
-            <li><strong>Prévisions à valider.</strong> Les temps prévus seront comparés, après le 2 octobre, aux relevés en direct faits la même semaine.</li>
-            <li><strong>Origine inconnue.</strong> Les fournisseurs ne seront choisis qu'en 2027. La carte et le calculateur servent précisément à montrer le résultat pour toutes les origines possibles.</li>
-            <li><strong>Carrés masqués.</strong> <span data-lie="masque-limite"></span></li>
-            <li><strong>Liens « Vérifier ».</strong> Ils ouvrent Google Maps avec les mêmes points de passage, sous forme d'étapes. Google Maps ne permet pas d'y préciser le sens de circulation : un petit écart de distance avec la mesure reste possible.</li>
-          </ul>
-        </div>
-        <div>
-          <h3>Paramètres</h3>
-          <div id="tableau-parametres"></div>
-          <h3>Télécharger les données</h3>
-          <ul class="telechargements">
-            <li><a href="collecte/donnees/distances.csv">distances.csv</a> : toutes les distances mesurées</li>
-            <li><a href="collecte/donnees/previsions.csv">previsions.csv</a> : tous les temps prévus</li>
-            <li><a href="collecte/donnees/origines.csv">origines.csv</a> : les 1 157 points de départ et leurs sources</li>
-            <li><a href="collecte/config_collecte.json">config_collecte.json</a> : tous les paramètres et leurs sources</li>
-            <li><a href="collecte/donnees/requetes_distances.jsonl">requetes_distances.jsonl</a> et <a href="collecte/donnees/requetes_previsions.jsonl">requetes_previsions.jsonl</a> : chaque requête envoyée à Google, telle quelle (sans la clé)</li>
-            <li><a href="collecte/donnees/README.md">README des données</a> : description des fichiers et des colonnes, essai écarté, limites</li>
-          </ul>
-          <h3>Refaire la mesure</h3>
-          <p>Tout le code est publié sur le <a href="https://github.com/Rico91130/Thermo-sur-seine">dépôt GitHub</a>. Avec votre propre clé Google, le script <code>collecte/collecte_v2.py</code> refait l'ensemble des mesures. Une erreur, une objection ? <a href="https://github.com/Rico91130/Thermo-sur-seine/issues">Signalez-la</a> : elle sera examinée et, si elle est fondée, corrigée publiquement.</p>
-          <h3>Principales sources</h3>
-          <ul class="sources" id="liste-sources"></ul>
-        </div>
+    <section class="conteneur bloc">
+      <h2>Pour aller plus loin</h2>
+      <div class="pages-liens">
+        <a class="page-lien" href="dossier.html"><strong>Le dossier et les données</strong><span>Les affirmations du dossier, confrontées aux mesures.</span></a>
+        <a class="page-lien" href="itineraires.html"><strong>Les itinéraires</strong><span>Les règles imposées aux camions, leurs sources et leurs points de passage.</span></a>
+        <a class="page-lien" href="carte.html"><strong>La carte</strong><span>Le détour pour toutes les origines possibles, dans un rayon de 300 km.</span></a>
+        <a class="page-lien" href="heures.html"><strong>Heure par heure</strong><span>Les temps de trajet prévus pour chaque heure de livraison.</span></a>
+        <a class="page-lien" href="annee.html"><strong>Sur une année</strong><span>Les kilomètres et les heures de conduite en plus, selon l'origine du combustible.</span></a>
+        <a class="page-lien" href="methode.html"><strong>Méthode et sources</strong><span>La mesure, ses limites, et toutes les données à télécharger.</span></a>
       </div>
     </section>
   </main>
@@ -199,8 +82,6 @@
     </div>
   </footer>
 
-  <div class="infobulle" id="infobulle" role="tooltip" hidden></div>
-  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

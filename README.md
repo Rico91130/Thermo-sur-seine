@@ -2,7 +2,7 @@
 
 Site citoyen qui mesure ce que coûte, en kilomètres et en temps, le choix de livrer le combustible de la future chaufferie de Vitry-sur-Seine (projet Thermo-sur-Seine) par camion à **Ris-Orangis**, plutôt que directement à **Vitry**.
 
-- **Site** : `index.html`, publié avec GitHub Pages.
+- **Site** : sept pages statiques publiées avec GitHub Pages : `index.html` (l'essentiel), `dossier.html`, `itineraires.html`, `carte.html`, `heures.html`, `annee.html` et `methode.html`. Elles partagent `style.css` et `app.js`, qui n'exécute que le code de la page affichée (`<body data-page="…">`). L'en-tête, le menu et le pied de page sont répétés dans chaque page : une modification du menu se fait dans les sept fichiers.
 - **Données et code de la mesure** : dossier [`collecte/`](collecte/).
 - **Principe** : chaque chiffre renvoie à sa source (page du dossier de concertation, question publiée sur la plateforme de la concertation), et chaque mesure peut être refaite par n'importe qui.
 

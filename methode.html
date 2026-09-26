@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Méthode, sources et données · Le détour des camions</title>
+  <meta name="description" content="Thermo-sur-Seine : méthode de mesure des trajets, limites, paramètres sourcés et données téléchargeables.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="methode">
+  <header class="entete">
+    <div class="conteneur">
+      <p class="surtitre"><a class="marque" href="./">Le détour des camions</a> <span class="surtitre-suite">Thermo-sur-Seine · concertation préalable jusqu'au 1er novembre 2026</span></p>
+      <nav class="sommaire" aria-label="Pages du site">
+        <a href="./">L'essentiel</a>
+        <a href="dossier.html">Le dossier et les données</a>
+        <a href="itineraires.html">Les itinéraires</a>
+        <a href="carte.html">La carte</a>
+        <a href="heures.html">Heure par heure</a>
+        <a href="annee.html">Sur une année</a>
+        <a href="methode.html" aria-current="page">Méthode et sources</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="methode" class="conteneur bloc">
+      <h1>Méthode, sources et données</h1>
+      <div class="methode-grille">
+        <div>
+          <h2>Comment les trajets ont été mesurés</h2>
+          <ol class="etapes">
+            <li><strong>Points d'arrivée.</strong> <span data-lie="dest-vitry"></span> <span data-lie="dest-ris"></span></li>
+            <li><strong>Points de départ.</strong> 8 entrées d'autoroute en limite de l'Île-de-France, 28 installations de préparation de CSR ou de tri de déchets (chacune sourcée), et une grille de points dans un rayon de 300 km autour de Vitry : un point tous les 5 km jusqu'à 60 km, puis tous les 20 km. <span data-lie="masque-methode"></span></li>
+            <li><strong>Itinéraires vers Ris-Orangis.</strong> Trois itinéraires sont mesurés : le plus rapide (non autorisé), l'accès final imposé et l'itinéraire du dossier. Leurs règles, leurs sources et leurs points de passage sont détaillés dans <a href="itineraires.html">Les règles des itinéraires</a>. Chaque tracé obtenu est contrôlé.</li>
+            <li><strong>Calcul.</strong> Google Maps Platform (API Routes), le 26 septembre 2026. Distances sans trafic ; temps prévus avec trafic pour chaque heure de livraison de la semaine du 28 septembre. Chaque requête envoyée est publiée.</li>
+          </ol>
+          <h2>Limites</h2>
+          <ul class="limites">
+            <li><strong>Voiture, pas camion.</strong> Google ne calcule pas d'itinéraire poids lourd en France. Les temps sont donc des minimums pour un camion. Les distances restent valables sur le même itinéraire.</li>
+            <li><strong>Itinéraire le plus rapide, pas le plus court.</strong> Google choisit le trajet le plus rapide ; les distances sont celles de ce trajet.</li>
+            <li><strong>Vitry sans contrainte.</strong> Aucun itinéraire n'est imposé vers Vitry, puisque le dossier n'en prévoit aucun. Les trajets obtenus empruntent tous des grands axes (A86, A4, A1, A6, A10, A13).</li>
+            <li><strong>Prévisions à valider.</strong> Les temps prévus seront comparés, après le 2 octobre, aux relevés en direct faits la même semaine.</li>
+            <li><strong>Origine inconnue.</strong> Les fournisseurs ne seront choisis qu'en 2027. La <a href="carte.html">carte</a> et le <a href="annee.html">calculateur</a> servent précisément à montrer le résultat pour toutes les origines possibles.</li>
+            <li><strong>Carrés masqués.</strong> <span data-lie="masque-limite"></span></li>
+            <li><strong>Liens « Vérifier ».</strong> Ils ouvrent Google Maps avec les mêmes points de passage, sous forme d'étapes. Google Maps ne permet pas d'y préciser le sens de circulation : un petit écart de distance avec la mesure reste possible.</li>
+          </ul>
+        </div>
+        <div>
+          <h2>Paramètres</h2>
+          <div id="tableau-parametres"></div>
+          <h2>Télécharger les données</h2>
+          <ul class="telechargements">
+            <li><a href="collecte/donnees/distances.csv">distances.csv</a> : toutes les distances mesurées</li>
+            <li><a href="collecte/donnees/previsions.csv">previsions.csv</a> : tous les temps prévus</li>
+            <li><a href="collecte/donnees/origines.csv">origines.csv</a> : les 1 157 points de départ et leurs sources</li>
+            <li><a href="collecte/config_collecte.json">config_collecte.json</a> : tous les paramètres et leurs sources</li>
+            <li><a href="collecte/donnees/requetes_distances.jsonl">requetes_distances.jsonl</a> et <a href="collecte/donnees/requetes_previsions.jsonl">requetes_previsions.jsonl</a> : chaque requête envoyée à Google, telle quelle (sans la clé)</li>
+            <li><a href="collecte/donnees/README.md">README des données</a> : description des fichiers et des colonnes, essai écarté, limites</li>
+          </ul>
+          <h2>Refaire la mesure</h2>
+          <p>Tout le code est publié sur le <a href="https://github.com/Rico91130/Thermo-sur-seine">dépôt GitHub</a>. Avec votre propre clé Google, le script <code>collecte/collecte_v2.py</code> refait l'ensemble des mesures. Une erreur, une objection ? <a href="https://github.com/Rico91130/Thermo-sur-seine/issues">Signalez-la</a> : elle sera examinée et, si elle est fondée, corrigée publiquement.</p>
+          <h2>Principales sources</h2>
+          <ul class="sources" id="liste-sources"></ul>
+        </div>
+      </div>
+    </section>
+
+    <nav class="conteneur pages-voisines" aria-label="Pages précédente et suivante">
+      <a href="annee.html" rel="prev"><span>Page précédente</span>Sur une année</a>
+    </nav>
+  </main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <p>Site citoyen indépendant, sans lien avec la SEMOP, la Ville de Paris ou Google. Éditeur non professionnel ayant choisi de rester anonyme (article 6-III-2 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique). Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</p>
+      <p>Itinéraires calculés avec Google Maps Platform (collecte du 26 septembre 2026). Fond de carte © IGN – Géoplateforme. Frontières et trait de côte : Natural Earth (domaine public). Bibliothèque cartographique Leaflet. <a href="https://github.com/Rico91130/Thermo-sur-seine">Code source et données</a> : code sous licence MIT, données et textes sous licence <a href="LICENCE-DONNEES.md">CC BY 4.0</a>, hors résultats bruts de Google, fond de carte et citations.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>La carte du détour · Le détour des camions</title>
+  <meta name="description" content="Thermo-sur-Seine : kilomètres en plus ou en moins pour livrer Ris-Orangis plutôt que Vitry, pour toutes les origines possibles dans un rayon de 300 km.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="carte">
+  <header class="entete">
+    <div class="conteneur">
+      <p class="surtitre"><a class="marque" href="./">Le détour des camions</a> <span class="surtitre-suite">Thermo-sur-Seine · concertation préalable jusqu'au 1er novembre 2026</span></p>
+      <nav class="sommaire" aria-label="Pages du site">
+        <a href="./">L'essentiel</a>
+        <a href="dossier.html">Le dossier et les données</a>
+        <a href="itineraires.html">Les itinéraires</a>
+        <a href="carte.html" aria-current="page">La carte</a>
+        <a href="heures.html">Heure par heure</a>
+        <a href="annee.html">Sur une année</a>
+        <a href="methode.html">Méthode et sources</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="carte" class="bloc">
+      <div class="conteneur">
+        <h1>La carte du détour</h1>
+        <p class="intro">Chaque carré est un point de départ possible, dans le rayon d'approvisionnement de 300 km. Sa couleur indique combien de kilomètres en plus (en rouge) ou en moins (en bleu) il faut parcourir pour livrer Ris-Orangis au lieu de Vitry. Cliquez sur un carré pour le vérifier sur Google Maps, ou sur un site pour voir les trajets. <span data-lie="grille-masque"></span> (<a href="methode.html">voir la méthode</a>).</p>
+        <div class="controles" role="group" aria-label="Itinéraire vers Ris-Orangis">
+          <span class="controles-label">Itinéraire vers Ris-Orangis :</span>
+          <button type="button" class="segment" data-variante="acces" aria-pressed="true">Accès final imposé <span class="segment-note">(le plus favorable au projet)</span></button>
+          <button type="button" class="segment" data-variante="dossier" aria-pressed="false">Itinéraire du dossier <span class="segment-note">(par la RN104)</span></button>
+          <a href="itineraires.html" class="controles-aide">Quelles règles ?</a>
+        </div>
+      </div>
+      <div class="conteneur carte-disposition">
+        <div class="carte-cadre">
+          <div id="map" role="region" aria-label="Carte du détour"></div>
+          <div class="carte-boutons">
+            <button type="button" id="btn-ile-de-france">Île-de-France</button>
+            <button type="button" id="btn-300km">Rayon de 300 km</button>
+            <button type="button" id="btn-retour" hidden>Revenir à la carte du détour</button>
+          </div>
+        </div>
+        <aside class="panneau" id="panneau" aria-live="polite">
+          <div id="legende-grille"></div>
+          <div id="legende-points"></div>
+          <div id="detail-point" hidden></div>
+        </aside>
+      </div>
+    </section>
+
+    <nav class="conteneur pages-voisines" aria-label="Pages précédente et suivante">
+      <a href="itineraires.html" rel="prev"><span>Page précédente</span>Les itinéraires</a>
+      <a href="heures.html" rel="next"><span>Page suivante</span>Heure par heure</a>
+    </nav>
+  </main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <p>Site citoyen indépendant, sans lien avec la SEMOP, la Ville de Paris ou Google. Éditeur non professionnel ayant choisi de rester anonyme (article 6-III-2 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique). Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</p>
+      <p>Itinéraires calculés avec Google Maps Platform (collecte du 26 septembre 2026). Fond de carte © IGN – Géoplateforme. Frontières et trait de côte : Natural Earth (domaine public). Bibliothèque cartographique Leaflet. <a href="https://github.com/Rico91130/Thermo-sur-seine">Code source et données</a> : code sous licence MIT, données et textes sous licence <a href="LICENCE-DONNEES.md">CC BY 4.0</a>, hors résultats bruts de Google, fond de carte et citations.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
