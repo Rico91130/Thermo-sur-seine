@@ -729,14 +729,14 @@ function urlGoogleMaps(orig, dest, passages) {
         detail: [
           ['La règle', 'Aucune. Le dossier ne prévoit pas de livraison par camion à Vitry : il n\'y définit donc pas d\'itinéraire.'],
           ['Dans le calcul', 'Le trajet le plus rapide selon Google, sans point de passage, jusqu\'à l\'entrée du site EDF rue des Fusillés (', lien(pageDuDossier(50)), ').']] },
-      { cle: 'rapide', titre: 'Le plus rapide', couleur: '--encre-attenuee', badge: 'non autorisé',
+      { cle: 'rapide', titre: 'Par Ris-Orangis – le plus rapide', couleur: '--encre-attenuee', badge: 'non autorisé',
         trace: p => p.traces.rapide, km: p => p.km.rapide, passages: () => [], controle: p => p.conforme.rapide,
         regle: 'Le trajet que Google choisirait sans contrainte vers Ris-Orangis. Il n\'est pas autorisé : il ne respecte pas l\'accès final imposé.',
         detail: [
           ['La règle', 'Aucune : c\'est le trajet que Google choisirait sans contrainte.'],
           ['Pourquoi il n\'est pas retenu', `Il ne respecte pas l'accès final décrit par le maître d'ouvrage : sur les ${D.points.length} origines détaillées, il ne passe pas par la D310 dans ${rapideHorsD310} cas.`],
           ['Dans le calcul', 'Il sert seulement de repère. Il figure dans le détail de chaque point et dans les fichiers téléchargeables.']] },
-      { cle: 'acces', titre: 'Accès final imposé', couleur: '--serie-2', badge: 'hypothèse la plus favorable au projet',
+      { cle: 'acces', titre: 'Par Ris-Orangis – accès final imposé', couleur: '--serie-2', badge: 'hypothèse la plus favorable au projet',
         trace: p => p.traces.acces_impose, km: p => p.km.acces_impose, passages: () => ['ACCES_D310'], controle: p => p.conforme.acces_impose,
         regle: 'Arriver par l\'A6 puis la D310, sans traverser Ris-Orangis. Avant la D310, le trajet est libre.',
         detail: [
@@ -744,7 +744,7 @@ function urlGoogleMaps(orig, dest, passages) {
           ['Les sources', citer(F.acces_final), citer(F.trajet_terminal), citer(F.traversee)],
           ['Dans le calcul', 'Un point de passage obligé : ', pointPassage('ACCES_D310'), `. Avant ce point, Google choisit librement le trajet le plus rapide. Chaque tracé obtenu est contrôlé : il passe à moins de ${M.controle.tolerance_m} m de ce point.`],
           ['Pourquoi c\'est l\'hypothèse la plus favorable au projet', 'Elle n\'impose pas la RN104. Chaque camion rejoint l\'A6 par le chemin le plus rapide, y compris par l\'A6 depuis Paris, que la carte des itinéraires du dossier trace aussi (', lien(F.carte_itineraires.source), ').']] },
-      { cle: 'dossier', titre: 'Itinéraire du dossier', couleur: '--serie-3', badge: 'texte du dossier',
+      { cle: 'dossier', titre: 'Par Ris-Orangis – itinéraire du dossier', couleur: '--serie-3', badge: 'texte du dossier',
         trace: p => p.traces[brancheDossier(p)], km: p => p.km.dossier, controle: p => p.conforme[brancheDossier(p)],
         passages: p => [brancheDossier(p) === 'impose_ouest' ? 'N104_OUEST' : 'N104_EST', 'ACCES_D310'],
         regle: 'Passer par la RN104 (la Francilienne), puis suivre l\'accès final imposé. La branche de la RN104, est ou ouest, est la plus courte des deux.',
