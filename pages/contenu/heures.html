@@ -1,0 +1,27 @@
+<!--
+titre: Heure par heure · Le détour des camions
+description: Thermo-sur-Seine : temps de trajet prévus par Google vers Vitry et vers Ris-Orangis, pour chaque heure de livraison autorisée.
+-->
+    <section id="heures" class="conteneur bloc">
+      <h1>Heure par heure</h1>
+      <p class="intro">Temps de trajet prévus par Google pour chaque heure de livraison autorisée (du lundi au vendredi, de 8 h à 20 h), semaine du 28 septembre au 2 octobre 2026. Ce sont des temps de voiture : un camion ne peut qu'être plus lent.</p>
+      <div class="filtres">
+        <label>Point de départ
+          <select id="choix-origine"></select>
+        </label>
+        <label>Jour
+          <select id="choix-jour"></select>
+        </label>
+      </div>
+      <figure class="graphique">
+        <figcaption id="titre-graphique"></figcaption>
+        <div id="legende-graphique" class="legende-series"></div>
+        <div class="graphique-zone" id="graphique"></div>
+        <details class="tableau-vue">
+          <summary>Voir les données en tableau</summary>
+          <div id="tableau-heures"></div>
+        </details>
+      </figure>
+    </section>
+
+    <div class="infobulle" id="infobulle" role="tooltip" hidden></div>

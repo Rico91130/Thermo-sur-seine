@@ -2,7 +2,7 @@
 
 Site citoyen qui mesure ce que coûte, en kilomètres et en temps, le choix de livrer le combustible de la future chaufferie de Vitry-sur-Seine (projet Thermo-sur-Seine) par camion à **Ris-Orangis**, plutôt que directement à **Vitry**.
 
-- **Site** : sept pages statiques publiées avec GitHub Pages : `index.html` (l'essentiel), `dossier.html`, `itineraires.html`, `carte.html`, `heures.html`, `annee.html` et `methode.html`. Elles partagent `style.css` et `app.js`, qui n'exécute que le code de la page affichée (`<body data-page="…">`). L'en-tête, le menu et le pied de page sont répétés dans chaque page : une modification du menu se fait dans les sept fichiers.
+- **Site** : sept pages statiques publiées avec GitHub Pages : `index.html` (l'essentiel), `dossier.html`, `itineraires.html`, `carte.html`, `heures.html`, `annee.html` et `methode.html`. Elles partagent `style.css` et `app.js`, qui n'exécute que le code de la page affichée (`<body data-page="…">`). Ces pages HTML sont **générées** : voir « Modifier les pages » ci-dessous.
 - **Données et code de la mesure** : dossier [`collecte/`](collecte/).
 - **Principe** : chaque chiffre renvoie à sa source (page du dossier de concertation, question publiée sur la plateforme de la concertation), et chaque mesure peut être refaite par n'importe qui.
 
@@ -42,6 +42,22 @@ python collecte/build_data.py                          # régénère data/donnee
 ```
 
 Sans l'option `--go`, rien n'est envoyé à Google : le script affiche seulement le nombre de requêtes et leur coût estimé. Chaque requête envoyée est journalisée, sans la clé, dans `collecte/donnees/requetes_*.jsonl`.
+
+## Modifier les pages
+
+L'en-tête, le menu et le pied de page ne sont écrits qu'une fois. Les pages HTML de la racine sont construites à partir de :
+- [`pages/gabarit.html`](pages/gabarit.html) : en-tête, menu et pied de page, communs à toutes les pages ;
+- [`pages/contenu/`](pages/contenu/) : le contenu propre à chaque page, précédé de son titre et de sa description ;
+- [`pages/construire_pages.py`](pages/construire_pages.py) : l'ordre et les libellés du menu.
+
+Après une modification de ces fichiers :
+
+```bash
+python pages/construire_pages.py              # régénère les sept pages
+python pages/construire_pages.py --verifier   # avant un commit : vérifie qu'aucune page n'a été modifiée à la main ou oubliée
+```
+
+Ne modifiez pas directement `index.html`, `carte.html`, etc. : la prochaine construction écraserait la modification.
 
 ## Voir le site en local
 

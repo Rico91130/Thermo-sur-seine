@@ -1,0 +1,27 @@
+<!--
+titre: Sur une année · Le détour des camions
+description: Thermo-sur-Seine : kilomètres et heures de conduite en plus sur une année, selon l'origine du combustible.
+-->
+    <section id="calculateur" class="conteneur bloc">
+      <h1>Sur une année</h1>
+      <p class="intro">L'origine du combustible n'est pas connue. Choisissez une hypothèse : le calcul et toutes ses données s'affichent en dessous.</p>
+      <div class="filtres">
+        <label>Origine du combustible
+          <select id="calc-scenario"></select>
+        </label>
+        <label>Tonnage annuel (t)
+          <input type="number" id="calc-tonnage" min="0" step="10000">
+        </label>
+        <label>Tonnes par camion
+          <input type="number" id="calc-charge" min="1" step="0.1">
+        </label>
+      </div>
+      <p class="rappel-variante" id="calc-variante"></p>
+      <div class="tuiles resultat" id="calc-resultats"></div>
+      <p class="formule" id="calc-formule"></p>
+      <details class="tableau-vue" open>
+        <summary>Origines prises en compte</summary>
+        <div id="calc-tableau"></div>
+      </details>
+      <p class="note">Émissions de CO<sub>2</sub> : ce calcul sera ajouté quand le facteur d'émission d'un poids lourd aura été sourcé (Base Empreinte de l'ADEME).</p>
+    </section>

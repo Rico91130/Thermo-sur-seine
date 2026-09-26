@@ -1,39 +1,8 @@
-<!doctype html>
-<!-- Fichier généré par pages/construire_pages.py à partir de pages/contenu/index.html : ne pas le modifier directement. -->
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Le détour des camions</title>
-  <meta name="description" content="Thermo-sur-Seine : ce que coûte, en kilomètres et en temps, le choix de livrer le combustible à Ris-Orangis plutôt qu'à Vitry-sur-Seine. Mesures Google, sources citées, données téléchargeables.">
-  <script>
-    // Anciennes adresses de la version en une seule page (#carte, #point=IDF1…) : redirection vers la bonne page
-    (function () {
-      var h = location.hash, pages = { '#confrontation': 'dossier.html', '#itineraires': 'itineraires.html', '#carte': 'carte.html',
-        '#heures': 'heures.html', '#calculateur': 'annee.html', '#methode': 'methode.html' };
-      if (/^#point=/.test(h)) location.replace('carte.html' + h);
-      else if (pages[h]) location.replace(pages[h]);
-    })();
-  </script>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body data-page="essentiel">
-  <header class="entete">
-    <div class="conteneur">
-      <p class="surtitre"><a class="marque" href="./">Le détour des camions</a> <span class="surtitre-suite">Thermo-sur-Seine · concertation préalable jusqu'au 1er novembre 2026</span></p>
-      <nav class="sommaire" aria-label="Pages du site">
-        <a href="./" aria-current="page">L'essentiel</a>
-        <a href="dossier.html">Le dossier et les données</a>
-        <a href="itineraires.html">Les itinéraires</a>
-        <a href="carte.html">La carte</a>
-        <a href="heures.html">Heure par heure</a>
-        <a href="annee.html">Sur une année</a>
-        <a href="methode.html">Méthode et sources</a>
-      </nav>
-    </div>
-  </header>
-
-  <main>
+<!--
+titre: Le détour des camions
+description: Thermo-sur-Seine : ce que coûte, en kilomètres et en temps, le choix de livrer le combustible à Ris-Orangis plutôt qu'à Vitry-sur-Seine. Mesures Google, sources citées, données téléchargeables.
+options: redirection
+-->
     <section id="essentiel" class="conteneur bloc">
       <h1>Le détour des camions</h1>
       <p class="chapeau">Le combustible de la future chaufferie de Vitry-sur-Seine sera livré par camion à Ris-Orangis, puis remontera la Seine en barge. Ce site mesure, avec Google Maps, ce que coûte ce détour, et publie toutes ses données et ses sources.</p>
@@ -74,15 +43,3 @@
         <a class="page-lien" href="methode.html"><strong>Méthode et sources</strong><span>La mesure, ses limites, et toutes les données à télécharger.</span></a>
       </div>
     </section>
-  </main>
-
-  <footer class="pied">
-    <div class="conteneur">
-      <p>Site citoyen indépendant, sans lien avec la SEMOP, la Ville de Paris ou Google. Éditeur non professionnel ayant choisi de rester anonyme (article 6-III-2 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique). Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</p>
-      <p>Itinéraires calculés avec Google Maps Platform (collecte du 26 septembre 2026). Fond de carte © IGN – Géoplateforme. Frontières et trait de côte : Natural Earth (domaine public). Bibliothèque cartographique Leaflet. <a href="https://github.com/Rico91130/Thermo-sur-seine">Code source et données</a> : code sous licence MIT, données et textes sous licence <a href="LICENCE-DONNEES.md">CC BY 4.0</a>, hors résultats bruts de Google, fond de carte et citations.</p>
-    </div>
-  </footer>
-
-  <script src="app.js"></script>
-</body>
-</html>
