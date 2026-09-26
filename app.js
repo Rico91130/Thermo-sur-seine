@@ -126,6 +126,21 @@ function urlGoogleMaps(orig, dest, passages) {
   };
   const millions = v => { const r = Math.round(v / 1e5) / 10; return `${Number.isInteger(r) ? fmt0(r) : fmt1(r)} million${r >= 2 ? 's' : ''}`; };
   const lienCnr = texte => [lien({ texte, url: F.consommation.source.url }), ' (', lien({ texte: 'copie archivée', url: F.consommation.source.archive }), ')'];
+  // Volet fluvial (dossier p. 56) : une barge de 2 500 m³ de CSR à 0,20 t/m³ emporte 500 t ; le pousseur fait 36 km aller et retour.
+  // Consommation par km de convoi (guide « Information GES ») : la puissance des pousseurs n'est pas publiée, d'où une fourchette.
+  const T_PAR_BARGE = F.barge_m3.valeur * F.densite.valeur;
+  const KM_SEINE = F.trajet_fluvial.valeur / 2;   // km de barge parcourus par chaque tonne livrée
+  const SUD = parId.IDF2;                          // Écharcon (91), producteur de CSR au sud de Ris-Orangis
+  const barges = tonnage => {
+    const convois = tonnage / T_PAR_BARGE, km = convois * F.trajet_fluvial.valeur;
+    const [bas, haut] = [F.pousseur_conso.valeurs.moins_590_kw, F.pousseur_conso.valeurs['590_879_kw']];
+    return { convois, km, litres: { bas: km * bas, haut: km * haut },
+             co2: { bas: km * bas * F.co2_gnr.valeur / 1000, haut: km * haut * F.co2_gnr.valeur / 1000 } };
+  };
+  const fourchetteCo2 = (bas, haut) => `${fmt0(arrondi(bas, 10))} à ${fmt0(arrondi(haut, 10))} t`;
+  const lienGuide = texte => lien({ texte, url: F.pousseur_conso.source.url });
+  const noteBarges = b => [`${fmt0(F.tonnage.valeur)} t ÷ ${fmt0(T_PAR_BARGE)} t par barge (2 500 m³ × ${fmt2(F.densite.valeur)} t/m³) = ${fmt0(b.convois)} convois ; × ${fmt0(F.trajet_fluvial.valeur)} km aller et retour = ${fmt0(b.km)} km de pousseur ; × ${fmt2(F.pousseur_conso.valeurs.moins_590_kw)} à ${fmt2(F.pousseur_conso.valeurs['590_879_kw'])} litres de gazole non routier par km (pousseur de moins de 590 kW ou de 590 à 879 kW : la puissance n'est pas publiée) × ${fmt2(F.co2_gnr.valeur)} kg de CO₂ par litre (`,
+    lienGuide('guide officiel « Information GES des prestations de transport », 2018, tableaux 11 et 12'), '). Hypothèses : un pousseur par barge ; pousseurs de manœuvre non comptés. Les facteurs actuels de l\'ADEME, exprimés par tonne-kilomètre, supposent des convois bien plus chargés : ils ne conviennent pas à des barges de CSR, très léger, qui n\'emportent que 500 t.'];
 
   const PAGES = { essentiel, dossier: confrontation, itineraires, carte: carteDuDetour, heures: heureParHeure, annee: surUneAnnee, methode };
   const recolorer = PAGES[page] ? PAGES[page]() : null;
@@ -166,6 +181,10 @@ function urlGoogleMaps(orig, dest, passages) {
     compteur('co2', b.co2, v => `${fmt0(arrondi(v, 10))} tonnes`);
     compteur('cout', b.cout, v => `${fmt0(arrondi(v, 1000))} €`);
     compteur('nord', pct(nord, d => d > 0), v => `${fmt0(v)} %`);
+    // Volet fluvial : distance de la chaîne complète (camion puis barge) et CO2 des pousseurs
+    const chaineRef = ref.km.acces_impose + KM_SEINE, fl = barges(F.tonnage.valeur);
+    compteur('chaine', chaineRef, v => `${fmt0(v)} km`);
+    compteur('co2-barges', fl.co2.haut, v => `${fmt0(arrondi(v * fl.co2.bas / fl.co2.haut, 10))} à ${fmt0(arrondi(v, 10))} tonnes`);
 
     lier('trajet-fluvial', `${fmt0(F.trajet_fluvial.valeur)} km`);
     lier('detour-aller-retour', `${signe0(2 * detourRef)} km`);
@@ -175,6 +194,21 @@ function urlGoogleMaps(orig, dest, passages) {
     lier('vols', `environ ${fmt0(vols)} allers-retours`);
     lier('carburant', `${fmt0(arrondi(b.carburant, 10000))} €`);
     lier('nord-mediane', `${fmt0(mediane(nord))} km`);
+    lier('chaine-directe', `${fmt0(ref.km.vitry)} km`);
+    lier('convois', fmt0(arrondi(fl.convois, 10)));
+    lier('co2-camions', `${fmt0(arrondi(b.co2, 10))} tonnes`);
+    document.getElementById('citation-fluvial').replaceChildren(`« ${F.atout_fluvial.citation} »`, el('footer', {}, '— ', lien(F.atout_fluvial.source)));
+
+    // Barres empilées : distance parcourue par chaque tonne, en camion puis en barge
+    const kmChaineMax = Math.max(ref.km.vitry, chaineRef);
+    const segment = (km, couleur) => el('span', { class: 'barre-remplie', style: `width:${(100 * km / kmChaineMax).toFixed(1)}%;background:var(${couleur})` });
+    document.getElementById('barres-chaine').replaceChildren(
+      el('div', { class: 'barre' }, el('span', { class: 'barre-libelle' }, 'Directement à Vitry', el('strong', {}, `${fmt1(ref.km.vitry)} km`)),
+        el('span', { class: 'barre-piste barre-piste-empilee' }, segment(ref.km.vitry, '--serie-2'))),
+      el('div', { class: 'barre' }, el('span', { class: 'barre-libelle' }, 'Par Ris-Orangis', el('strong', {}, `${fmt1(chaineRef)} km`)),
+        el('span', { class: 'barre-piste barre-piste-empilee' }, segment(ref.km.acces_impose, '--serie-2'), segment(KM_SEINE, '--serie-1'))),
+      el('p', { class: 'barres-legende' }, el('span', { class: 'cle-ligne', style: 'background:var(--serie-2)' }), 'camion ',
+        el('span', { class: 'cle-ligne', style: 'background:var(--serie-1)' }, ), 'barge sur la Seine'));
 
     // Deux barres : distance vers Vitry et vers Ris-Orangis, depuis le Plessis-Gassot
     const kmMax = Math.max(ref.km.vitry, ref.km.acces_impose);
@@ -223,11 +257,15 @@ function urlGoogleMaps(orig, dest, passages) {
       `), soit ${fmt0(arrondi(b.co2, 10))} ÷ ${fmt2(F.avion_paris_new_york.valeur)} ≈ ${fmt0(vols)} allers-retours. Les camions à fond mouvant prévus consomment sans doute davantage : ce chiffre est prudent.`);
     note('note-cout', `Calcul : ${fmt0(arrondi(kmAn, 1000))} km × ${fmtBrut(F.cout_km.valeur)} €/km + ${fmt0(arrondi(heuresAn, 100))} h × ${fmt2(F.cout_heure.valeur)} €/h ; gazole : ${fmt0(arrondi(b.litres, 1000))} litres × ${fmt2(F.prix_gazole.valeur)} € (`,
       ...lienCnr('CNR, décembre 2025'), '). Hors péages et hors TVA. Le gazole a fortement augmenté en 2026 : ces montants sont sous-estimés.');
+    note('note-chaine-complete', `Calcul : ${fmt1(ref.km.acces_impose)} km de camion jusqu'à Ris-Orangis (accès final imposé, mesure Google), puis ${fmt0(KM_SEINE)} km de barge, soit la moitié du trajet aller et retour décrit par le dossier : « ${F.trajet_fluvial.citation} » (`,
+      lien(F.trajet_fluvial.source), `) ; livraison directe : ${fmt1(ref.km.vitry)} km. Depuis le sud, c'est différent : depuis Écharcon (Essonne), ${fmt1(SUD.km.acces_impose)} km de camion puis ${fmt0(KM_SEINE)} km de barge font ${fmt1(SUD.km.acces_impose + KM_SEINE)} km, contre ${fmt1(SUD.km.vitry)} km directement.`);
+    note('note-co2-barges', 'Moteurs thermiques : ', lien(F.pousseurs_thermiques.source), '. Calcul : ', ...noteBarges(fl), ` Le dossier annonce « ${F.barges_jour.citation.replace(/\.$/, '')} » (`, lien(F.barges_jour.source), '), ce qui est du même ordre.');
     note('note-nord', 'Le dossier prévoit des livraisons « ', F.nord.citation, ' » (', lien(F.nord.source), ').');
     note('essentiel-sources', 'Sources : présentation du projet d\'après le dossier de concertation (pages citées à chaque étape) ; nombre de camions calculé d\'après le dossier (', lien(F.tonnage.source), ' ; ', lien(F.barge.source),
       ') ; tour de la Terre : ', lien({ texte: 'NGA, WGS 84', url: F.tour_terre.source.url }),
       ' ; durée légale du travail : ', lien({ texte: 'service-public.gouv.fr', url: F.duree_legale.source.url }),
       ' ; consommation et coûts : ', ...lienCnr('CNR, référentiel régional'), ' ; CO₂ du gazole : ', lien({ texte: 'ADEME, Base Carbone', url: F.co2_gazole.source.url }),
+      ' ; barges : dossier (', lien(F.trajet_fluvial.source), ') et ', lienGuide('guide officiel « Information GES des prestations de transport »'),
       ' ; distances et temps : mesures Google du 26 septembre 2026 (', el('a', { href: 'methode.html' }, 'méthode'), '). Les étapes chiffrées du détour supposent un combustible venant du Plessis-Gassot, sauf la dernière, qui porte sur tous les points de départ situés au nord de Vitry. Les fournisseurs ne seront choisis qu\'en 2027 (',
       lien({ texte: 'question n° 46', url: F.fournisseurs.source.url }), ').');
 
@@ -368,6 +406,8 @@ function urlGoogleMaps(orig, dest, passages) {
     const cellulesSud = D.grille.filter(g => g[0] < R.lat);
     const part = (cells, test) => Math.round(100 * cells.filter(test).length / cells.length);
     const kmParKmDetour = 2 * camionsDossier;
+    const fl = barges(F.tonnage.valeur);
+    const co2Camions = bilan(camionsDossier * 2 * detour(ref, 'acces'), 0).co2;   // même hypothèse que l'accueil (Plessis-Gassot, accès imposé)
     const fort = t => el('strong', {}, t);
     // Chaque échange : un sujet, les citations du maître d'ouvrage, puis les réponses (une bulle par élément de « montre »)
     const echanges = [
@@ -386,6 +426,12 @@ function urlGoogleMaps(orig, dest, passages) {
         montre: [['La parcelle EDF de Vitry fait 38 ha, dont 6,7 ha pour la chaufferie. Ce que ce choix coûte en kilomètres n\'est chiffré nulle part.'],
           [`Or, avec ${fmt0(arrondi(camionsDossier, 100))} camions par an, chaque kilomètre de détour moyen représente environ `, fort(`${fmt0(arrondi(kmParKmDetour, 100))} km de plus par an`), ', aller et retour.']],
         sourcesMontre: [F.parcelle.source, F.transport_absent.source] },
+      { titre: 'L\'atout du fluvial', dit: [F.atout_fluvial, F.pousseurs_thermiques],
+        montre: [['Depuis le nord, la barge ne remplace aucun kilomètre de camion : elle s\'y ajoute.'],
+          [`Depuis le Plessis-Gassot, livré directement à Vitry, le combustible ferait ${fmt1(ref.km.vitry)} km. Par Ris-Orangis : ${fmt1(ref.km.acces_impose)} km de camion, puis ${fmt0(KM_SEINE)} km de barge, soit `, fort(`${fmt1(ref.km.acces_impose + KM_SEINE)} km`), '.'],
+          [`Et les ${fmt0(arrondi(fl.convois, 10))} convois par an émettraient `, fort(`${fourchetteCo2(fl.co2.bas, fl.co2.haut)} de CO₂`), `, en plus des ${fmt0(arrondi(co2Camions, 10))} t du détour des camions.`],
+          [`Depuis le sud, en revanche, la barge remplace une partie de la route : depuis Écharcon, ${fmt1(SUD.km.acces_impose + KM_SEINE)} km par Ris-Orangis, contre ${fmt1(SUD.km.vitry)} km directement.`]],
+        sourcesMontre: [F.trajet_fluvial.source, F.pousseur_conso.source] },
       { titre: 'L\'origine du combustible', dit: [F.fournisseurs, F.nord],
         montre: [['La ', el('a', { href: 'carte.html' }, 'carte du détour'), ' donne le résultat pour toutes les origines possibles.'],
           ['Avec l\'accès final imposé, Ris-Orangis est plus loin que Vitry pour ', fort(`${part(cellulesNord, g => g[5] - g[3] > 0)} %`), ' des points situés au nord de Vitry…'],
@@ -933,6 +979,7 @@ function urlGoogleMaps(orig, dest, passages) {
       const tonnage = Math.max(0, +calcTonnage.value || 0), charge = Math.max(0.1, +calcCharge.value || CHARGE_DOSSIER);
       const n = camionsAn(tonnage, charge);
       const kmAn = v => n * 2 * det[v], hAn = v => n * 2 * min[v] / 60;
+      const fl = barges(tonnage), direct = moy(p => p.km.vitry), chaine = moy(p => p.km.acces_impose) + KM_SEINE;
       const cellule = (titre, a, b, note) => el('div', { class: 'tuile' },
         el('p', { class: 'tuile-label' }, titre),
         el('p', { class: 'tuile-valeur' }, a), b ? el('p', { class: 'tuile-note' }, b) : null, note ? el('p', { class: 'tuile-note' }, note) : null);
@@ -950,10 +997,15 @@ function urlGoogleMaps(orig, dest, passages) {
           cellule('Gazole en plus par an', `${signe0(arrondi(b.carburant, 1000))} €`, `itinéraire du dossier : ${signe0(arrondi(bd.carburant, 1000))} €`, 'hors TVA, prix de décembre 2025'),
           cellule('Coût de transport en plus par an', `${signe0(arrondi(b.cout, 1000))} €`, `itinéraire du dossier : ${signe0(arrondi(bd.cout, 1000))} €`, 'camion et chauffeur, hors péages'),
         ];
-      })());
+      })(),
+      // Volet fluvial : la barge s'ajoute au trajet des camions
+      cellule('Distance parcourue par tonne', `${fmt1(chaine)} km`, `dont ${fmt0(KM_SEINE)} km de barge ; directement à Vitry : ${fmt1(direct)} km`, 'camion (accès final imposé) puis barge'),
+      cellule('Convois de barges par an', fmt0(arrondi(fl.convois, 10)), `${fmt0(arrondi(fl.km, 100))} km de pousseur`, `${fmt0(T_PAR_BARGE)} t par barge, ${fmt0(F.trajet_fluvial.valeur)} km aller et retour`),
+      cellule('CO₂ des barges par an', fourchetteCo2(fl.co2.bas, fl.co2.haut), 'à ajouter au CO₂ des camions', 'selon la puissance des pousseurs, non publiée'));
       document.getElementById('calc-formule').textContent =
         `Calcul : kilomètres en plus par an = camions par an × 2 (aller et retour) × détour moyen = ${fmt0(n)} × 2 × ${fmt1(det.acces)} km = ${fmt0(kmAn('acces'))} km (accès final imposé). Le retour se fait vers le point de départ, avec ou sans chargement. Le détour moyen est la moyenne des détours des origines ci-dessous, pondérée par leur part. `
-        + `Litres de gazole = kilomètres × ${fmt1(F.consommation.valeur)} ÷ 100 ; CO₂ = litres × ${fmt1(F.co2_gazole.valeur)} kg ; gazole en euros = litres × ${fmt2(F.prix_gazole.valeur)} € ; coût de transport = kilomètres × ${fmtBrut(F.cout_km.valeur)} € + heures × ${fmt2(F.cout_heure.valeur)} €.`;
+        + `Litres de gazole = kilomètres × ${fmt1(F.consommation.valeur)} ÷ 100 ; CO₂ = litres × ${fmt1(F.co2_gazole.valeur)} kg ; gazole en euros = litres × ${fmt2(F.prix_gazole.valeur)} € ; coût de transport = kilomètres × ${fmtBrut(F.cout_km.valeur)} € + heures × ${fmt2(F.cout_heure.valeur)} €. `
+        + `Barges : convois = tonnage ÷ ${fmt0(T_PAR_BARGE)} t = ${fmt0(fl.convois)} ; km de pousseur = convois × ${fmt0(F.trajet_fluvial.valeur)} km ; CO₂ = km × ${fmt2(F.pousseur_conso.valeurs.moins_590_kw)} à ${fmt2(F.pousseur_conso.valeurs['590_879_kw'])} litres par km × ${fmt2(F.co2_gnr.valeur)} kg. Le nombre de barges ne dépend pas des tonnes par camion.`;
       document.getElementById('calc-tableau').replaceChildren(el('div', { class: 'tableau-defilant' }, el('table', { class: 'tableau-donnees' },
         el('thead', {}, el('tr', {}, el('th', {}, 'Origine'), el('th', {}, 'Part'), el('th', {}, 'Vers Vitry'),
           el('th', {}, 'Détour, accès imposé'), el('th', {}, 'Détour, dossier'), el('th', {}, 'Écart de temps, accès imposé'))),
@@ -967,7 +1019,9 @@ function urlGoogleMaps(orig, dest, passages) {
       `Constantes : consommation de ${fmt1(F.consommation.valeur)} litres aux 100 km, gazole à ${fmt2(F.prix_gazole.valeur)} € le litre hors TVA, ${fmtBrut(F.cout_km.valeur)} € par km et ${fmt2(F.cout_heure.valeur)} € par heure de conduite (`,
       ...lienCnr('CNR, référentiel régional, décembre 2025'), `) ; ${fmt1(F.co2_gazole.valeur)} kg de CO₂ par litre de gazole, de l'extraction du pétrole au pot d'échappement (`,
       lien({ texte: 'ADEME, Base Carbone, élément 25775', url: F.co2_gazole.source.url }),
-      '). Le prix du gazole a fortement augmenté en 2026 : les montants en euros sont sous-estimés. Les camions à fond mouvant consomment sans doute plus que la moyenne : tous ces chiffres sont prudents.');
+      '). Le prix du gazole a fortement augmenté en 2026 : les montants en euros sont sous-estimés. Les camions à fond mouvant consomment sans doute plus que la moyenne : tous ces chiffres sont prudents. ',
+      `Barges : ${fmt2(F.pousseur_conso.valeurs.moins_590_kw)} à ${fmt2(F.pousseur_conso.valeurs['590_879_kw'])} litres de gazole non routier par km de convoi et ${fmt2(F.co2_gnr.valeur)} kg de CO₂ par litre (`,
+      lienGuide('guide officiel « Information GES des prestations de transport », 2018'), `) ; ${fmt0(T_PAR_BARGE)} t par barge et ${fmt0(F.trajet_fluvial.valeur)} km aller et retour (`, lien(F.trajet_fluvial.source), '). Un pousseur par barge ; pousseurs de manœuvre et manutention non comptés.');
     [calcScenario, calcTonnage, calcCharge].forEach(n => n.addEventListener('input', calculer));
     calculer();
   }
@@ -982,6 +1036,9 @@ function urlGoogleMaps(orig, dest, passages) {
       ? `Ce masque ne favorise pas la démonstration : pour chacun des ${nbMasques} carrés masqués, Ris-Orangis était plus loin que Vitry (de ${signe1(GM.detour_acces_min_km)} à ${signe1(GM.detour_acces_max_km)} km avec l'accès final imposé).`
       : `Pour les ${nbMasques} carrés masqués, l'écart avec l'accès final imposé allait de ${signe1(GM.detour_acces_min_km)} à ${signe1(GM.detour_acces_max_km)} km.`)
       + ' Ils restent dans les fichiers téléchargeables.');
+    document.querySelectorAll('[data-lie="limite-barges"]').forEach(n => n.replaceChildren(
+      `Le trajet en barge (${fmt0(KM_SEINE)} km par tonne livrée) est ajouté au trajet des camions pour obtenir la distance de la chaîne complète. Son CO₂ est calculé par kilomètre de convoi, comme celui des camions : ${fmt2(F.pousseur_conso.valeurs.moins_590_kw)} à ${fmt2(F.pousseur_conso.valeurs['590_879_kw'])} litres de gazole non routier par km, car la puissance des pousseurs n'est pas publiée (`,
+      lienGuide('guide « Information GES », 2018'), `). Les facteurs actuels de l'ADEME, par tonne-kilomètre, supposent des convois bien plus chargés : appliqués aux ${fmt0(T_PAR_BARGE)} t d'une barge de CSR, ils sous-estimeraient nettement. On suppose un pousseur par barge ; les pousseurs de manœuvre, la manutention (deux ruptures de charge) et une éventuelle motorisation électrique ne sont pas pris en compte.`));
     document.getElementById('tableau-parametres').replaceChildren(el('table', { class: 'parametres' }, el('tbody', {},
       [['Arrivée à Vitry', `${V.lat}, ${V.lon}`, 'Dossier p. 50 et 83'],
        ['Arrivée à Ris-Orangis', `${R.lat}, ${R.lon} + ${forfaitRis}`, 'Dossier p. 54, 55 et 87'],
@@ -995,6 +1052,9 @@ function urlGoogleMaps(orig, dest, passages) {
        ['Prix du gazole', `${fmt2(F.prix_gazole.valeur)} €/L hors TVA`, 'CNR, décembre 2025'],
        ['Coût d\'un semi-remorque', `${fmtBrut(F.cout_km.valeur)} €/km + ${fmt2(F.cout_heure.valeur)} €/h`, 'CNR, hors péages'],
        ['CO₂ du gazole', `${fmt1(F.co2_gazole.valeur)} kg CO₂e/L`, 'ADEME, Base Carbone, élément 25775'],
+       ['Barge', `${fmt0(T_PAR_BARGE)} t de CSR (2 500 m³ × ${fmt2(F.densite.valeur)} t/m³), ${fmt0(F.trajet_fluvial.valeur)} km aller et retour`, 'Dossier p. 56'],
+       ['Consommation d\'un pousseur', `${fmt2(F.pousseur_conso.valeurs.moins_590_kw)} L/km (moins de 590 kW) à ${fmt2(F.pousseur_conso.valeurs['590_879_kw'])} L/km (590 à 879 kW)`, 'Guide « Information GES », 2018, tableau 12'],
+       ['CO₂ du gazole non routier', `${fmt2(F.co2_gnr.valeur)} kg CO₂e/L`, 'Guide « Information GES », 2018, tableau 11 (Base Carbone)'],
        ['Collecte', M.collecte, null],
        ['Prévisions', M.previsions, null]]
         .map(([a, b, c]) => el('tr', {}, el('th', {}, a, c ? el('span', { class: 'param-source' }, c) : null), el('td', {}, b))))));
@@ -1009,6 +1069,8 @@ function urlGoogleMaps(orig, dest, passages) {
       { texte: 'Google Maps : format des liens « Vérifier » (étapes)', url: 'https://developers.google.com/maps/documentation/urls/get-started#directions-action' },
       { texte: 'Natural Earth : frontières et trait de côte, 1:10m (domaine public)', url: 'https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-0-countries/' },
       { texte: 'ADEME, Base Carbone : facteur d\'émission du gazole routier (élément 25775)', url: F.co2_gazole.source.url },
+      { texte: 'Ministère, « Information GES des prestations de transport », guide méthodologique (2018) : consommation des pousseurs par km', url: F.pousseur_conso.source.url },
+      { texte: 'ADEME et VNF, « Efficacités énergétiques et émissions unitaires du transport fluvial » (2019) : facteurs par tonne-kilomètre', url: 'https://entreprises-fluviales.fr/wp-content/uploads/2020/11/Rapport_efficacite_transport_fluvial_2019_ADEME.pdf' },
     ];
     document.getElementById('liste-sources').replaceChildren(...sources.map(s => el('li', {}, lien(s))),
       el('li', {}, lienCnr('Comité national routier : consommation, prix du gazole et coûts d\'un semi-remorque (référentiel régional, décembre 2025)')));

@@ -24,6 +24,9 @@ Q_URL = "https://www.thermo-sur-seine-concertation.fr/posts/"
 CNR_REGIONAL = {"texte": "CNR, référentiel de prix de revient « régional », ensemble articulé gazole, échantillon 2025, conditions économiques de décembre 2025",
                 "url": "https://www.cnr.fr/espace-standard/3",
                 "archive": "http://web.archive.org/web/20260310155217/https://cnr.fr/espace-standard/3"}
+# Seule source officielle donnant la consommation des pousseurs par km de convoi (la Base Carbone ne donne plus que des t.km)
+GUIDE_GES = {"texte": "Ministère de la Transition écologique, « Information GES des prestations de transport », guide méthodologique, septembre 2018, p. 50, tableaux 11 et 12 (consulté le 26/09/2026)",
+             "url": "https://www.ecologie.gouv.fr/sites/default/files/publications/Info%20GES_Guide%20m%C3%A9thodo.pdf#page=52"}
 
 
 def dossier(page_imprimee):
@@ -179,6 +182,15 @@ def main():
             "csr": {"citation": "Ils proviennent de déchets impossibles à recycler (refus de tri, encombrants, activités économiques et bâtiment) qui sont sélectionnés et préparés pour être valorisés en énergie.", "source": dossier(7)},
             "chaine": {"citation": "Alimentée par des combustibles de récupération préalablement collectés, triés, puis acheminés par voie fluviale depuis une plateforme située à Ris-Orangis (91), elle produira de la vapeur destinée au réseau de chaleur.", "source": dossier(42)},
             "trajet_fluvial": {"valeur": 36, "citation": "des pousseurs de lignes déplaceront les barges sur le trajet de 36 km aller/retour qui sépare les sites de Vitry et Ris-Orangis", "source": dossier(56)},
+            # Volet fluvial : ce que le dossier en dit, et la consommation des pousseurs (guide officiel « Information GES », par km de convoi)
+            "atout_fluvial": {"citation": "Le transport fluvial contribue à réduire les distances parcourues par les camions jusqu'au point de livraison final.", "source": dossier(56)},
+            "pousseurs_thermiques": {"citation": "La flotte de pousseurs qui manœuvreront les barges est aujourd'hui majoritairement équipée de moteur thermique.", "source": dossier(56)},
+            "barges_jour": {"valeur": 3, "citation": "Sur l'ensemble de l'année, le trafic sera en moyenne de 3 barges par jour.", "source": dossier(56)},
+            "pousseur_conso": {"valeurs": {"moins_590_kw": 9.40, "590_879_kw": 14.40}, "unite": "L/km",
+                               "citation": "Pousseur avec barge(s) de capacité inférieure à 590 kW - Gazole non routier : 1 104 tonnes, 9,40 ℓ / km ; Pousseur avec barge(s) de capacité comprise entre 590 et 879 kW - Gazole non routier : 1 270 tonnes, 14,40 ℓ / km",
+                               "note": "Valeurs de niveau 1 (tableau 12), par kilomètre de convoi, quel que soit le nombre de barges. Le tonnage indiqué (trajets à vide compris) n'intervient pas : une barge de CSR, très léger, n'emporte que 500 t.",
+                               "source": GUIDE_GES},
+            "co2_gnr": {"valeur": 3.17, "unite": "kg CO2e/L", "citation": "Gazole non routier : phase amont 0,66, phase de fonctionnement 2,51, total 3,17 kg de CO2e par litre (tableau 11, Source : Base Carbone de l'ADEME)", "source": GUIDE_GES},
             "tonnage": {"valeur": 450000, "citation": "environ 450 000 tonnes de combustibles solides de récupération (CSR)", "source": dossier(65)},
             "barge": {"valeur": 28, "citation": "Chaque barge dispose d'une capacité d'emport équivalente à celle de 28 camions.", "source": dossier(56)},
             "barge_m3": {"valeur": 2500, "citation": "6 barges par jour, d'une capacité unitaire de 2 500 m³", "source": dossier(56)},

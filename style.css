@@ -147,6 +147,12 @@ main > .bloc:first-child { padding-top: 32px; }
 .barre-libelle strong { color: var(--encre); font-size: 1.05rem; }
 .barre-piste { display: block; height: 26px; }
 .barre-remplie { display: block; height: 100%; border-radius: 4px; }
+.barre-piste-empilee { display: flex; gap: 2px; }
+.barre-piste-empilee .barre-remplie { flex: none; }
+.barres-legende { margin: 0; font-size: 0.85rem; color: var(--encre-2); }
+.barres-legende .cle-ligne { width: 14px; height: 10px; margin-left: 4px; }
+.etape-amorce-suite { margin-top: 22px; }
+.etape-valeur-longue { font-size: clamp(2.4rem, 9vw, 5rem); }
 .pictos { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 0; max-width: 560px; }
 .picto { width: 28px; height: 28px; fill: none; stroke: var(--serie-1); stroke-width: 1.6; }
 .picto .plein { fill: var(--serie-2); stroke: none; }

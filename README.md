@@ -24,6 +24,7 @@ Les trajets sont calculés par Google Maps Platform (API Routes) le 26 septembre
 - **Itinéraire du dossier.** La règle ne dit pas par où rejoindre la RN104. Google prend le trajet le plus rapide qui passe par le point imposé, dans le sens imposé, même si cela suppose un demi-tour sur la RN104.
 - **Prévisions.** Les temps prévus restent à valider par des relevés en direct.
 - **Liens « Vérifier ».** Ils transmettent les points de passage à Google Maps sous forme d'étapes, sans sens de circulation : un petit écart avec la mesure reste possible.
+- **Barges.** Le trajet en barge (18 km par tonne) s'ajoute à celui des camions : c'est la « distance de la chaîne complète ». Le CO₂ des pousseurs est calculé par kilomètre de convoi, comme pour les camions, avec une fourchette car la puissance des pousseurs n'est pas publiée. Les facteurs actuels de l'ADEME, par tonne-kilomètre ([étude ADEME et VNF, 2019](https://entreprises-fluviales.fr/wp-content/uploads/2020/11/Rapport_efficacite_transport_fluvial_2019_ADEME.pdf)), supposent des convois bien plus chargés que 500 t de CSR et sous-estimeraient nettement. Un pousseur par barge ; pousseurs de manœuvre et manutention non comptés.
 - **Gazole, CO₂ et coûts.** Ce sont des moyennes nationales appliquées à nos kilomètres. Les camions à fond mouvant prévus consomment sans doute davantage, et le prix du gazole a fortement augmenté en 2026 : ces chiffres sont prudents.
 
 Le détail est dans [`collecte/donnees/README.md`](collecte/donnees/README.md).
@@ -38,6 +39,8 @@ Les kilomètres et les heures de conduite en plus sont convertis avec quelques c
 | CO₂ = litres × facteur d'émission | 3,1 kg CO₂e par litre, de l'extraction du pétrole au pot d'échappement | ADEME, [Base Carbone](https://data.ademe.fr/datasets/base-carboner), élément 25775 |
 | Gazole en euros = litres × prix | 1,18 € par litre hors TVA, décembre 2025 | CNR, même référentiel |
 | Coût de transport = km × coût kilométrique + heures × coût horaire | 0,496 €/km et 23,60 €/h, hors péages | CNR, même référentiel |
+| Barges par an = tonnage ÷ 500 t ; km de pousseur = barges × 36 km | Une barge de 2 500 m³ de CSR à 0,20 t/m³ ; 36 km aller et retour entre Ris-Orangis et Vitry | Dossier de concertation, p. 56 |
+| CO₂ des barges = km de pousseur × consommation × 3,17 kg CO₂e/L | 9,40 à 14,40 L de gazole non routier par km de convoi (pousseur de moins de 590 kW ou de 590 à 879 kW) | Ministère, [« Information GES des prestations de transport »](https://www.ecologie.gouv.fr/sites/default/files/publications/Info%20GES_Guide%20m%C3%A9thodo.pdf#page=52), 2018, tableaux 11 et 12 |
 
 Comparaisons de la page d'accueil : tour de la Terre à l'équateur de 40 075 km (rayon du WGS 84, [NGA](https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs84)) ; durée légale du travail de 1 607 heures par an ([service-public.gouv.fr](https://www.service-public.gouv.fr/particuliers/vosdroits/F1911)) ; aller-retour Paris–New York en avion à 2,06 t CO₂e par passager ([ADEME, Impact CO₂](https://impactco2.fr/outils/caspratiques/avion-pny)).
 
