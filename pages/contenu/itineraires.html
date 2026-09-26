@@ -1,10 +1,21 @@
 <!--
 titre: Les règles des itinéraires · Le trajet du combustible
-description: Thermo-sur-Seine : les itinéraires imposés aux camions vers Ris-Orangis, leurs sources et leur traduction en points de passage.
+description: Thermo-sur-Seine : les itinéraires des camions vers Ris-Orangis et vers Vitry, scénario par scénario, sur une carte, avec leurs règles et leurs sources.
+options: leaflet
 -->
     <section id="itineraires" class="conteneur bloc">
       <h1>Les règles des itinéraires</h1>
-      <p class="intro">Le trajet vers Ris-Orangis est mesuré de trois façons, pour distinguer ce que le maître d'ouvrage impose de ce qu'il décrit seulement. Chaque règle est traduite en points de passage obligés, transmis à Google avec leur sens de circulation, puis contrôlée sur les tracés obtenus.</p>
-      <div class="regles" id="regles-itineraires"></div>
+      <p class="intro">Le trajet vers Ris-Orangis est mesuré de trois façons, et comparé au trajet vers Vitry. Choisissez un scénario et un point de départ : la carte montre le trajet et ses points de passage obligés.</p>
+      <div class="controles" role="group" aria-label="Scénario" id="itin-scenarios"></div>
+      <div class="filtres">
+        <label>Point de départ
+          <select id="itin-origine"></select>
+        </label>
+      </div>
+      <div class="itin-disposition">
+        <div class="itin-carte" id="itin-carte" role="region" aria-label="Carte du trajet du scénario choisi"></div>
+        <aside class="panneau itin-panneau" id="itin-panneau" aria-live="polite"></aside>
+      </div>
+      <section class="itin-comparaison" id="itin-comparaison" aria-label="Comparaison des scénarios"></section>
       <p class="note" id="regles-opposable"></p>
     </section>

@@ -7,6 +7,8 @@ const HEURES = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 const CHARGE_DOSSIER = 2500 * 0.20 / 28;             // t par camion : barge de 2 500 m³ × 0,20 t/m³ ÷ 28 camions
 const REFERENCE_NORD = 'IDF1';                       // Val'Pôle Plessis-Gassot (95)
 const MOINS = '−';
+// Fond de carte IGN Plan (Géoplateforme, sans clé ni compte)
+const TUILES_IGN = 'https://data.geopf.fr/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
 
 const nf1 = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
 const nf0 = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
@@ -209,7 +211,7 @@ function urlGoogleMaps(orig, dest, passages) {
   function carteDuTrajet() {
     const carte = L.map('carte-projet', { scrollWheelZoom: false, zoomSnap: 0.25 });
     carte.attributionControl.setPrefix(false);   // Leaflet est crédité en pied de page
-    L.tileLayer('https://data.geopf.fr/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {
+    L.tileLayer(TUILES_IGN, {
       attribution: '© <a href="https://www.ign.fr/">IGN</a> · Seine : BD TOPO · itinéraire : Google', maxZoom: 18 }).addTo(carte);
     const icone = (html, taille = [0, 0], ancre) => L.divIcon({ className: '', html, iconSize: taille, iconAnchor: ancre });
     const poser = (latlng, html, taille, ancre) => L.marker(latlng, { icon: icone(html, taille, ancre), interactive: false, keyboard: false }).addTo(carte);
@@ -714,43 +716,156 @@ function urlGoogleMaps(orig, dest, passages) {
   function itineraires() {
     const citer = f => el('div', { class: 'regle-citation' }, el('blockquote', {}, `« ${f.citation} »`),
       el('div', { class: 'conf-source' }, '— ', lien(f.source)));
-    const pointPassage = k => [el('strong', {}, PASSAGES[k].long), ` (${PP[k].lat}, ${PP[k].lon}), `,
-      el('a', { href: `carte.html#passage=${k}` }, 'voir sur la carte')];
+    const pointPassage = k => [el('strong', {}, PASSAGES[k].long), ` (${PP[k].lat}, ${PP[k].lon})`];
     const rapideHorsD310 = D.points.filter(p => p.conforme.rapide && p.conforme.rapide !== 'oui').length;
     const entreeA6 = parId.E_A6;
-    const regles = [
-      { titre: 'Vers Vitry', couleur: '--serie-1', badge: 'aucune règle',
-        lignes: [
+    const brancheDossier = p => p.branche_dossier || 'impose_est';
+
+    // Les quatre scénarios : trajet, distance, points de passage obligés, règle en une phrase, et le détail (replié)
+    const SCENARIOS = [
+      { cle: 'vitry', titre: 'Vers Vitry', couleur: '--serie-1', badge: 'aucune règle',
+        trace: p => p.traces.vitry, km: p => p.km.vitry, passages: () => [], controle: () => null,
+        regle: 'Aucune règle : le trajet le plus rapide jusqu\'à l\'entrée du site EDF. C\'est la référence pour mesurer le détour.',
+        detail: [
           ['La règle', 'Aucune. Le dossier ne prévoit pas de livraison par camion à Vitry : il n\'y définit donc pas d\'itinéraire.'],
           ['Dans le calcul', 'Le trajet le plus rapide selon Google, sans point de passage, jusqu\'à l\'entrée du site EDF rue des Fusillés (', lien(pageDuDossier(50)), ').']] },
-      { titre: 'Vers Ris-Orangis, le plus rapide', couleur: null, badge: 'non autorisé',
-        lignes: [
+      { cle: 'rapide', titre: 'Le plus rapide', couleur: '--encre-attenuee', badge: 'non autorisé',
+        trace: p => p.traces.rapide, km: p => p.km.rapide, passages: () => [], controle: p => p.conforme.rapide,
+        regle: 'Le trajet que Google choisirait sans contrainte vers Ris-Orangis. Il n\'est pas autorisé : il ne respecte pas l\'accès final imposé.',
+        detail: [
           ['La règle', 'Aucune : c\'est le trajet que Google choisirait sans contrainte.'],
           ['Pourquoi il n\'est pas retenu', `Il ne respecte pas l'accès final décrit par le maître d'ouvrage : sur les ${D.points.length} origines détaillées, il ne passe pas par la D310 dans ${rapideHorsD310} cas.`],
           ['Dans le calcul', 'Il sert seulement de repère. Il figure dans le détail de chaque point et dans les fichiers téléchargeables.']] },
-      { titre: 'Accès final imposé', couleur: '--serie-2', badge: 'hypothèse la plus favorable au projet',
-        lignes: [
+      { cle: 'acces', titre: 'Accès final imposé', couleur: '--serie-2', badge: 'hypothèse la plus favorable au projet',
+        trace: p => p.traces.acces_impose, km: p => p.km.acces_impose, passages: () => ['ACCES_D310'], controle: p => p.conforme.acces_impose,
+        regle: 'Arriver par l\'A6 puis la D310, sans traverser Ris-Orangis. Avant la D310, le trajet est libre.',
+        detail: [
           ['La règle', 'Sur le trajet terminal : l\'A6, puis la D310 jusqu\'à la RN7 à Grigny, moins de 1 km sur la RN7, puis le Chemin Latéral, sans traverser Ris-Orangis.'],
           ['Les sources', citer(F.acces_final), citer(F.trajet_terminal), citer(F.traversee)],
           ['Dans le calcul', 'Un point de passage obligé : ', pointPassage('ACCES_D310'), `. Avant ce point, Google choisit librement le trajet le plus rapide. Chaque tracé obtenu est contrôlé : il passe à moins de ${M.controle.tolerance_m} m de ce point.`],
           ['Pourquoi c\'est l\'hypothèse la plus favorable au projet', 'Elle n\'impose pas la RN104. Chaque camion rejoint l\'A6 par le chemin le plus rapide, y compris par l\'A6 depuis Paris, que la carte des itinéraires du dossier trace aussi (', lien(F.carte_itineraires.source), ').']] },
-      { titre: 'Itinéraire du dossier', couleur: '--serie-3', badge: 'texte du dossier',
-        lignes: [
+      { cle: 'dossier', titre: 'Itinéraire du dossier', couleur: '--serie-3', badge: 'texte du dossier',
+        trace: p => p.traces[brancheDossier(p)], km: p => p.km.dossier, controle: p => p.conforme[brancheDossier(p)],
+        passages: p => [brancheDossier(p) === 'impose_ouest' ? 'N104_OUEST' : 'N104_EST', 'ACCES_D310'],
+        regle: 'Passer par la RN104 (la Francilienne), puis suivre l\'accès final imposé. La branche de la RN104, est ou ouest, est la plus courte des deux.',
+        detail: [
           ['La règle', 'Passer par la RN104 (la Francilienne), puis suivre l\'accès final imposé : A6, D310, RN7 et Chemin Latéral.'],
           ['Les sources', citer(F.rn104), citer(F.trajet_terminal)],
           ['Dans le calcul', 'Deux points de passage obligés. D\'abord la RN104, soit ', pointPassage('N104_EST'), ', soit ', pointPassage('N104_OUEST'),
             ' ; puis le point de la D310. Avant la RN104, Google choisit librement le trajet le plus rapide. Les deux branches sont mesurées, et la plus courte est retenue.'],
           ['Limite', `La règle ne dit pas par où rejoindre la RN104. Google prend le trajet le plus rapide qui passe par le point imposé, dans le sens imposé, même si cela suppose un demi-tour sur la RN104 ; c'est le cas pour des origines situées au nord comme au sud. Depuis l'entrée de l'A6 en Île-de-France (Égreville), le détour atteint ainsi ${signe1(entreeA6.km.dossier - entreeA6.km.acces_impose)} km par rapport à l'accès final imposé. C'est pourquoi le site retient l'accès final imposé comme hypothèse principale.`]] },
     ];
-    document.getElementById('regles-itineraires').replaceChildren(...regles.map(r => el('article', { class: 'regle' },
-      el('div', { class: 'regle-tete' },
-        el('span', { class: r.couleur ? 'cle-ligne' : 'cle-ligne cle-neutre', style: r.couleur ? `background:var(${r.couleur})` : null }),
-        el('h2', {}, r.titre), el('span', { class: 'badge' }, r.badge)),
-      el('dl', { class: 'regle-liste' }, r.lignes.map(([titre, ...contenu]) => [el('dt', {}, titre), el('dd', {}, contenu)])))));
+    const parCle = Object.fromEntries(SCENARIOS.map(s => [s.cle, s]));
+
+    // État, lu et écrit dans l'adresse (itineraires.html#scenario=acces&point=IDF1) pour pouvoir partager une vue
+    const lireAdresse = () => Object.fromEntries(new URLSearchParams(location.hash.slice(1)));
+    const a = lireAdresse();
+    const etat = { scenario: parCle[a.scenario] ? a.scenario : 'acces', point: parId[a.point] ? a.point : REFERENCE_NORD };
+
+    // Choix du scénario et du point de départ
+    const boutons = SCENARIOS.map(s => el('button', { type: 'button', class: 'segment', 'aria-pressed': 'false', onclick: () => choisir({ scenario: s.cle }) },
+      el('span', { class: 'cle-ligne', style: `background:var(${s.couleur})` }), s.titre));
+    document.getElementById('itin-scenarios').replaceChildren(el('span', { class: 'controles-label' }, 'Scénario :'), ...boutons);
+    const choixOrigine = document.getElementById('itin-origine');
+    const groupes = [['Producteurs de CSR', p => categorie(p) === 'site-confirme'], ['Centres de tri (possibles)', p => categorie(p) === 'site-possible'],
+      ['Entrées d\'autoroute en Île-de-France', p => categorie(p) === 'entree']];
+    choixOrigine.replaceChildren(...groupes.map(([titre, test]) => el('optgroup', { label: titre },
+      D.points.filter(test).sort((x, y) => x.nom.localeCompare(y.nom, 'fr')).map(p => el('option', { value: p.id }, p.nom)))));
+    choixOrigine.addEventListener('input', () => choisir({ point: choixOrigine.value }));
+
+    // Carte : fond IGN, étiquettes fixes (pas d'infobulle), trajet du scénario tracé progressivement
+    let carte = null, calque = null;
+    if (window.L) {
+      carte = L.map('itin-carte', { scrollWheelZoom: false, zoomSnap: 0.25 });
+      carte.attributionControl.setPrefix(false);
+      L.tileLayer(TUILES_IGN, { attribution: '© <a href="https://www.ign.fr/">IGN</a> · itinéraires : Google', maxZoom: 18 }).addTo(carte);
+      calque = L.layerGroup().addTo(carte);
+    } else {
+      document.getElementById('itin-carte').replaceChildren(el('p', { class: 'carte-indisponible' }, 'La carte n\'a pas pu être chargée.'));
+    }
+    const poser = (latlng, html, taille = [0, 0], ancre) =>
+      L.marker(latlng, { icon: L.divIcon({ className: '', html, iconSize: taille, iconAnchor: ancre }), interactive: false, keyboard: false }).addTo(calque);
+    const animer = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let animation = null;
+
+    function dessiner(s, p) {
+      calque.clearLayers();
+      if (animation) cancelAnimationFrame(animation);
+      // Les autres scénarios en gris clair, pour comparer
+      SCENARIOS.filter(x => x !== s).forEach(x => L.polyline(decoder(x.trace(p)), { color: cssVar('--base'), weight: 3, opacity: 0.9, interactive: false }).addTo(calque));
+      const pts = decoder(s.trace(p));
+      const liseré = L.polyline([], { color: cssVar('--surface'), weight: 9, opacity: 0.95, interactive: false }).addTo(calque);
+      const trait = L.polyline([], { color: cssVar(s.couleur), weight: 5, lineJoin: 'round', lineCap: 'round', interactive: false }).addTo(calque);
+      // Départ, arrivées et points de passage obligés du scénario
+      poser([p.lat, p.lon], `<div class="marqueur ${categorie(p)}"></div>`, [12, 12], [6, 6]);
+      poser([p.lat, p.lon], `<span class="etiquette-carte">${nomCourt(p)}</span>`);
+      poser([V.lat, V.lon], '<span class="site-projet site-vitry"></span>', [14, 14], [7, 7]);
+      poser([V.lat, V.lon], '<span class="etiquette-carte"><strong>Vitry</strong></span>');
+      poser([R.lat, R.lon], '<span class="site-projet site-ris"></span>', [14, 14], [7, 7]);
+      poser([R.lat, R.lon], '<span class="etiquette-carte etiquette-carte-gauche"><strong>Ris-Orangis</strong></span>');
+      s.passages(p).forEach(k => poser([PP[k].lat, PP[k].lon], `<span class="passage passage-oblige"><span class="passage-point"></span>${PASSAGES[k].court} (obligatoire)</span>`));
+      carte.fitBounds(L.latLngBounds([...pts, [V.lat, V.lon], [R.lat, R.lon], ...s.passages(p).map(k => [PP[k].lat, PP[k].lon])]),
+        { paddingTopLeft: [30, 30], paddingBottomRight: [30, 40] });
+      // Tracé progressif, en proportion de la distance parcourue
+      const cum = pts.reduce((acc, q, i) => (acc.push(i ? acc[i - 1] + carte.distance(pts[i - 1], q) : 0), acc), []);
+      const jusqua = t => { const c = t * cum[cum.length - 1]; const i = cum.findIndex(x => x >= c); return i <= 0 ? pts.slice(0, 1) : pts.slice(0, i + 1); };
+      if (!animer) { liseré.setLatLngs(pts); trait.setLatLngs(pts); return; }
+      const debut = performance.now(), duree = 1400;
+      const pas = maintenant => {
+        const t = Math.min(1, (maintenant - debut) / duree), e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+        const trace = t < 1 ? jusqua(e) : pts;
+        liseré.setLatLngs(trace); trait.setLatLngs(trace);
+        if (t < 1) animation = requestAnimationFrame(pas);
+      };
+      animation = requestAnimationFrame(pas);
+    }
+
+    // Panneau : la distance, la règle en une phrase, les points de passage, le contrôle, puis le détail replié
+    function panneau(s, p) {
+      const km = s.km(p), controle = s.controle(p);
+      const passages = s.passages(p);
+      document.getElementById('itin-panneau').replaceChildren(
+        el('div', { class: 'regle-tete' }, el('span', { class: 'cle-ligne', style: `background:var(${s.couleur})` }), el('h2', {}, s.titre), el('span', { class: 'badge' }, s.badge)),
+        el('p', { class: 'itin-depart' }, `Depuis ${p.nom}`),
+        el('p', { class: 'encart-valeur' }, `${fmt1(km)} km`),
+        el('p', { class: 'detail-sous' }, s.cle === 'vitry' ? 'trajet de référence' : `${signe1(km - p.km.vitry)} km par rapport à la livraison à Vitry`),
+        el('p', { class: 'itin-regle' }, s.regle),
+        el('p', { class: 'itin-ligne' }, el('strong', {}, 'Points de passage obligés : '), passages.length ? passages.map((k, i) => [i ? ', puis ' : '', PASSAGES[k].long]) : 'aucun'),
+        controle ? el('p', { class: 'itin-ligne' }, el('strong', {}, 'Passage par la D310 : '),
+          controle === 'oui' ? 'oui, vérifié sur le tracé' : `non : le tracé évite la D310 (il passe au plus près à ${fmt0(+controle.replace(/\D/g, ''))} m du point de contrôle)`) : null,
+        el('details', { class: 'sources-repliees' }, el('summary', {}, 'La règle en détail, ses sources et le calcul'),
+          el('dl', { class: 'regle-liste' }, s.detail.map(([titre, ...contenu]) => [el('dt', {}, titre), el('dd', {}, contenu)]))));
+    }
+
+    // Comparaison des quatre scénarios pour ce point de départ : une barre par scénario, cliquable
+    function comparaison(s, p) {
+      const max = Math.max(...SCENARIOS.map(x => x.km(p)));
+      document.getElementById('itin-comparaison').replaceChildren(
+        el('h2', {}, `Les quatre scénarios depuis ${nomCourt(p)}`),
+        el('div', { class: 'barres' }, SCENARIOS.map(x => el('button', { type: 'button', class: 'barre barre-bouton', 'aria-pressed': String(x === s), onclick: () => choisir({ scenario: x.cle }) },
+          el('span', { class: 'barre-libelle' }, x.titre, el('strong', {}, `${fmt1(x.km(p))} km`)),
+          el('span', { class: 'barre-piste' }, el('span', { class: 'barre-remplie', style: `width:${(100 * x.km(p) / max).toFixed(1)}%;background:var(${x.couleur})` }))))));
+    }
+
+    function choisir(changement, depuisAdresse = false) {
+      Object.assign(etat, changement);
+      const s = parCle[etat.scenario], p = parId[etat.point];
+      boutons.forEach((b, i) => b.setAttribute('aria-pressed', String(SCENARIOS[i] === s)));
+      choixOrigine.value = p.id;
+      if (carte) dessiner(s, p);
+      panneau(s, p);
+      comparaison(s, p);
+      if (!depuisAdresse) history.replaceState(null, '', `#scenario=${s.cle}&point=${p.id}`);
+    }
+    choisir({}, true);
+    window.addEventListener('hashchange', () => { const h = lireAdresse(); choisir({ scenario: parCle[h.scenario] ? h.scenario : etat.scenario, point: parId[h.point] ? h.point : etat.point }, true); });
+
     document.getElementById('regles-opposable').replaceChildren(
       'Pour le maître d\'ouvrage, c\'est leur inscription dans l\'arrêté préfectoral qui rendrait ces itinéraires opposables : « ',
-      F.opposable.citation, ' » (', lien(F.opposable.source), '). Pour les trois itinéraires, Google calcule le trajet jusqu\'à l\'entrée du Chemin Latéral ; les ',
+      F.opposable.citation, ' » (', lien(F.opposable.source), '). Pour les trois itinéraires vers Ris-Orangis, Google calcule le trajet jusqu\'à l\'entrée du Chemin Latéral ; les ',
       forfaitRis, ' restants jusqu\'au portail des camions sont ajoutés à chaque distance (', lien(pageDuDossier(55)), ').');
+    // Recolorer les tracés si le thème change
+    return () => choisir({}, true);
   }
 
   /* ---------------- La carte du détour ---------------- */
@@ -876,7 +991,7 @@ function urlGoogleMaps(orig, dest, passages) {
         return;
       }
       carte = L.map('map', { preferCanvas: true, minZoom: 6, maxZoom: 16 }).setView([48.72, 2.42], 9);
-      L.tileLayer('https://data.geopf.fr/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {
+      L.tileLayer(TUILES_IGN, {
         attribution: '© <a href="https://www.ign.fr/">IGN</a> – Géoplateforme · itinéraires : Google', maxZoom: 18 }).addTo(carte);
 
       const calqueGrille = L.layerGroup().addTo(carte);

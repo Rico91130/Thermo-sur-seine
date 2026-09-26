@@ -383,10 +383,23 @@ blockquote.bulle-texte { font-style: normal; }
   .message-recu .sms-frappe { left: 32px; }
 }
 
-/* Règles des itinéraires */
-.regles { display: grid; grid-template-columns: 1fr; gap: 16px; }
-@media (min-width: 800px) { .regles { grid-template-columns: 1fr 1fr; } }
-.regle { background: var(--surface); border: 1px solid var(--bordure); border-radius: 12px; padding: 18px; }
+/* Règles des itinéraires : un scénario à la fois, sur une carte, avec son panneau (app.js, fonction itineraires) */
+.itin-disposition { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 980px) { .itin-disposition { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); align-items: start; } }
+.itin-carte { height: min(62vh, 560px); min-height: 360px; border-radius: 12px; border: 1px solid var(--bordure); background: var(--surface); }
+.itin-disposition > .itin-carte, .itin-disposition > .itin-panneau { grid-area: auto; min-width: 0; }   /* .panneau (page Carte) nomme sa zone de grille */
+.itin-depart { margin: 10px 0 0; color: var(--encre-2); font-size: 0.88rem; }
+.itin-regle { margin: 12px 0 8px; }
+.itin-ligne { margin: 6px 0; font-size: 0.9rem; }
+.itin-panneau .sources-repliees { margin-top: 14px; }
+.itin-comparaison { margin-top: 28px; max-width: 760px; }
+.itin-comparaison h2 { font-size: 1.1rem; }
+.barre-bouton { width: 100%; font: inherit; color: inherit; text-align: left; background: none; border: 0; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
+.barre-bouton:hover { background: var(--grille); }
+.barre-bouton[aria-pressed="true"] { background: var(--accent-fond); }
+.segment .cle-ligne { width: 14px; }
+.passage-oblige { font-size: 0.8rem; }
+.conf-source { font-size: 0.85rem; }
 .regle-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .regle-tete h2 { margin: 0; font-size: 1.1rem; }
 .regle-tete .cle-ligne { width: 22px; height: 4px; margin: 0; }
