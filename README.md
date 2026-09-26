@@ -1,8 +1,8 @@
 # Thermo-sur-Seine : le trajet du combustible
 
-Site citoyen qui mesure ce que coûte, en kilomètres et en temps, le choix de livrer le combustible de la future chaufferie de Vitry-sur-Seine (projet Thermo-sur-Seine) par camion à **Ris-Orangis**, plutôt que directement à **Vitry**.
+Site citoyen qui présente le projet Thermo-sur-Seine et mesure ce que coûte, en kilomètres, en temps et en CO₂, le choix de livrer le combustible de la future chaufferie de Vitry-sur-Seine par camion à **Ris-Orangis**, puis par barge sur la Seine, plutôt que directement à **Vitry**.
 
-- **Site** : huit pages statiques publiées avec GitHub Pages : `presentation.html` (le projet en bref et son calendrier), `index.html` (« Le grand détour » : le détour en chiffres), `dossier.html` (questions / réponses : questions du public, réponses du maître d'ouvrage et faits, en conversation de groupe), `itineraires.html`, `carte.html`, `heures.html`, `annee.html` et `methode.html`. Elles partagent `style.css` et `app.js`, qui n'exécute que le code de la page affichée (`<body data-page="…">`). Ces pages HTML sont **générées** : voir « Modifier les pages » ci-dessous.
+- **Site** : huit pages statiques publiées avec GitHub Pages : `presentation.html` (le projet en bref : diaporama, carte du trajet du combustible, calendrier), `index.html` (« Le grand détour » : le détour des camions puis des barges, en chiffres), `dossier.html` (« Questions / réponses » : questions du public, réponses du maître d'ouvrage et faits, en conversation de groupe), `itineraires.html` (les règles des itinéraires, scénario par scénario sur une carte), `carte.html` (le détour pour toutes les origines possibles), `heures.html` (heure par heure), `annee.html` (simulateur) et `methode.html` (méthode et sources). Elles partagent `style.css` et `app.js`, qui n'exécute que le code de la page affichée (`<body data-page="…">`). Ces pages HTML sont **générées** : voir « Modifier les pages » ci-dessous.
 - **Données et code de la mesure** : dossier [`collecte/`](collecte/).
 - **Principe** : chaque chiffre renvoie à sa source (page du dossier de concertation, question publiée sur la plateforme de la concertation), et chaque mesure peut être refaite par n'importe qui.
 
@@ -90,7 +90,7 @@ python -m http.server 8000
 
 Le fond de carte vient de l'IGN (Géoplateforme) et ne demande aucune clé. Le site n'appelle jamais Google quand on le consulte. Les liens « Vérifier » ouvrent simplement Google Maps avec le même trajet.
 
-La page d'accueil est un récit à faire défiler : chaque chiffre s'anime quand il entre dans l'écran, et un petit camion descend la page. La page de présentation est un diaporama horizontal (flèches, points, touches ← → ou balayage au doigt), avec une barge qui avance sur la Seine d'une diapositive à l'autre. Les animations utilisent GSAP (chargé depuis jsdelivr). Sans GSAP, ou si le navigateur demande de réduire les animations, toutes les valeurs s'affichent directement.
+La page d'accueil est un récit à faire défiler : chaque chiffre s'anime quand il entre dans l'écran, et un petit camion descend la page, puis laisse la place à une péniche sur la Seine à partir de l'étape « Et la barge ? ». La page de présentation est un diaporama horizontal (flèches, points, touches ← → ou balayage au doigt), avec une barge qui avance sur la Seine d'une diapositive à l'autre. Les animations utilisent GSAP (chargé depuis jsdelivr). Sans GSAP, ou si le navigateur demande de réduire les animations, toutes les valeurs s'affichent directement.
 
 ## Signaler une erreur
 
@@ -101,5 +101,5 @@ Ouvrez un [ticket](https://github.com/Rico91130/Thermo-sur-seine/issues). Toute 
 - **Indépendance.** Site citoyen indépendant, sans lien avec la SEMOP, la Ville de Paris ou Google.
 - **Éditeur.** Éditeur non professionnel ayant choisi de rester anonyme (article 6-III-2 de la loi n° 2004-575 pour la confiance dans l'économie numérique).
 - **Hébergeur.** GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.
-- **Crédits.** Fond de carte © IGN – Géoplateforme. Tracé de la Seine : IGN, BD TOPO, Licence Ouverte Etalab 2.0 ([`collecte/seine_ign.py`](collecte/seine_ign.py)). Itinéraires : Google Maps Platform. Frontières et trait de côte : Natural Earth (domaine public). Animations de la page d'accueil : GSAP, ScrollTrigger et MotionPathPlugin (licence « Standard no-charge », chargés depuis jsdelivr). Constantes de conversion : CNR, ADEME, NGA, service-public.gouv.fr (voir plus haut).
+- **Crédits.** Fond de carte © IGN – Géoplateforme. Tracé de la Seine : IGN, BD TOPO, Licence Ouverte Etalab 2.0 ([`collecte/seine_ign.py`](collecte/seine_ign.py)). Itinéraires : Google Maps Platform. Frontières et trait de côte : Natural Earth (domaine public). Cartes : Leaflet. Animations de l'accueil et de la présentation : GSAP, ScrollTrigger et MotionPathPlugin (licence « Standard no-charge », chargés depuis jsdelivr). Constantes de conversion : CNR, ADEME, NGA, service-public.gouv.fr (voir plus haut).
 - **Licence.** Le code est sous licence MIT ([`LICENSE`](LICENSE)). Les données et les textes produits pour ce projet sont sous licence CC BY 4.0 ([`LICENCE-DONNEES.md`](LICENCE-DONNEES.md)). Les résultats bruts de Google, le fond de carte IGN et les citations restent soumis aux droits de leurs auteurs.
