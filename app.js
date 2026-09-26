@@ -248,6 +248,7 @@ function urlGoogleMaps(orig, dest, passages) {
     const progression = el('div', { class: 'recit-progression', 'aria-hidden': 'true' });
     document.body.append(progression);
     G.to(progression, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: '#essentiel', start: 'top top', end: 'bottom bottom', scrub: 0.3 } });
+    if (window.MotionPathPlugin) routeDuCamion(G, ST);
 
     // Ouverture
     G.from('.etape-ouverture .etape-contenu > *', { y: 30, opacity: 0, duration: 0.9, stagger: 0.15, ease: 'power3.out' });
@@ -265,6 +266,73 @@ function urlGoogleMaps(orig, dest, passages) {
       if (pictos.length) tl.from(pictos, { scale: 0, opacity: 0, duration: 0.35, ease: 'back.out(2.5)', stagger: duree / pictos.length }, 0.3);
       const barres = etape.querySelectorAll('.barre-remplie');
       if (barres.length) tl.from(barres, { scaleX: 0, transformOrigin: 'left center', duration: 1.3, stagger: 0.3, ease: 'power2.out' }, 0.3);
+    });
+  }
+
+  // Un petit camion (vu de dessus) descend le récit au rythme du défilement.
+  // Grand écran : il suit une route sinueuse dans la marge de droite et reste à hauteur du milieu de l'écran.
+  // Petit écran : pas de place à côté du texte, il roule le long de la barre de progression, en haut.
+  function routeDuCamion(G, ST) {
+    G.registerPlugin(window.MotionPathPlugin);
+    const ns = 'http://www.w3.org/2000/svg', recit = document.getElementById('essentiel');
+    const svgEl = (tag, attrs, parent) => {
+      const n = document.createElementNS(ns, tag);
+      for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+      if (parent) parent.append(n);
+      return n;
+    };
+    // Camion vu de dessus, orienté vers la droite (x positif = avant) : remorque, cabine, pare-brise
+    const camion = (parent, echelle = 1) => {
+      const g = svgEl('g', { transform: `scale(${echelle})` }, svgEl('g', { class: 'camion' }, parent));
+      svgEl('rect', { x: -19, y: -7, width: 27, height: 14, rx: 2, class: 'camion-remorque' }, g);
+      svgEl('rect', { x: 9, y: -6, width: 10, height: 12, rx: 2.5, class: 'camion-cabine' }, g);
+      svgEl('rect', { x: 15.5, y: -4.5, width: 2, height: 9, rx: 1, class: 'camion-parebrise' }, g);
+      return g.parentNode;   // groupe animé (le groupe intérieur porte l'échelle)
+    };
+    const mm = G.matchMedia();
+
+    mm.add('(min-width: 1000px)', () => {
+      const svg = svgEl('svg', { class: 'route', 'aria-hidden': 'true' });
+      const chaussee = svgEl('path', { class: 'route-chaussee' }, svg);
+      const parcourue = svgEl('path', { class: 'route-parcourue' }, svg);
+      const ligne = svgEl('path', { class: 'route-ligne' }, svg);
+      const vehicule = camion(svg, 1.5);
+      recit.append(svg);
+      let longueur = 0;
+      // Géométrie recalculée à chaque rafraîchissement (hauteur du récit, largeur de la marge)
+      const geometrie = () => {
+        const r = recit.getBoundingClientRect(), c = recit.querySelector('.etape-contenu').getBoundingClientRect();
+        const gauche = Math.round(c.right - r.left + 40), largeur = Math.max(80, Math.min(220, r.width - gauche - 24)), H = recit.offsetHeight;
+        Object.assign(svg.style, { left: `${gauche}px`, width: `${largeur}px`, height: `${H}px` });
+        svg.setAttribute('viewBox', `0 0 ${largeur} ${H}`);
+        // Virages alternés à gauche et à droite, un tous les ~420 px
+        const n = Math.max(2, Math.round(H / 420)), pas = H / n, milieu = largeur / 2, a = milieu - 20;
+        let d = `M ${milieu} 0`;
+        for (let i = 0; i < n; i++) {
+          const x = milieu + (i % 2 ? -a : a), y = i * pas;
+          d += ` C ${x} ${y + pas * 0.25}, ${x} ${y + pas * 0.75}, ${milieu} ${y + pas}`;
+        }
+        [chaussee, parcourue, ligne].forEach(p => p.setAttribute('d', d));
+        longueur = chaussee.getTotalLength();
+        parcourue.style.strokeDasharray = `${longueur}`;
+      };
+      geometrie();
+      ST.addEventListener('refreshInit', geometrie);
+      // Le milieu de l'écran parcourt le récit de haut en bas : le camion y reste, à la même hauteur
+      const defilement = { trigger: recit, start: 'top center', end: 'bottom center', scrub: 0.6, invalidateOnRefresh: true };
+      G.to(vehicule, { ease: 'none', scrollTrigger: defilement,
+        motionPath: { path: chaussee, align: chaussee, alignOrigin: [0.5, 0.5], autoRotate: true } });
+      G.fromTo(parcourue, { strokeDashoffset: () => longueur }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { ...defilement } });
+      return () => { ST.removeEventListener('refreshInit', geometrie); svg.remove(); };
+    });
+
+    mm.add('(max-width: 999px)', () => {
+      const svg = svgEl('svg', { class: 'camion-barre', viewBox: '-20 -10 40 20', 'aria-hidden': 'true' });
+      camion(svg);
+      document.body.append(svg);
+      G.fromTo(svg, { x: 0 }, { x: () => window.innerWidth - 34, ease: 'none', scrollTrigger: {
+        trigger: recit, start: 'top top', end: 'bottom bottom', scrub: 0.3, invalidateOnRefresh: true } });
+      return () => svg.remove();
     });
   }
 

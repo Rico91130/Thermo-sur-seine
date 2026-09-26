@@ -40,7 +40,8 @@ OPTIONS = {
     # Animations du récit de la page d'accueil (GSAP, licence « Standard no-charge », https://gsap.com/standard-license)
     "recit": ("",
               '  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>\n'
-              '  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>\n'),
+              '  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>\n'
+              '  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/MotionPathPlugin.min.js"></script>\n'),
     "redirection": ("""  <script>
     // Anciennes adresses de la version en une seule page (#carte, #point=IDF1…) : redirection vers la bonne page
     (function () {
