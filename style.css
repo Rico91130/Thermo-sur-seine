@@ -293,8 +293,10 @@ main > .bloc:first-child { padding-top: 32px; }
 .tuile-note { margin: 0; color: var(--encre-attenuee); font-size: 0.85rem; }
 .encadre { padding: 14px 18px; margin: 16px 0 0; }
 
-/* Le dossier et les données : conversation de groupe (app.js, fonctions confrontation et animerConversation) */
+/* Questions / réponses : conversation de groupe (app.js, fonctions confrontation et animerConversation) */
+#confrontation h1 { max-width: 780px; margin-left: auto; margin-right: auto; }   /* titre aligné sur la fenêtre centrée */
 .sms {
+  margin: 0 auto;   /* fenêtre de discussion centrée sur la page */
   max-width: 780px; padding: 0 14px 20px; background: var(--wa-fond); color: var(--wa-texte);
   border: 1px solid var(--bordure); border-radius: 24px; overflow: hidden;
 }
@@ -336,6 +338,7 @@ blockquote.bulle-texte { font-style: normal; }
 .bulle-meta { display: block; margin-top: 3px; text-align: right; font-size: 0.74rem; color: var(--wa-meta); }
 .bulle-meta a { color: var(--wa-meta); }
 .message-systeme { align-self: center; max-width: min(92%, 520px); }
+.sms > .message-systeme { margin: 8px auto 0; }   /* notice d'en-tête, hors des fils */
 .bulle-systeme {
   margin: 6px 0; padding: 6px 12px; border-radius: 8px; text-align: center; font-size: 0.82rem;
   background: var(--wa-systeme); color: var(--wa-systeme-texte);

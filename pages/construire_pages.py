@@ -26,7 +26,7 @@ RACINE = os.path.dirname(ICI)
 MENU = [
     ("presentation", "presentation.html", "presentation.html", "Présentation"),
     ("essentiel", "index.html", "./", "L'essentiel"),
-    ("dossier", "dossier.html", "dossier.html", "Le dossier et les données"),
+    ("dossier", "dossier.html", "dossier.html", "Questions / réponses"),
     ("itineraires", "itineraires.html", "itineraires.html", "Les itinéraires"),
     ("carte", "carte.html", "carte.html", "La carte"),
     ("heures", "heures.html", "heures.html", "Heure par heure"),

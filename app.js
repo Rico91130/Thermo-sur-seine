@@ -566,7 +566,7 @@ function urlGoogleMaps(orig, dest, passages) {
     });
   }
 
-  /* ---------------- Le dossier et les données : une conversation de groupe ---------------- */
+  /* ---------------- Questions / réponses : une conversation de groupe ---------------- */
   // Trois participants. « Le public » : de vraies questions de la plateforme de la concertation, citées mot pour mot, sans nom d'auteur.
   // « Le maître d'ouvrage » : ses réponses publiées ou le dossier de concertation, cités mot pour mot. « Les faits » : nos mesures
   // et les chiffres du dossier. Chaque message renvoie à sa source.

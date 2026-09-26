@@ -199,7 +199,7 @@ def main():
                 {"annee": "2033", "texte": "2e ligne de production", "citation": "La 2e ligne de production et les chaudières électriques entreront en activité en 2033", "source": dossier(97)},
                 {"annee": "2034", "texte": "3e ligne : la chaufferie à pleine puissance", "citation": "puis la 3e ligne de production en 2034", "source": dossier(97)},
             ]},
-            # Conversation de groupe (page « Le dossier et les données ») : questions réelles du public, publiées sans nom d'auteur,
+            # Conversation de groupe (page « Questions / réponses ») : questions réelles du public, publiées sans nom d'auteur,
             # et réponses du maître d'ouvrage, citées mot pour mot. Statut des réponses vérifié le 26/09/2026.
             "public_camions": {"citation": "Combien de camions en plus pour alimenter le monstre ?", "source": question(36, 168047)},
             "public_a86": {"citation": "Quel sera l'impact sur le trafic, la pollution co2 et la saturation de l'A86 des camions qui ne manqueront pas d'apporter leurs déchets jusqu'à Vitry ?", "source": question(36, 168047)},
