@@ -18,6 +18,8 @@
   --lien: #1c5cab;
   --accent-fond: #cde2fb;
   --tuiles-filtre: grayscale(1) opacity(0.6);
+  --bulle-recue: #e9e8e3;
+  --bulle-envoyee: #1c5cab;   /* texte blanc : contraste 6,6:1 */
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
@@ -39,6 +41,8 @@
     --lien: #86b6ef;
     --accent-fond: #184f95;
     --tuiles-filtre: grayscale(1) invert(1) brightness(0.85) contrast(0.9);
+    --bulle-recue: #2c2c2a;
+    --bulle-envoyee: #184f95;
   }
 }
 :root[data-theme="dark"] {
@@ -60,6 +64,8 @@
   --lien: #86b6ef;
   --accent-fond: #184f95;
   --tuiles-filtre: grayscale(1) invert(1) brightness(0.85) contrast(0.9);
+  --bulle-recue: #2c2c2a;
+  --bulle-envoyee: #184f95;
 }
 
 * { box-sizing: border-box; }
@@ -115,7 +121,7 @@ main > .bloc:first-child { padding-top: 32px; }
 .pages-voisines a:hover { border-color: var(--lien); }
 
 /* Chiffres clés */
-.tuile, .carte-conf, .panneau, .graphique, .encadre {
+.tuile, .panneau, .graphique, .encadre {
   background: var(--surface);
   border: 1px solid var(--bordure);
   border-radius: 12px;
@@ -146,6 +152,44 @@ main > .bloc:first-child { padding-top: 32px; }
 .picto .plein { fill: var(--serie-2); stroke: none; }
 .pictos-denses { gap: 3px; max-width: 660px; }
 .pictos-denses .picto { width: 15px; height: 15px; }
+.etape-surtitre { margin: 0 0 12px; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--serie-2); }
+.etape-citation { margin: 8px 0 0; padding-left: 18px; border-left: 4px solid var(--serie-2); font-size: clamp(1.15rem, 2.6vw, 1.5rem); font-style: italic; line-height: 1.4; }
+.etape-citation footer { margin-top: 8px; font-size: 0.9rem; font-style: normal; }
+/* Schéma de la chaîne du projet : vertical sur mobile, horizontal sur grand écran. --avance (0 à 1) place le camion
+   et la barge sur leur trajet ; l'animation (animerRecit) la fait passer de 0 à 1. */
+.chaine { margin: 18px 0 10px; }
+.chaine-schema { display: flex; flex-direction: column; }
+.chaine-etape { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 12px; align-items: center; }
+.chaine-icone {
+  grid-row: span 2; width: 48px; height: 48px; padding: 9px; border-radius: 14px; background: var(--surface); border: 1px solid var(--bordure);
+  fill: none; stroke: var(--encre); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round;
+}
+.chaine-etape-ris .chaine-icone { border: 2px solid var(--serie-2); }
+.chaine-etape strong { line-height: 1.2; align-self: end; }
+.chaine-etape span { font-size: 0.85rem; color: var(--encre-2); align-self: start; }
+.chaine-lien { --avance: 0.5; display: flex; align-items: center; gap: 12px; min-height: 64px; padding-left: 9px; }
+.chaine-piste {
+  position: relative; align-self: stretch; flex: none; width: 30px; order: -1;   /* sous l'icône du maillon */
+  background: repeating-linear-gradient(to bottom, var(--couleur-lien) 0 6px, transparent 6px 11px) center / 3px 100% no-repeat;
+}
+.chaine-mode { font-size: 0.85rem; font-weight: 600; color: var(--couleur-lien); }
+.chaine-lien-camion { --couleur-lien: var(--serie-2); }
+.chaine-lien-barge { --couleur-lien: var(--serie-1); }
+.chaine-lien-reseau { --couleur-lien: var(--encre-attenuee); }
+.chaine-mobile { position: absolute; left: 50%; top: calc(var(--avance) * (100% - 30px)); width: 30px; height: 19px; transform: translate(-50%, 6px) rotate(90deg); }
+.chaine-mobile circle, .chaine-cabine { fill: var(--encre); }
+.chaine-remorque { fill: var(--serie-2); }
+.chaine-coque { fill: var(--serie-1); }
+.chaine-cargaison { fill: var(--encre-attenuee); }
+@media (min-width: 720px) {
+  .chaine-schema { flex-direction: row; align-items: flex-start; }
+  .chaine-etape { flex: 1 1 0; min-width: 0; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; row-gap: 2px; }
+  .chaine-icone { grid-row: auto; width: 56px; height: 56px; margin-bottom: 6px; }
+  .chaine-lien { flex: 0.8 1 0; min-width: 0; min-height: 0; flex-direction: column-reverse; gap: 2px; padding: 0; margin-top: 13px; }
+  .chaine-piste { order: 0; align-self: stretch; width: auto; height: 30px; background: repeating-linear-gradient(to right, var(--couleur-lien) 0 6px, transparent 6px 11px) center / 100% 3px no-repeat; }
+  .chaine-mobile { left: calc(var(--avance) * (100% - 30px)); top: 50%; transform: translateY(-65%); }
+  .chaine-mode { font-size: 0.78rem; text-align: center; line-height: 1.2; }
+}
 /* Route sinueuse et camion (app.js, fonction routeDuCamion) */
 .recit { position: relative; }
 .recit .etape { position: relative; z-index: 1; }
@@ -167,16 +211,58 @@ main > .bloc:first-child { padding-top: 32px; }
 .tuile-note { margin: 0; color: var(--encre-attenuee); font-size: 0.85rem; }
 .encadre { padding: 14px 18px; margin: 16px 0 0; }
 
-/* Confrontation */
-.cartes-confrontation { display: grid; grid-template-columns: 1fr; gap: 16px; }
-@media (min-width: 800px) { .cartes-confrontation { grid-template-columns: 1fr 1fr; } }
-.carte-conf { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
-.carte-conf h2 { margin: 0; font-size: 1.1rem; }
-.conf-dit, .conf-montre { margin: 0; }
-.conf-etiquette { display: block; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--encre-2); margin-bottom: 2px; }
-.conf-dit blockquote { margin: 0; font-style: italic; }
-.conf-source { font-size: 0.85rem; }
-.conf-montre { border-top: 1px solid var(--grille); padding-top: 10px; }
+/* Le dossier et les données : un échange de SMS (app.js, fonctions confrontation et animerConversation) */
+.sms {
+  max-width: 760px; padding: 0 16px 20px; background: var(--surface);
+  border: 1px solid var(--bordure); border-radius: 24px; overflow: hidden;
+}
+.sms-entete {
+  display: flex; align-items: center; gap: 12px; margin: 0 -16px 4px; padding: 12px 16px;
+  border-bottom: 1px solid var(--bordure); background: var(--page);
+}
+.sms-entete strong { display: block; line-height: 1.2; }
+.sms-entete-sous { display: block; font-size: 0.82rem; color: var(--encre-2); }
+.sms-avatar {
+  flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--base); color: var(--encre); font-weight: 700; font-size: 0.85rem;
+}
+.fil { display: flex; flex-direction: column; gap: 6px; }
+.fil-sujet {
+  align-self: center; margin: 22px 0 6px; padding: 3px 12px; border-radius: 999px; text-align: center;
+  font-size: 0.8rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--encre-2); background: var(--page);
+}
+.message { position: relative; display: flex; flex-direction: column; max-width: min(85%, 560px); }
+.message-recu { align-self: flex-start; align-items: flex-start; }
+.message-envoye { align-self: flex-end; align-items: flex-end; }
+.bulle { margin: 0; padding: 9px 14px; border-radius: 20px; line-height: 1.45; overflow-wrap: anywhere; }
+.message-recu .bulle { background: var(--bulle-recue); color: var(--encre); border-bottom-left-radius: 6px; }
+.message-envoye .bulle { background: var(--bulle-envoyee); color: #fff; border-bottom-right-radius: 6px; }
+.message-envoye .bulle a { color: #fff; }
+.message-envoye .bulle strong { font-size: 1.08em; }
+.bulle-meta { margin: 3px 8px 6px; font-size: 0.78rem; color: var(--encre-attenuee); }
+/* « En train d'écrire » : trois points dans une petite bulle, à la place du message qui arrive */
+.sms-frappe { display: none; }
+.sms-anime .message { opacity: 0; transform: translateY(10px) scale(0.97); transition: opacity 0.3s ease, transform 0.3s ease; }
+.sms-anime .message-recu { transform-origin: left bottom; }
+.sms-anime .message-envoye { transform-origin: right bottom; }
+.sms-anime .message.en-frappe, .sms-anime .message.lu { opacity: 1; transform: none; }
+.sms-anime .message.en-frappe > :not(.sms-frappe) { visibility: hidden; }
+.sms-anime .message.en-frappe .sms-frappe {
+  display: inline-flex; gap: 4px; position: absolute; top: 0; padding: 12px 14px; border-radius: 20px;
+}
+.message-recu .sms-frappe { left: 0; background: var(--bulle-recue); }
+.message-envoye .sms-frappe { right: 0; background: var(--bulle-envoyee); }
+.sms-frappe i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.4; animation: points 1s infinite ease-in-out; }
+.message-recu .sms-frappe { color: var(--encre-2); }
+.message-envoye .sms-frappe { color: #fff; }
+.sms-frappe i:nth-child(2) { animation-delay: 0.15s; }
+.sms-frappe i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes points { 30% { opacity: 1; transform: translateY(-3px); } }
+@media (max-width: 600px) {
+  .sms { border-radius: 18px; padding: 0 10px 14px; }
+  .sms-entete { margin: 0 -10px 4px; padding: 10px; }
+  .message { max-width: 90%; }
+}
 
 /* Règles des itinéraires */
 .regles { display: grid; grid-template-columns: 1fr; gap: 16px; }

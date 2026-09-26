@@ -170,6 +170,15 @@ def main():
             "poids_arqp_source": cfg["entrees_poids_arqp"]["source"],
         },
         "faits": {
+            # Présentation du projet (récit de la page d'accueil)
+            "maitrise_ouvrage": {"citation": "une Société d'économie mixte à opération unique (SEMOP) a été créée spécifiquement pour assurer l'exploitation, la modernisation et la décarbonation du réseau de chaleur parisien pour les 25 prochaines années, à compter du 1er janvier 2027. Dotée d'un plan d'investissement conséquent, cette SEMOP porte la maîtrise d'ouvrage du projet Thermo-sur-Seine.", "source": dossier(6)},
+            "projet": {"citation": "Thermo-sur-Seine, un projet stratégique pour diminuer la dépendance aux énergies fossiles du réseau de chaleur qui alimente Paris et 16 communes franciliennes.", "source": dossier(6)},
+            "reseau": {"citation": "le réseau de chaleur urbain de Paris – qui chauffe aujourd'hui plus d'un million d'habitants – se modernise", "source": dossier(6)},
+            "chaleur": {"valeur": 1.6, "unite": "TWh par an", "citation": "Trois lignes de production de vapeur bas carbone totalisant une puissance de 333 mégawatts (MW), qui permettra de produire 1,6 TWh de chaleur annuelle, soit les besoins de plus de 200 000 logements en chaleur renouvelable", "source": dossier(42)},
+            "chaufferie": {"citation": "Implantée sur le site de l'ancienne centrale à charbon d'EDF, sur une emprise d'environ 6,7 hectares, elle est destinée à remplacer une partie de la chaleur aujourd'hui produite à partir de gaz.", "source": dossier(7)},
+            "csr": {"citation": "Ils proviennent de déchets impossibles à recycler (refus de tri, encombrants, activités économiques et bâtiment) qui sont sélectionnés et préparés pour être valorisés en énergie.", "source": dossier(7)},
+            "chaine": {"citation": "Alimentée par des combustibles de récupération préalablement collectés, triés, puis acheminés par voie fluviale depuis une plateforme située à Ris-Orangis (91), elle produira de la vapeur destinée au réseau de chaleur.", "source": dossier(42)},
+            "trajet_fluvial": {"valeur": 36, "citation": "des pousseurs de lignes déplaceront les barges sur le trajet de 36 km aller/retour qui sépare les sites de Vitry et Ris-Orangis", "source": dossier(56)},
             "tonnage": {"valeur": 450000, "citation": "environ 450 000 tonnes de combustibles solides de récupération (CSR)", "source": dossier(65)},
             "barge": {"valeur": 28, "citation": "Chaque barge dispose d'une capacité d'emport équivalente à celle de 28 camions.", "source": dossier(56)},
             "barge_m3": {"valeur": 2500, "citation": "6 barges par jour, d'une capacité unitaire de 2 500 m³", "source": dossier(56)},

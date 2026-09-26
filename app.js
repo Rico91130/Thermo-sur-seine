@@ -156,6 +156,9 @@ function urlGoogleMaps(orig, dest, passages) {
       span.after(el('span', { class: 'sr-only' }, format(valeur)));
       compteurs.set(span, { valeur, format });
     };
+    // Le projet dans son ensemble (chiffres et citations du dossier), puis le détour
+    compteur('chaleur', F.chaleur.valeur, v => `${fmt1(v)} TWh`);
+    compteur('tonnage', F.tonnage.valeur, v => `${fmt0(arrondi(v, 1000))} tonnes`);
     compteur('detour-trajet', detourRef, v => `${signe1(v)} km`);
     compteur('camions', camionsDossier, v => fmt0(arrondi(v, 100)));
     compteur('km-an', kmAn, v => `${fmt0(arrondi(v, 1000))} km`);
@@ -164,6 +167,7 @@ function urlGoogleMaps(orig, dest, passages) {
     compteur('cout', b.cout, v => `${fmt0(arrondi(v, 1000))} €`);
     compteur('nord', pct(nord, d => d > 0), v => `${fmt0(v)} %`);
 
+    lier('trajet-fluvial', `${fmt0(F.trajet_fluvial.valeur)} km`);
     lier('detour-aller-retour', `${signe0(2 * detourRef)} km`);
     lier('tours-terre', `${fmt0(tours)} fois le tour de la Terre`);
     lier('emplois', `${fmt0(emplois)} emplois à temps plein`);
@@ -199,6 +203,14 @@ function urlGoogleMaps(orig, dest, passages) {
     document.getElementById('pictos-co2').replaceChildren(...Array.from({ length: vols }, avion));   // un avion par aller-retour
 
     // Calculs et sources, étape par étape
+    const citation = f => [`« ${f.citation} » (`, lien(f.source), ')'];
+    note('note-chaleur', 'Dossier de concertation : ', ...citation(F.projet), ' ; ', ...citation(F.reseau), ' ; ', ...citation(F.chaleur), ' ; ', ...citation(F.chaufferie),
+      '. Le maître d\'ouvrage est une société d\'économie mixte à opération unique (SEMOP), créée pour exploiter le réseau de chaleur parisien pendant 25 ans (', lien(F.maitrise_ouvrage.source), ').');
+    note('note-tonnage', 'Dossier de concertation : « ', F.tonnage.citation, ' » (', lien(F.tonnage.source), ') ; ', ...citation(F.csr),
+      '. Les fournisseurs ne seront choisis qu\'en 2027, dans un rayon de 300 km au maximum (', lien(F.fournisseurs.source), ').');
+    note('note-chaine', 'Dossier de concertation : ', ...citation(F.chaine), ' ; ', ...citation(F.trajet_fluvial), '.');
+    document.getElementById('citation-foncier').replaceChildren(`« ${F.foncier.citation} »`, el('footer', {}, '— ', lien(F.foncier.source)));
+    note('note-foncier', F.transport_absent.constat.replace(/\.$/, ''), ' (', lien(F.transport_absent.source), ').');
     note('note-camions', `Calcul : ${fmt0(F.tonnage.valeur)} t ÷ ${fmt1(CHARGE_DOSSIER)} t par camion (une barge de 2 500 m³ vaut 28 camions, densité de 0,20 t/m³) : `,
       lien(F.tonnage.source), ' ; ', lien(F.barge.source), '.');
     note('note-km-an', `Calcul : ${fmt0(camionsDossier)} camions × 2 (aller et retour) × ${fmt1(detourRef)} km. Tour de la Terre à l'équateur : ${fmt0(F.tour_terre.valeur)} km (`,
@@ -212,11 +224,11 @@ function urlGoogleMaps(orig, dest, passages) {
     note('note-cout', `Calcul : ${fmt0(arrondi(kmAn, 1000))} km × ${fmtBrut(F.cout_km.valeur)} €/km + ${fmt0(arrondi(heuresAn, 100))} h × ${fmt2(F.cout_heure.valeur)} €/h ; gazole : ${fmt0(arrondi(b.litres, 1000))} litres × ${fmt2(F.prix_gazole.valeur)} € (`,
       ...lienCnr('CNR, décembre 2025'), '). Hors péages et hors TVA. Le gazole a fortement augmenté en 2026 : ces montants sont sous-estimés.');
     note('note-nord', 'Le dossier prévoit des livraisons « ', F.nord.citation, ' » (', lien(F.nord.source), ').');
-    note('essentiel-sources', 'Sources : nombre de camions calculé d\'après le dossier (', lien(F.tonnage.source), ' ; ', lien(F.barge.source),
+    note('essentiel-sources', 'Sources : présentation du projet d\'après le dossier de concertation (pages citées à chaque étape) ; nombre de camions calculé d\'après le dossier (', lien(F.tonnage.source), ' ; ', lien(F.barge.source),
       ') ; tour de la Terre : ', lien({ texte: 'NGA, WGS 84', url: F.tour_terre.source.url }),
       ' ; durée légale du travail : ', lien({ texte: 'service-public.gouv.fr', url: F.duree_legale.source.url }),
       ' ; consommation et coûts : ', ...lienCnr('CNR, référentiel régional'), ' ; CO₂ du gazole : ', lien({ texte: 'ADEME, Base Carbone', url: F.co2_gazole.source.url }),
-      ' ; distances et temps : mesures Google du 26 septembre 2026 (', el('a', { href: 'methode.html' }, 'méthode'), '). Toutes les étapes supposent un combustible venant du Plessis-Gassot, sauf la dernière, qui porte sur tous les points de départ situés au nord de Vitry. Les fournisseurs ne seront choisis qu\'en 2027 (',
+      ' ; distances et temps : mesures Google du 26 septembre 2026 (', el('a', { href: 'methode.html' }, 'méthode'), '). Les étapes chiffrées du détour supposent un combustible venant du Plessis-Gassot, sauf la dernière, qui porte sur tous les points de départ situés au nord de Vitry. Les fournisseurs ne seront choisis qu\'en 2027 (',
       lien({ texte: 'question n° 46', url: F.fournisseurs.source.url }), ').');
 
     animerRecit(compteurs);
@@ -266,6 +278,18 @@ function urlGoogleMaps(orig, dest, passages) {
       if (pictos.length) tl.from(pictos, { scale: 0, opacity: 0, duration: 0.35, ease: 'back.out(2.5)', stagger: duree / pictos.length }, 0.3);
       const barres = etape.querySelectorAll('.barre-remplie');
       if (barres.length) tl.from(barres, { scaleX: 0, transformOrigin: 'left center', duration: 1.3, stagger: 0.3, ease: 'power2.out' }, 0.3);
+      // Schéma de la chaîne du projet : chaque maillon apparaît, puis le camion et la barge font leur trajet jusqu'au suivant
+      const chaine = etape.querySelector('.chaine');
+      if (chaine) {
+        const maillons = chaine.querySelectorAll('.chaine-etape'), apparait = { y: 14, opacity: 0, duration: 0.45, ease: 'power2.out' };
+        tl.from(maillons[0], apparait, 0.4);
+        chaine.querySelectorAll('.chaine-lien').forEach((lienChaine, i) => {
+          const debut = 0.8 + i * 1.3;
+          tl.from(lienChaine, { opacity: 0, duration: 0.3 }, debut);
+          if (lienChaine.querySelector('.chaine-mobile')) tl.fromTo(lienChaine, { '--avance': 0 }, { '--avance': 1, duration: 1.1, ease: 'power1.inOut' }, debut);
+          tl.from(maillons[i + 1], apparait, debut + 1);
+        });
+      }
     });
   }
 
@@ -336,38 +360,77 @@ function urlGoogleMaps(orig, dest, passages) {
     });
   }
 
-  /* ---------------- Le dossier et les données ---------------- */
+  /* ---------------- Le dossier et les données : un échange de SMS ---------------- */
+  // Bulles grises : le maître d'ouvrage, cité mot pour mot avec sa source. Bulles bleues : ce que montrent les données.
   function confrontation() {
     const au8 = ecartHeure(ref, 'acces', 8), au17 = ecartHeure(ref, 'acces', 17);
     const cellulesNord = D.grille.filter(g => g[0] > V.lat);
     const cellulesSud = D.grille.filter(g => g[0] < R.lat);
     const part = (cells, test) => Math.round(100 * cells.filter(test).length / cells.length);
     const kmParKmDetour = 2 * camionsDossier;
-    const cartes = [
+    const fort = t => el('strong', {}, t);
+    // Chaque échange : un sujet, les citations du maître d'ouvrage, puis les réponses (une bulle par élément de « montre »)
+    const echanges = [
       { titre: 'Les bouchons de l\'A86', dit: [F.congestion],
-        montre: [`Depuis le Plessis-Gassot, le trajet vers Ris-Orangis reste plus long que vers Vitry, même aux heures de pointe : ${signe0(au8)} min à 8 h et ${signe0(au17)} min à 17 h (médianes de la semaine du 28 septembre, prévisions Google en voiture). Le détail est sur la page `,
-          el('a', { href: 'heures.html' }, 'Heure par heure'), '.'] },
+        montre: [['Depuis le Plessis-Gassot, le trajet vers Ris-Orangis reste plus long que vers Vitry, même aux heures de pointe :'],
+          [fort(`${signe0(au8)} min à 8 h`), ' et ', fort(`${signe0(au17)} min à 17 h`), '.'],
+          ['Médianes de la semaine du 28 septembre, prévisions Google en voiture. Le détail est sur la page ', el('a', { href: 'heures.html' }, 'Heure par heure'), '.']] },
       { titre: 'L\'itinéraire imposé', dit: [F.itineraire, F.traversee],
-        montre: [`Cet itinéraire rallonge encore le trajet : ${signe0(detour(ref, 'dossier'))} km depuis le Plessis-Gassot, contre ${signe0(detour(ref, 'acces'))} km si l'on respecte seulement l'accès final. Sans point de passage imposé, Google ferait passer les camions par la RN7, dans Ris-Orangis. Voir `,
-          el('a', { href: 'itineraires.html' }, 'les règles des itinéraires'), '.'] },
+        montre: [['Cet itinéraire rallonge encore le trajet : ', fort(`${signe0(detour(ref, 'dossier'))} km`), ` depuis le Plessis-Gassot, contre ${signe0(detour(ref, 'acces'))} km si l'on respecte seulement l'accès final.`],
+          ['Sans point de passage imposé, Google ferait passer les camions par la RN7, dans Ris-Orangis. Voir ', el('a', { href: 'itineraires.html' }, 'les règles des itinéraires'), '.']] },
       { titre: 'Le nombre de camions', dit: [F.camions_texte],
-        montre: `Le graphique de la même page monte à ${F.graphique_2035.valeurs[0]} camions par jour en janvier 2035. Avec les chiffres du dossier (une barge de 2 500 m³ équivaut à 28 camions ; densité de 0,20 t/m³), on obtient ${fmt1(CHARGE_DOSSIER)} t par camion, soit environ ${fmt0(arrondi(camionsDossier, 100))} camions par an.`,
+        montre: [['Le graphique de la même page monte à ', fort(`${F.graphique_2035.valeurs[0]} camions par jour`), ' en janvier 2035.'],
+          [`Avec les chiffres du dossier (une barge de 2 500 m³ équivaut à 28 camions ; densité de 0,20 t/m³), on obtient ${fmt1(CHARGE_DOSSIER)} t par camion, soit environ `, fort(`${fmt0(arrondi(camionsDossier, 100))} camions par an`), '.']],
         sourcesMontre: [F.graphique_2035.source, F.barge.source] },
       { titre: 'Le choix de Ris-Orangis', dit: [F.foncier],
-        montre: `La parcelle EDF de Vitry fait 38 ha, dont 6,7 ha pour la chaufferie. Ce que ce choix coûte en kilomètres n'est chiffré nulle part. Or, avec ${fmt0(arrondi(camionsDossier, 100))} camions par an, chaque kilomètre de détour moyen représente environ ${fmt0(arrondi(kmParKmDetour, 100))} km de plus par an, aller et retour.`,
+        montre: [['La parcelle EDF de Vitry fait 38 ha, dont 6,7 ha pour la chaufferie. Ce que ce choix coûte en kilomètres n\'est chiffré nulle part.'],
+          [`Or, avec ${fmt0(arrondi(camionsDossier, 100))} camions par an, chaque kilomètre de détour moyen représente environ `, fort(`${fmt0(arrondi(kmParKmDetour, 100))} km de plus par an`), ', aller et retour.']],
         sourcesMontre: [F.parcelle.source, F.transport_absent.source] },
       { titre: 'L\'origine du combustible', dit: [F.fournisseurs, F.nord],
-        montre: ['La ', el('a', { href: 'carte.html' }, 'carte du détour'), ` donne le résultat pour toutes les origines possibles. Avec l'accès final imposé, Ris-Orangis est plus loin que Vitry pour ${part(cellulesNord, g => g[5] - g[3] > 0)} % des points situés au nord de Vitry, et plus proche pour ${part(cellulesSud, g => g[5] - g[3] < 0)} % des points situés au sud de Ris-Orangis.`] },
+        montre: [['La ', el('a', { href: 'carte.html' }, 'carte du détour'), ' donne le résultat pour toutes les origines possibles.'],
+          ['Avec l\'accès final imposé, Ris-Orangis est plus loin que Vitry pour ', fort(`${part(cellulesNord, g => g[5] - g[3] > 0)} %`), ' des points situés au nord de Vitry…'],
+          ['… et plus proche pour ', fort(`${part(cellulesSud, g => g[5] - g[3] < 0)} %`), ' des points situés au sud de Ris-Orangis.']] },
     ];
-    document.getElementById('cartes-confrontation').replaceChildren(...cartes.map(c => el('article', { class: 'carte-conf' },
-      el('h2', {}, c.titre),
-      el('div', { class: 'conf-dit' }, el('span', { class: 'conf-etiquette' }, 'Le maître d\'ouvrage dit'),
-        c.dit.map(f => el('div', {}, el('blockquote', {}, `« ${f.citation} »`),
-          el('div', { class: 'conf-source' }, '— ', lien(f.source))))),
-      el('div', { class: 'conf-montre' }, el('span', { class: 'conf-etiquette' }, 'Les données montrent'),
-        el('p', { style: 'margin:0' }, c.montre),
-        c.sourcesMontre ? el('div', { class: 'conf-source' }, 'Sources : ',
-          c.sourcesMontre.map((s, i) => [i ? ' ; ' : '', lien(s)])) : null))));
+    // Un message : sa bulle, sa ligne de source, et l'indicateur « en train d'écrire » (utilisé seulement par l'animation)
+    const frappe = () => el('span', { class: 'sms-frappe', 'aria-hidden': 'true' }, el('i'), el('i'), el('i'));
+    const recu = f => el('div', { class: 'message message-recu' }, frappe(),
+      el('blockquote', { class: 'bulle' }, el('span', { class: 'sr-only' }, 'Le maître d\'ouvrage : '), `« ${f.citation} »`),
+      el('p', { class: 'bulle-meta' }, lien(f.source)));
+    const envoye = (contenu, sources) => el('div', { class: 'message message-envoye' }, frappe(),
+      el('p', { class: 'bulle' }, el('span', { class: 'sr-only' }, 'Les données : '), contenu),
+      sources ? el('p', { class: 'bulle-meta' }, 'Sources : ', sources.map((s, i) => [i ? ' ; ' : '', lien(s)])) : null);
+    document.getElementById('cartes-confrontation').replaceChildren(
+      el('div', { class: 'sms-entete' },
+        el('span', { class: 'sms-avatar', 'aria-hidden': 'true' }, 'MO'),
+        el('span', {}, el('strong', {}, 'Le maître d\'ouvrage'), el('span', { class: 'sms-entete-sous' }, 'dossier de concertation et réponses publiées'))),
+      ...echanges.map(c => el('section', { class: 'fil' },
+        el('h2', { class: 'fil-sujet' }, c.titre),
+        c.dit.map(recu),
+        c.montre.map((contenu, i) => envoye(contenu, i === c.montre.length - 1 ? c.sourcesMontre : null)))));
+    animerConversation();
+  }
+
+  // Chaque échange se joue tout seul quand il apparaît à l'écran : « en train d'écrire », puis la bulle, message après message.
+  // Les bulles gardent leur place pendant l'animation (pas de saut de mise en page). Sans IntersectionObserver ou avec
+  // « réduire les animations », tout reste affiché directement.
+  function animerConversation() {
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.documentElement.classList.add('sms-anime');
+    const attendre = ms => new Promise(r => setTimeout(r, ms));
+    const jouer = async fil => {
+      for (const m of fil.querySelectorAll('.message')) {
+        m.classList.add('en-frappe');
+        await attendre(Math.min(1100, 350 + m.querySelector('.bulle').textContent.length * 2.5));
+        m.classList.replace('en-frappe', 'lu');
+        await attendre(200);
+      }
+    };
+    const observateur = new IntersectionObserver(entrees => entrees.forEach(e => {
+      if (!e.isIntersecting) return;
+      observateur.unobserve(e.target);
+      jouer(e.target);
+    }), { rootMargin: '0px 0px -15% 0px' });
+    document.querySelectorAll('.fil').forEach(f => observateur.observe(f));
   }
 
   /* ---------------- Les règles des itinéraires ---------------- */
@@ -838,7 +901,7 @@ function urlGoogleMaps(orig, dest, passages) {
     return dessinerGraphique;
   }
 
-  /* ---------------- Sur une année ---------------- */
+  /* ---------------- Simulateur (sur une année) ---------------- */
   function surUneAnnee() {
     const calcScenario = document.getElementById('calc-scenario');
     const calcTonnage = document.getElementById('calc-tonnage');

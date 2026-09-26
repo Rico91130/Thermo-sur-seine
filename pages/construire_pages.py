@@ -29,7 +29,7 @@ MENU = [
     ("itineraires", "itineraires.html", "itineraires.html", "Les itinéraires"),
     ("carte", "carte.html", "carte.html", "La carte"),
     ("heures", "heures.html", "heures.html", "Heure par heure"),
-    ("annee", "annee.html", "annee.html", "Sur une année"),
+    ("annee", "annee.html", "annee.html", "Simulateur"),
     ("methode", "methode.html", "methode.html", "Méthode et sources"),
 ]
 
