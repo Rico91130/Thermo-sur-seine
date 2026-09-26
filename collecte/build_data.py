@@ -151,6 +151,10 @@ def main():
             },
         })
 
+    with open(os.path.join(COLLECTE, "seine_ris-vitry.geojson"), encoding="utf-8") as f:
+        s = json.load(f)
+    seine = {**s["properties"], "latlngs": [[y, x] for x, y in s["geometry"]["coordinates"]]}
+
     imp = cfg["itineraire_impose_ris"]
     donnees = {
         "meta": {
@@ -173,6 +177,8 @@ def main():
             },
             "poids_arqp":{k: v for k, v in cfg["entrees_poids_arqp"].items() if k != "source"},
             "poids_arqp_source": cfg["entrees_poids_arqp"]["source"],
+            # Tracé de la Seine entre Ris-Orangis et Vitry (IGN, BD TOPO), pour la carte de la page Présentation : voir seine_ign.py
+            "seine": seine,
         },
         "faits": {
             # Présentation du projet (récit de la page d'accueil)

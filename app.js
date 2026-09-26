@@ -173,7 +173,21 @@ function urlGoogleMaps(orig, dest, passages) {
       '. Le maître d\'ouvrage est une société d\'économie mixte à opération unique (SEMOP), créée pour exploiter le réseau de chaleur parisien pendant 25 ans (', lien(F.maitrise_ouvrage.source), ').');
     note('note-tonnage', 'Dossier de concertation : « ', F.tonnage.citation, ' » (', lien(F.tonnage.source), ') ; ', ...citation(F.csr),
       '. Les fournisseurs ne seront choisis qu\'en 2027, dans un rayon de 300 km au maximum (', lien(F.fournisseurs.source), ').');
-    note('note-chaine', 'Dossier de concertation : ', ...citation(F.chaine), ' ; ', ...citation(F.trajet_fluvial), '.');
+    note('note-chaine', 'Dossier de concertation : ', ...citation(F.chaine), ' ; ', ...citation(F.trajet_fluvial),
+      `. Carte : trajet d'un camion venant du Plessis-Gassot, calculé par Google le 26 septembre 2026 avec l'accès final imposé, jusqu'à l'entrée du Chemin Latéral (il reste ${forfaitRis} jusqu'au portail) ; tracé de la Seine d'après l'`,
+      lien({ texte: 'IGN, BD TOPO', url: M.seine.url }), ` (${fmt1(M.seine.longueur_km)} km entre les deux sites, cohérent avec les ${fmt0(F.trajet_fluvial.valeur)} km aller et retour du dossier) ; centres de préparation de CSR confirmés en Île-de-France (`,
+      el('a', { href: 'methode.html' }, 'méthode'), ').');
+    // Carte du trajet du combustible : créée à la première ouverture de sa diapositive (Leaflet a besoin d'une taille),
+    // puis le camion et la barge refont leur trajet à chaque ouverture.
+    let carteTrajet = null;
+    document.getElementById('carte-projet').closest('.diapo').addEventListener('diapo-affichee', () => {
+      if (!window.L) {
+        document.getElementById('carte-projet').replaceChildren(el('p', { class: 'carte-indisponible' }, 'La carte n\'a pas pu être chargée.'));
+        return;
+      }
+      carteTrajet = carteTrajet || carteDuTrajet();
+      carteTrajet();
+    });
     // Frise chronologique : une année, ce qui s'y passe, et la citation qui le dit
     const etapes = F.calendrier.etapes;
     document.getElementById('frise-projet').replaceChildren(...etapes.map(e => el('li', { class: 'frise-etape' },
@@ -187,6 +201,76 @@ function urlGoogleMaps(orig, dest, passages) {
     note('presentation-sources', 'Toutes les citations viennent du ', lien({ texte: 'dossier de concertation (juillet 2026)', url: urlDossier }),
       ', de ', lien({ texte: 'L\'essentiel du projet', url: F.calendrier.etapes[0].source.url }), ' ou des réponses publiées par le maître d\'ouvrage sur la plateforme de la concertation.');
     diaporama(compteurs);
+  }
+
+  // Carte de la région parisienne : les centres de préparation de CSR franciliens, un camion qui va du Plessis-Gassot
+  // à la plateforme de Ris-Orangis, puis une barge qui descend la Seine jusqu'à Vitry. Pas d'infobulle : des étiquettes fixes.
+  // Renvoie la fonction qui (re)joue l'animation ; sans GSAP ou avec « réduire les animations », les tracés sont complets d'emblée.
+  function carteDuTrajet() {
+    const carte = L.map('carte-projet', { scrollWheelZoom: false, zoomSnap: 0.25 });
+    carte.attributionControl.setPrefix(false);   // Leaflet est crédité en pied de page
+    L.tileLayer('https://data.geopf.fr/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}', {
+      attribution: '© <a href="https://www.ign.fr/">IGN</a> · Seine : BD TOPO · itinéraire : Google', maxZoom: 18 }).addTo(carte);
+    const icone = (html, taille = [0, 0], ancre) => L.divIcon({ className: '', html, iconSize: taille, iconAnchor: ancre });
+    const poser = (latlng, html, taille, ancre) => L.marker(latlng, { icon: icone(html, taille, ancre), interactive: false, keyboard: false }).addTo(carte);
+    const camionPts = decoder(ref.traces.acces_impose), seinePts = M.seine.latlngs;
+
+    // Centres de préparation de CSR confirmés en Île-de-France, avec leur commune
+    const COMMUNES = { IDF3: 'Bruyères-sur-Oise', IDF1: 'Le Plessis-Gassot', IDF2: 'Écharcon' };
+    Object.entries(COMMUNES).forEach(([id, commune]) => {
+      const p = parId[id];
+      poser([p.lat, p.lon], '<div class="marqueur site-confirme"></div>', [12, 12], [6, 6]);
+      poser([p.lat, p.lon], `<span class="etiquette-carte">${commune}</span>`);
+    });
+    // Tracés : un liseré clair sous chaque ligne pour la lisibilité sur le fond de carte
+    const ligne = (couleur, epaisseur) => [
+      L.polyline([], { color: cssVar('--surface'), weight: epaisseur + 4, opacity: 0.9, interactive: false }).addTo(carte),
+      L.polyline([], { color: cssVar(couleur), weight: epaisseur, lineJoin: 'round', lineCap: 'round', interactive: false }).addTo(carte)];
+    const lignesCamion = ligne('--serie-2', 3.5), lignesSeine = ligne('--serie-1', 5);
+    // Sites du projet et véhicules (vus de profil, comme dans la barre de navigation)
+    poser(seinePts[0], '<span class="site-projet site-ris"></span>', [14, 14], [7, 7]);
+    poser(seinePts[0], '<span class="etiquette-carte etiquette-carte-gauche"><strong>Plateforme de Ris-Orangis</strong></span>');
+    poser(seinePts[seinePts.length - 1], '<span class="site-projet site-vitry"></span>', [14, 14], [7, 7]);
+    poser(seinePts[seinePts.length - 1], '<span class="etiquette-carte"><strong>Chaufferie de Vitry</strong></span>');
+    const vehiculeCamion = poser(camionPts[0], '<svg class="carte-mobile" viewBox="0 0 32 20"><rect x="1" y="3" width="19" height="11" rx="1.5" class="chaine-remorque"/><path d="M21 6h5.5l4 4.5V14H21z" class="chaine-cabine"/><circle cx="7" cy="16" r="2.6"/><circle cx="25" cy="16" r="2.6"/></svg>', [30, 19], [15, 16]);
+    const vehiculeBarge = poser(seinePts[0], '<svg class="carte-mobile" viewBox="0 0 32 20"><path d="M1 10h30l-4 7H5z" class="chaine-coque"/><rect x="6" y="5" width="18" height="5" rx="1" class="chaine-cargaison"/></svg>', [30, 19], [15, 15]);
+
+    // Position le long d'un tracé, en proportion de sa longueur
+    const cumul = pts => pts.reduce((acc, p, i) => (acc.push(i ? acc[i - 1] + carte.distance(pts[i - 1], p) : 0), acc), []);
+    const cumulCamion = cumul(camionPts), cumulSeine = cumul(seinePts);
+    const jusqua = (pts, cum, t) => {
+      const cible = t * cum[cum.length - 1];
+      let i = cum.findIndex(c => c >= cible);
+      if (i <= 0) return [pts[0]];
+      const f = (cible - cum[i - 1]) / ((cum[i] - cum[i - 1]) || 1);
+      return [...pts.slice(0, i), [pts[i - 1][0] + f * (pts[i][0] - pts[i - 1][0]), pts[i - 1][1] + f * (pts[i][1] - pts[i - 1][1])]];
+    };
+    const avancer = (lignes, vehicule, pts, cum) => t => {
+      const trace = jusqua(pts, cum, t);
+      lignes.forEach(l => l.setLatLngs(trace));
+      vehicule.setLatLng(trace[trace.length - 1]);
+    };
+    const majCamion = avancer(lignesCamion, vehiculeCamion, camionPts, cumulCamion);
+    const majSeine = avancer(lignesSeine, vehiculeBarge, seinePts, cumulSeine);
+    const bornes = L.latLngBounds([...camionPts, ...seinePts, ...Object.keys(COMMUNES).map(id => [parId[id].lat, parId[id].lon])]);
+
+    const G = window.gsap, anime = !!G && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let tl = null;
+    return () => {
+      carte.invalidateSize();
+      carte.fitBounds(bornes, { paddingTopLeft: [28, 20], paddingBottomRight: [28, 36] });   // en bas : place pour les crédits
+      if (tl) tl.kill();
+      // Arrivés, le camion et la barge s'effacent pour laisser voir les sites du projet
+      const visibles = (camion, barge) => { vehiculeCamion.setOpacity(camion); vehiculeBarge.setOpacity(barge); };
+      if (!anime) { majCamion(1); majSeine(1); visibles(0, 0); return; }
+      const o = { camion: 0, seine: 0, vc: 1, vb: 0 };
+      majCamion(0); majSeine(0); visibles(1, 0);
+      tl = G.timeline({ delay: 0.5, onUpdate: () => visibles(o.vc, o.vb) })
+        .to(o, { camion: 1, duration: 3.2, ease: 'power1.inOut', onUpdate: () => majCamion(o.camion) })
+        .to(o, { vc: 0, vb: 1, duration: 0.3 })
+        .to(o, { seine: 1, duration: 2.4, ease: 'power1.inOut', onUpdate: () => majSeine(o.seine) }, '+=0.1')
+        .to(o, { vb: 0, duration: 0.4 }, '+=0.3');
+    };
   }
 
   /* ---------------- L'essentiel : récit à faire défiler ---------------- */
@@ -307,7 +391,7 @@ function urlGoogleMaps(orig, dest, passages) {
   }
 
   // Animation d'une étape (récit de l'accueil ou diapositive de la présentation) : apparition en cascade, puis compteurs,
-  // barres, pictogrammes, schéma de la chaîne et frise chronologique, joués d'un seul tenant. Renvoie une timeline en pause.
+  // barres, pictogrammes et frise chronologique, joués d'un seul tenant. Renvoie une timeline en pause.
   function animationEtape(G, etape, compter) {
     const contenu = etape.querySelector('.etape-contenu');
     const tl = G.timeline({ paused: true });
@@ -319,18 +403,6 @@ function urlGoogleMaps(orig, dest, passages) {
     if (pictos.length) tl.from(pictos, { scale: 0, opacity: 0, duration: 0.35, ease: 'back.out(2.5)', stagger: duree / pictos.length }, 0.3);
     const barres = etape.querySelectorAll('.barre-remplie');
     if (barres.length) tl.from(barres, { scaleX: 0, transformOrigin: 'left center', duration: 1.3, stagger: 0.3, ease: 'power2.out' }, 0.3);
-    // Schéma de la chaîne du projet : chaque maillon apparaît, puis le camion et la barge font leur trajet jusqu'au suivant
-    const chaine = etape.querySelector('.chaine');
-    if (chaine) {
-      const maillons = chaine.querySelectorAll('.chaine-etape'), apparait = { y: 14, opacity: 0, duration: 0.45, ease: 'power2.out' };
-      tl.from(maillons[0], apparait, 0.4);
-      chaine.querySelectorAll('.chaine-lien').forEach((lienChaine, i) => {
-        const debut = 0.8 + i * 1.3;
-        tl.from(lienChaine, { opacity: 0, duration: 0.3 }, debut);
-        if (lienChaine.querySelector('.chaine-mobile')) tl.fromTo(lienChaine, { '--avance': 0 }, { '--avance': 1, duration: 1.1, ease: 'power1.inOut' }, debut);
-        tl.from(maillons[i + 1], apparait, debut + 1);
-      });
-    }
     // Frise chronologique : le trait se trace, puis chaque année apparaît à son tour
     const frise = etape.querySelector('.frise');
     if (frise) {
@@ -399,6 +471,7 @@ function urlGoogleMaps(orig, dest, passages) {
       fleuve.style.setProperty('--position', n > 1 ? i / (n - 1) : 0);
       if (anime && courante >= 0) G.fromTo(diapos[i], { x: 60 * sens, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' });
       if (anime) timelines[i].restart();
+      diapos[i].dispatchEvent(new CustomEvent('diapo-affichee'));   // par exemple pour la carte, qui a besoin d'être visible
       if (courante >= 0 && !depuisAdresse) history.replaceState(null, '', `#diapo-${i + 1}`);
       // Après un changement, le haut de la diapositive reste en vue
       if (courante >= 0 && racine.getBoundingClientRect().top < 0) racine.scrollIntoView({ block: 'start' });

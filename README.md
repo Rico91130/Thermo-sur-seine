@@ -57,6 +57,7 @@ python collecte/collecte_v2.py origines                # construit les 1 157 poi
 python collecte/collecte_v2.py distances               # affiche le nombre de requêtes et le coût estimé
 python collecte/collecte_v2.py distances --go          # lance la collecte
 python collecte/collecte_v2.py previsions --semaine 2026-10-05 --go
+python collecte/seine_ign.py                           # tracé de la Seine entre Ris-Orangis et Vitry (IGN, BD TOPO), pour la carte de la présentation
 python collecte/build_data.py                          # régénère data/donnees.json pour le site
 ```
 
@@ -100,5 +101,5 @@ Ouvrez un [ticket](https://github.com/Rico91130/Thermo-sur-seine/issues). Toute 
 - **Indépendance.** Site citoyen indépendant, sans lien avec la SEMOP, la Ville de Paris ou Google.
 - **Éditeur.** Éditeur non professionnel ayant choisi de rester anonyme (article 6-III-2 de la loi n° 2004-575 pour la confiance dans l'économie numérique).
 - **Hébergeur.** GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.
-- **Crédits.** Fond de carte © IGN – Géoplateforme. Itinéraires : Google Maps Platform. Frontières et trait de côte : Natural Earth (domaine public). Animations de la page d'accueil : GSAP, ScrollTrigger et MotionPathPlugin (licence « Standard no-charge », chargés depuis jsdelivr). Constantes de conversion : CNR, ADEME, NGA, service-public.gouv.fr (voir plus haut).
+- **Crédits.** Fond de carte © IGN – Géoplateforme. Tracé de la Seine : IGN, BD TOPO, Licence Ouverte Etalab 2.0 ([`collecte/seine_ign.py`](collecte/seine_ign.py)). Itinéraires : Google Maps Platform. Frontières et trait de côte : Natural Earth (domaine public). Animations de la page d'accueil : GSAP, ScrollTrigger et MotionPathPlugin (licence « Standard no-charge », chargés depuis jsdelivr). Constantes de conversion : CNR, ADEME, NGA, service-public.gouv.fr (voir plus haut).
 - **Licence.** Le code est sous licence MIT ([`LICENSE`](LICENSE)). Les données et les textes produits pour ce projet sont sous licence CC BY 4.0 ([`LICENCE-DONNEES.md`](LICENCE-DONNEES.md)). Les résultats bruts de Google, le fond de carte IGN et les citations restent soumis aux droits de leurs auteurs.

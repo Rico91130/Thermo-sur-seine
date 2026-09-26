@@ -186,41 +186,31 @@ main > .bloc:first-child { padding-top: 32px; }
 .etape-surtitre { margin: 0 0 12px; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--serie-2); }
 .etape-citation { margin: 8px 0 0; padding-left: 18px; border-left: 4px solid var(--serie-2); font-size: clamp(1.15rem, 2.6vw, 1.5rem); font-style: italic; line-height: 1.4; }
 .etape-citation footer { margin-top: 8px; font-size: 0.9rem; font-style: normal; }
-/* Schéma de la chaîne du projet : vertical sur mobile, horizontal sur grand écran. --avance (0 à 1) place le camion
-   et la barge sur leur trajet ; l'animation (animerRecit) la fait passer de 0 à 1. */
-.chaine { margin: 18px 0 10px; }
-.chaine-schema { display: flex; flex-direction: column; }
-.chaine-etape { display: grid; grid-template-columns: 48px minmax(0, 1fr); column-gap: 12px; align-items: center; }
-.chaine-icone {
-  grid-row: span 2; width: 48px; height: 48px; padding: 9px; border-radius: 14px; background: var(--surface); border: 1px solid var(--bordure);
-  fill: none; stroke: var(--encre); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round;
+/* Carte du trajet du combustible (page Présentation, app.js, fonction carteDuTrajet) */
+.carte-projet { margin: 14px 0 6px; }
+.carte-projet-cadre {
+  height: min(52vh, 460px); min-height: 320px; border-radius: 12px; border: 1px solid var(--bordure); background: var(--surface);
 }
-.chaine-etape-ris .chaine-icone { border: 2px solid var(--serie-2); }
-.chaine-etape strong { line-height: 1.2; align-self: end; }
-.chaine-etape span { font-size: 0.85rem; color: var(--encre-2); align-self: start; }
-.chaine-lien { --avance: 0.5; display: flex; align-items: center; gap: 12px; min-height: 64px; padding-left: 9px; }
-.chaine-piste {
-  position: relative; align-self: stretch; flex: none; width: 30px; order: -1;   /* sous l'icône du maillon */
-  background: repeating-linear-gradient(to bottom, var(--couleur-lien) 0 6px, transparent 6px 11px) center / 3px 100% no-repeat;
+.carte-projet-legende { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; font-size: 0.85rem; color: var(--encre-2); }
+.carte-projet-legende > span { display: inline-flex; align-items: center; gap: 6px; }
+.carte-projet-legende .cle-ligne { margin-right: 0; width: 18px; height: 4px; }
+.cle-camion { background: var(--serie-2); }
+.cle-barge { background: var(--serie-1); }
+.etiquette-carte {
+  position: absolute; left: 12px; top: 0; transform: translateY(-50%); white-space: nowrap; font-size: 0.78rem; color: var(--encre);
+  text-shadow: 0 0 3px var(--surface), 0 0 3px var(--surface), 0 0 3px var(--surface);
 }
-.chaine-mode { font-size: 0.85rem; font-weight: 600; color: var(--couleur-lien); }
-.chaine-lien-camion { --couleur-lien: var(--serie-2); }
-.chaine-lien-barge { --couleur-lien: var(--serie-1); }
-.chaine-lien-reseau { --couleur-lien: var(--encre-attenuee); }
-.chaine-mobile { position: absolute; left: 50%; top: calc(var(--avance) * (100% - 30px)); width: 30px; height: 19px; transform: translate(-50%, 6px) rotate(90deg); }
-.chaine-mobile circle, .chaine-cabine { fill: var(--encre); }
+.etiquette-carte strong { font-size: 0.85rem; }
+.etiquette-carte-gauche { left: auto; right: 12px; }
+.site-projet { display: block; width: 14px; height: 14px; border-radius: 3px; box-shadow: 0 0 0 2px var(--surface); }
+.site-ris { background: var(--serie-2); }
+.site-vitry { background: var(--encre); }
+/* Véhicules vus de profil (carte, barre du diaporama) */
+.carte-mobile { display: block; width: 30px; height: 19px; overflow: visible; filter: drop-shadow(0 0 2px var(--surface)); }
+.carte-mobile circle, .chaine-cabine { fill: var(--encre); }
 .chaine-remorque { fill: var(--serie-2); }
 .chaine-coque { fill: var(--serie-1); }
 .chaine-cargaison { fill: var(--encre-attenuee); }
-@media (min-width: 720px) {
-  .chaine-schema { flex-direction: row; align-items: flex-start; }
-  .chaine-etape { flex: 1 1 0; min-width: 0; grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; row-gap: 2px; }
-  .chaine-icone { grid-row: auto; width: 56px; height: 56px; margin-bottom: 6px; }
-  .chaine-lien { flex: 0.8 1 0; min-width: 0; min-height: 0; flex-direction: column-reverse; gap: 2px; padding: 0; margin-top: 13px; }
-  .chaine-piste { order: 0; align-self: stretch; width: auto; height: 30px; background: repeating-linear-gradient(to right, var(--couleur-lien) 0 6px, transparent 6px 11px) center / 100% 3px no-repeat; }
-  .chaine-mobile { left: calc(var(--avance) * (100% - 30px)); top: 50%; transform: translateY(-65%); }
-  .chaine-mode { font-size: 0.78rem; text-align: center; line-height: 1.2; }
-}
 /* Diaporama de la page Présentation (app.js, fonction diaporama). Sans JavaScript, les diapositives s'affichent
    l'une sous l'autre ; avec, une seule est visible et la barre de navigation reste collée en bas de l'écran. */
 .diapo { padding: 40px 0; }
