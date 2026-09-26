@@ -169,8 +169,22 @@ main > .bloc:first-child { padding-top: 32px; }
 a.segment { display: inline-block; text-decoration: none; }
 .segment[aria-pressed="true"] { background: var(--accent-fond); border-color: var(--lien); font-weight: 600; }
 .segment-note { font-weight: 400; color: var(--encre-2); }
-.carte-disposition { display: grid; grid-template-columns: 1fr; gap: 16px; }
-@media (min-width: 980px) { .carte-disposition { grid-template-columns: 2fr 1fr; } }
+/* Mobile : carte, détail, légende. Ordinateur : carte puis légende à gauche, détail à droite. */
+.carte-disposition { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "carte" "panneau" "legende"; gap: 16px; }
+.carte-cadre { grid-area: carte; }
+.panneau { grid-area: panneau; }
+.legende-bloc { grid-area: legende; }
+@media (min-width: 980px) {
+  .carte-disposition { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); grid-template-areas: "carte panneau" "legende panneau"; }
+}
+.legende-bloc {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px 32px; padding: 16px; font-size: 0.92rem;
+  background: var(--surface); border: 1px solid var(--bordure); border-radius: 12px;
+}
+@media (min-width: 700px) { .legende-bloc { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); } }
+.legende-bloc h2 { margin: 0 0 8px; font-size: 1rem; }
+.legende-bloc .legende-points { margin: 0; }
+.panneau-vide { margin: 0; }
 .carte-cadre { position: relative; }
 #map { height: min(72vh, 680px); min-height: 420px; border-radius: 12px; border: 1px solid var(--bordure); background: var(--surface); }
 .leaflet-tile-pane { filter: var(--tuiles-filtre); }
@@ -216,7 +230,7 @@ a.segment { display: inline-block; text-decoration: none; }
 .trajets .etapes { display: block; color: var(--encre-attenuee); font-size: 0.78rem; }
 
 /* Encadré du carré ou du point de passage cliqué, en haut du panneau de la carte */
-.encart { margin: 0 0 16px; padding: 0 0 14px; border-bottom: 1px solid var(--grille); }
+.encart:not([hidden]) ~ #detail-point:not([hidden]) { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--grille); }
 .encart-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
 .encart-tete h2 { margin: 0; font-size: 1rem; }
 .encart-fermer {

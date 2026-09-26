@@ -251,12 +251,13 @@ function urlGoogleMaps(orig, dest, passages) {
         el('li', {}, el('span', { class: 'pastille site-possible' }), 'Grand centre de tri de déchets d\'activités (production de CSR non établie)'),
         el('li', {}, el('span', { class: 'pastille entree' }), 'Entrée d\'autoroute en Île-de-France'),
         el('li', {}, el('span', { class: 'pastille passage-point' }),
-          el('span', {}, 'Point de passage obligé de l\'itinéraire choisi (', el('a', { href: 'itineraires.html' }, 'voir les règles'), ')'))),
-      el('p', { class: 'note' }, 'Cliquez sur un carré, un site ou un point de passage pour en afficher le détail.'));
+          el('span', {}, 'Point de passage obligé de l\'itinéraire choisi (', el('a', { href: 'itineraires.html' }, 'voir les règles'), ')'))));
     lier('grille-masque', `Les ${GM.en_mer + GM.royaume_uni} carrés dont le centre est en mer ou au Royaume-Uni ne sont pas affichés`);
 
     // Encadré en haut du panneau : détail du carré ou du point de passage cliqué (aucune bulle sur la carte)
     const encart = document.getElementById('encart');
+    const panneauVide = document.getElementById('panneau-vide');
+    const majPanneau = () => { panneauVide.hidden = !encart.hidden || !detail.hidden; };
     const teteEncart = titre => el('div', { class: 'encart-tete' }, el('h2', {}, titre),
       el('button', { type: 'button', class: 'encart-fermer', onclick: () => fermerEncart() }, 'Fermer'));
     function marquerCarre(rect) {
@@ -266,12 +267,14 @@ function urlGoogleMaps(orig, dest, passages) {
     function montrerEncart(defiler, ...contenu) {
       encart.replaceChildren(...contenu);
       encart.hidden = false;
+      majPanneau();
       if (defiler) encart.scrollIntoView({ block: 'nearest' });
     }
     function fermerEncart() {
       marquerCarre(null);
       etat.carre = null;
       encart.hidden = true;
+      majPanneau();
     }
     function afficherCarre(g, rect, defiler = true) {
       marquerCarre(rect);
@@ -428,9 +431,9 @@ function urlGoogleMaps(orig, dest, passages) {
     function selectionner(id, depuisCarte) {
       etat.selection = id;
       const p = id ? parId[id] : null;
-      legendeGrille.hidden = !!p;
-      document.getElementById('legende-points').hidden = !!p;
+      legendeGrille.hidden = !!p;   // la grille est masquée pendant l'affichage des trajets d'un site
       detail.hidden = !p;
+      majPanneau();
       btnRetour.hidden = !p;
       if (carte) {
         styleGrille();
