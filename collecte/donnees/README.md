@@ -25,6 +25,10 @@ Ces données ont été produites par [`collecte_v2.py`](../collecte_v2.py) avec 
 - `acces_conforme` : `oui` si le tracé passe à moins de 60 m du point de la D310. Cette colonne n'est remplie que pour les trajets vers Ris-Orangis calculés avec un tracé.
 - `statut` : `OK`, `ROUTE_NOT_FOUND` ou `AUCUN_ITINERAIRE`. Les 60 points de la grille sans itinéraire sont probablement en mer.
 
+## Carrés masqués sur la carte
+
+Les fichiers de ce dossier sont complets. C'est `build_data.py` qui masque, sur la carte du site, les carrés de la grille dont le centre est en mer (20) ou au Royaume-Uni (11). Le test se fait sur les frontières et le trait de côte de Natural Earth (1:10m, domaine public), extraits dans [`terres_natural-earth.geojson`](../terres_natural-earth.geojson). La règle et sa justification sont dans [`config_collecte.json`](../config_collecte.json), à la clé `masque_grille`. Pour ces 31 carrés, Ris-Orangis était plus loin que Vitry (de +9,8 à +23,6 km avec l'accès final imposé) : le masque ne favorise donc pas la démonstration.
+
 ## Limites
 
 - **Véhicule.** Google calcule des trajets en voiture : il ne propose pas de calcul poids lourd en France. Les temps sont donc des minimums pour un camion. Les distances restent valables si le camion emprunte le même itinéraire.

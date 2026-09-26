@@ -84,6 +84,15 @@ function urlGoogleMaps(orig, dest, passages) {
     return;
   }
   const M = D.meta, F = D.faits;
+  const V = M.destinations.VITRY, R = M.destinations.RIS, PP = M.points_passage, GM = M.grille_masque;
+  const PASSAGES = {
+    ACCES_D310: { court: 'D310', long: 'D310 à Grigny, dans le sens A6 → RN7' },
+    N104_EST: { court: 'RN104 est', long: 'RN104, branche est (Tigery), dans le sens vers l\'A6' },
+    N104_OUEST: { court: 'RN104 ouest', long: 'RN104, branche ouest (Bondoufle), dans le sens vers l\'A6' },
+  };
+  const urlDossier = F.tonnage.source.url.split('#')[0];
+  const pageDossier = n => ({ texte: `Dossier de concertation, p. ${n}`, url: `${urlDossier}#page=${Math.floor(n / 2) + 1}` });
+  const forfaitRis = `${fmt1(R.forfait_m / 1000)} km`;
   const parId = Object.fromEntries(D.points.map(p => [p.id, p]));
   const etat = { variante: 'acces', selection: null };
   const cleVariante = v => (v === 'acces' ? 'acces_impose' : 'dossier');
@@ -145,8 +154,50 @@ function urlGoogleMaps(orig, dest, passages) {
           c.sourcesMontre.map((s, i) => [i ? ' ; ' : '', lien(s)])) : null)));
   }
 
-  /* ---------------- 3. Carte ---------------- */
-  let carte = null, calqueGrille = null, calqueTrajets = null, rectangles = [];
+  /* ---------------- 3. Règles des itinéraires ---------------- */
+  const citer = f => el('div', { class: 'regle-citation' }, el('blockquote', {}, `« ${f.citation} »`),
+    el('div', { class: 'conf-source' }, '— ', lien(f.source)));
+  const pointPassage = k => [el('strong', {}, PASSAGES[k].long), ` (${PP[k].lat}, ${PP[k].lon}), `,
+    el('button', { type: 'button', class: 'lien-bouton', onclick: () => montrerPassage(k) }, 'voir sur la carte')];
+  const rapideHorsD310 = D.points.filter(p => p.conforme.rapide && p.conforme.rapide !== 'oui').length;
+  const entreeA6 = parId.E_A6;
+  const regles = [
+    { titre: 'Vers Vitry', couleur: '--serie-1', badge: 'aucune règle',
+      lignes: [
+        ['La règle', 'Aucune. Le dossier ne prévoit pas de livraison par camion à Vitry : il n\'y définit donc pas d\'itinéraire.'],
+        ['Dans le calcul', 'Le trajet le plus rapide selon Google, sans point de passage, jusqu\'à l\'entrée du site EDF rue des Fusillés (', lien(pageDossier(50)), ').']] },
+    { titre: 'Vers Ris-Orangis, le plus rapide', couleur: null, badge: 'non autorisé',
+      lignes: [
+        ['La règle', 'Aucune : c\'est le trajet que Google choisirait sans contrainte.'],
+        ['Pourquoi il n\'est pas retenu', `Il ne respecte pas l'accès final décrit par le maître d'ouvrage : sur les ${D.points.length} origines détaillées, il ne passe pas par la D310 dans ${rapideHorsD310} cas.`],
+        ['Dans le calcul', 'Il sert seulement de repère. Il figure dans le détail de chaque point et dans les fichiers téléchargeables.']] },
+    { titre: 'Accès final imposé', couleur: '--serie-2', badge: 'hypothèse la plus favorable au projet',
+      lignes: [
+        ['La règle', 'Sur le trajet terminal : l\'A6, puis la D310 jusqu\'à la RN7 à Grigny, moins de 1 km sur la RN7, puis le Chemin Latéral, sans traverser Ris-Orangis.'],
+        ['Les sources', citer(F.acces_final), citer(F.trajet_terminal), citer(F.traversee)],
+        ['Dans le calcul', 'Un point de passage obligé : ', pointPassage('ACCES_D310'), `. Avant ce point, Google choisit librement le trajet le plus rapide. Chaque tracé obtenu est contrôlé : il passe à moins de ${M.controle.tolerance_m} m de ce point.`],
+        ['Pourquoi c\'est l\'hypothèse la plus favorable au projet', 'Elle n\'impose pas la RN104. Chaque camion rejoint l\'A6 par le chemin le plus rapide, y compris par l\'A6 depuis Paris, que la carte des itinéraires du dossier trace aussi (', lien(F.carte_itineraires.source), ').']] },
+    { titre: 'Itinéraire du dossier', couleur: '--serie-3', badge: 'texte du dossier',
+      lignes: [
+        ['La règle', 'Passer par la RN104 (la Francilienne), puis suivre l\'accès final imposé : A6, D310, RN7 et Chemin Latéral.'],
+        ['Les sources', citer(F.rn104), citer(F.trajet_terminal)],
+        ['Dans le calcul', 'Deux points de passage obligés. D\'abord la RN104, soit ', pointPassage('N104_EST'), ', soit ', pointPassage('N104_OUEST'),
+          ' ; puis le point de la D310. Avant la RN104, Google choisit librement le trajet le plus rapide. Les deux branches sont mesurées, et la plus courte est retenue.'],
+        ['Limite', `La règle ne dit pas par où rejoindre la RN104. Google prend le trajet le plus rapide qui passe par le point imposé, dans le sens imposé, même si cela suppose un demi-tour sur la RN104 ; c'est le cas pour des origines situées au nord comme au sud. Depuis l'entrée de l'A6 en Île-de-France (Égreville), le détour atteint ainsi ${signe1(entreeA6.km.dossier - entreeA6.km.acces_impose)} km par rapport à l'accès final imposé. C'est pourquoi le site retient l'accès final imposé comme hypothèse principale.`]] },
+  ];
+  document.getElementById('regles-itineraires').replaceChildren(...regles.map(r => el('article', { class: 'regle' },
+    el('div', { class: 'regle-tete' },
+      el('span', { class: r.couleur ? 'cle-ligne' : 'cle-ligne cle-neutre', style: r.couleur ? `background:var(${r.couleur})` : null }),
+      el('h3', {}, r.titre), el('span', { class: 'badge' }, r.badge)),
+    el('dl', { class: 'regle-liste' }, r.lignes.map(([titre, ...contenu]) => [el('dt', {}, titre), el('dd', {}, contenu)])))));
+  document.getElementById('regles-opposable').replaceChildren(
+    'Pour le maître d\'ouvrage, c\'est leur inscription dans l\'arrêté préfectoral qui rendrait ces itinéraires opposables : « ',
+    F.opposable.citation, ' » (', lien(F.opposable.source), '). Pour les trois itinéraires, Google calcule le trajet jusqu\'à l\'entrée du Chemin Latéral ; les ',
+    forfaitRis, ' restants jusqu\'au portail des camions sont ajoutés à chaque distance (', lien(pageDossier(55)), ').');
+
+  /* ---------------- 4. Carte ---------------- */
+  let carte = null, calqueGrille = null, calqueTrajets = null, calquePassages = null, rectangles = [];
+  const marqueursPassage = {};
   const legendeGrille = document.getElementById('legende-grille');
   const detail = document.getElementById('detail-point');
   const btnRetour = document.getElementById('btn-retour');
@@ -183,8 +234,11 @@ function urlGoogleMaps(orig, dest, passages) {
     el('ul', { class: 'legende-points' },
       el('li', {}, el('span', { class: 'pastille site-confirme' }), 'Producteur de CSR (sourcé)'),
       el('li', {}, el('span', { class: 'pastille site-possible' }), 'Grand centre de tri de déchets d\'activités (production de CSR non établie)'),
-      el('li', {}, el('span', { class: 'pastille entree' }), 'Entrée d\'autoroute en Île-de-France')),
+      el('li', {}, el('span', { class: 'pastille entree' }), 'Entrée d\'autoroute en Île-de-France'),
+      el('li', {}, el('span', { class: 'pastille passage-point' }),
+        el('span', {}, 'Point de passage obligé de l\'itinéraire choisi (', el('a', { href: '#itineraires' }, 'voir les règles'), ')'))),
     el('p', { class: 'note' }, 'Cliquez sur un point pour afficher ses trajets.'));
+  lier('grille-masque', `Les ${GM.en_mer + GM.royaume_uni} carrés dont le centre est en mer ou au Royaume-Uni ne sont pas affichés (voir la méthode).`);
 
   function texteCellule(g, v) {
     const kmRis = v === 'acces' ? g[5] : g[6];
@@ -198,14 +252,21 @@ function urlGoogleMaps(orig, dest, passages) {
   }
   function contenuPopup(g) {
     const orig = { lat: g[0], lon: g[1] };
-    const { det, lignes } = texteCellule(g, etat.variante);
+    const branche = g[7] || 'est';
+    const cellule = { branche_dossier: 'impose_' + branche };
+    const { det } = texteCellule(g, etat.variante);
+    const ligne = (libelle, etapes, kmVal, url) => el('tr', {},
+      el('td', {}, libelle, el('span', { class: 'etapes' }, etapes)),
+      el('td', { class: 'nombre' }, `${fmt1(kmVal)} km`),
+      el('td', {}, el('a', { class: 'verifier', href: url, target: '_blank', rel: 'noopener' }, 'Vérifier')));
     return el('div', {},
       el('div', { class: 'bulle-valeur' }, `${signe1(det)} km pour Ris-Orangis`),
-      lignes.map(l => el('div', { class: 'bulle-texte' }, l)),
-      el('div', { style: 'margin-top:8px' }, 'Vérifier sur Google Maps : ',
-        el('a', { href: urlGoogleMaps(orig, M.destinations.VITRY), target: '_blank', rel: 'noopener' }, 'vers Vitry'), ' · ',
-        el('a', { href: urlGoogleMaps(orig, M.destinations.RIS, passagesVariante({ branche_dossier: 'impose_est' }, etat.variante === 'acces' ? 'acces' : 'dossier')), target: '_blank', rel: 'noopener' }, 'vers Ris-Orangis')),
-      el('div', { class: 'note', style: 'font-size:0.8rem;margin-top:4px' }, 'Google Maps s\'arrête à l\'entrée du Chemin Latéral : ajoutez 1,4 km jusqu\'au portail.'));
+      el('div', { class: 'bulle-texte' }, etat.variante === 'acces' ? 'avec l\'accès final imposé' : `avec l'itinéraire du dossier (RN104 ${branche})`),
+      el('table', { class: 'trajets trajets-bulle' }, el('tbody', {},
+        ligne('Vers Vitry', 'sans point de passage', g[3], urlGoogleMaps(orig, V)),
+        ligne('Vers Ris-Orangis, accès final imposé', 'étape : D310', g[5], urlGoogleMaps(orig, R, passagesVariante(cellule, 'acces'))),
+        ligne('Vers Ris-Orangis, itinéraire du dossier', `étapes : RN104 ${branche}, puis D310`, g[6], urlGoogleMaps(orig, R, passagesVariante(cellule, 'dossier'))))),
+      el('p', { class: 'note bulle-note' }, `« Vérifier » ouvre Google Maps avec les mêmes points de passage, sous forme d'étapes. Google Maps s'arrête à l'entrée du Chemin Latéral : ajoutez ${forfaitRis} jusqu'au portail.`));
   }
 
   function styleGrille() {
@@ -233,7 +294,7 @@ function urlGoogleMaps(orig, dest, passages) {
       const dLat = (pas * 0.46) / 110.54, dLon = (pas * 0.46) / (111.32 * Math.cos(lat * Math.PI / 180));
       const rect = L.rectangle([[lat - dLat, lon - dLon], [lat + dLat, lon + dLon]], { stroke: false, fillOpacity: 0.8 });
       rect.bindTooltip(() => contenuBulle(g), { sticky: true, direction: 'top', opacity: 1 });
-      rect.on('click', e => L.popup().setLatLng(e.latlng).setContent(contenuPopup(g)).openOn(carte));
+      rect.on('click', e => L.popup({ maxWidth: Math.min(320, carte.getSize().x - 30), autoPanPaddingTopLeft: [10, 100] }).setLatLng(e.latlng).setContent(contenuPopup(g)).openOn(carte));
       rect.addTo(calqueGrille);
       rectangles.push({ rect, g });
     }
@@ -245,6 +306,13 @@ function urlGoogleMaps(orig, dest, passages) {
       L.marker([d.lat, d.lon], { interactive: false, zIndexOffset: 1000,
         icon: L.divIcon({ className: '', html: `<span class="etiquette-dest">${nom}</span>`, iconSize: [0, 0] }) }).addTo(carte);
     }
+    calquePassages = L.layerGroup().addTo(carte);
+    for (const [k, texte] of Object.entries(PASSAGES)) {
+      marqueursPassage[k] = L.marker([PP[k].lat, PP[k].lon], { keyboard: false, zIndexOffset: 500,
+        icon: L.divIcon({ className: '', html: `<span class="passage"><span class="passage-point"></span>${texte.court}</span>`, iconSize: [0, 0] }) })
+        .bindTooltip(() => el('div', {}, el('div', { class: 'bulle-texte' }, 'Point de passage obligé'), el('div', {}, texte.long)), { direction: 'top', opacity: 1 });
+    }
+    majPassages();
     for (const p of D.points) {
       const m = L.marker([p.lat, p.lon], { keyboard: true, title: p.nom, alt: p.nom,
         icon: L.divIcon({ className: '', html: `<div class="marqueur ${categorie(p)}"></div>`, iconSize: [12, 12], iconAnchor: [6, 6] }) });
@@ -273,6 +341,26 @@ function urlGoogleMaps(orig, dest, passages) {
     if (limites.length) carte.fitBounds(L.latLngBounds(limites), { padding: [30, 30] });
   }
 
+  // Points de passage affichés : ceux de l'itinéraire choisi, ou ceux des trajets du point sélectionné
+  function majPassages() {
+    if (!calquePassages) return;
+    const p = etat.selection ? parId[etat.selection] : null;
+    const cles = p ? ['ACCES_D310', p.branche_dossier === 'impose_ouest' ? 'N104_OUEST' : 'N104_EST']
+      : etat.variante === 'acces' ? ['ACCES_D310'] : ['N104_EST', 'N104_OUEST', 'ACCES_D310'];
+    calquePassages.clearLayers();
+    cles.forEach(k => marqueursPassage[k].addTo(calquePassages));
+  }
+
+  // Depuis la section des règles : centre la carte sur un point de passage
+  function montrerPassage(k) {
+    if (!carte) return;
+    if (etat.selection) selectionner(null);
+    if (k !== 'ACCES_D310' && etat.variante !== 'dossier') document.querySelector('.segment[data-variante="dossier"]').click();
+    document.getElementById('carte').scrollIntoView();
+    carte.setView([PP[k].lat, PP[k].lon], 13);
+    marqueursPassage[k].openTooltip();
+  }
+
   function remplirDetail(p) {
     const ligne = (couleur, libelle, kmVal, det, minutes, url) => el('tr', {},
       el('td', {}, couleur ? el('span', { class: 'cle-ligne', style: `background:${couleur}` }) : null, libelle),
@@ -292,7 +380,7 @@ function urlGoogleMaps(orig, dest, passages) {
           ligne(cssVar('--serie-2'), 'Ris-Orangis, accès final imposé', p.km.acces_impose, detour(p, 'acces'), tempsMedian(p, 'acces'), urlGoogleMaps(orig, M.destinations.RIS, passagesVariante(p, 'acces'))),
           ligne(cssVar('--serie-3'), `Ris-Orangis, itinéraire du dossier (RN104 ${p.branche_dossier === 'impose_ouest' ? 'ouest' : 'est'})`, p.km.dossier, detour(p, 'dossier'), tempsMedian(p, 'dossier'), urlGoogleMaps(orig, M.destinations.RIS, passagesVariante(p, 'dossier'))),
           ligne(null, 'Ris-Orangis, le plus rapide (non autorisé)', p.km.rapide, p.km.rapide - p.km.vitry, null, urlGoogleMaps(orig, M.destinations.RIS)))),
-      el('p', { class: 'note' }, '* Temps médian prévu par Google en voiture, jours ouvrés de 8 h à 20 h. Les distances vers Ris-Orangis vont jusqu\'au portail : Google Maps s\'arrête à l\'entrée du Chemin Latéral, il faut donc ajouter 1,4 km.'),
+      el('p', { class: 'note' }, `* Temps médian prévu par Google en voiture, jours ouvrés de 8 h à 20 h. Les distances vers Ris-Orangis vont jusqu'au portail : Google Maps s'arrête à l'entrée du Chemin Latéral, il faut donc ajouter ${forfaitRis}. « Vérifier » transmet à Google Maps les mêmes points de passage, sous forme d'étapes.`),
       el('button', { type: 'button', class: 'segment', onclick: () => { choixOrigine.value = p.id; dessinerGraphique(); document.getElementById('heures').scrollIntoView(); } }, 'Voir heure par heure'));
   }
 
@@ -305,6 +393,7 @@ function urlGoogleMaps(orig, dest, passages) {
     btnRetour.hidden = !p;
     if (carte) {
       styleGrille();
+      majPassages();
       if (p) dessinerTrajets(p); else calqueTrajets.clearLayers();
     }
     if (p) remplirDetail(p);
@@ -319,12 +408,13 @@ function urlGoogleMaps(orig, dest, passages) {
     document.querySelectorAll('.segment[data-variante]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
     dessinerLegende();
     styleGrille();
+    majPassages();
   }));
 
   dessinerLegende();
   initialiserCarte();
 
-  /* ---------------- 4. Heure par heure ---------------- */
+  /* ---------------- 5. Heure par heure ---------------- */
   const choixOrigine = document.getElementById('choix-origine');
   const choixJour = document.getElementById('choix-jour');
   const groupes = [['Producteurs de CSR', 'site-confirme'], ['Centres de tri de déchets d\'activités', 'site-possible'], ['Entrées d\'autoroute', 'entree']];
@@ -475,7 +565,7 @@ function urlGoogleMaps(orig, dest, passages) {
     }, 150);
   });
 
-  /* ---------------- 5. Calculateur ---------------- */
+  /* ---------------- 6. Calculateur ---------------- */
   const calcScenario = document.getElementById('calc-scenario');
   const calcTonnage = document.getElementById('calc-tonnage');
   const calcCharge = document.getElementById('calc-charge');
@@ -530,11 +620,15 @@ function urlGoogleMaps(orig, dest, passages) {
   [calcScenario, calcTonnage, calcCharge].forEach(n => n.addEventListener('input', calculer));
   calculer();
 
-  /* ---------------- 6. Méthode ---------------- */
-  const V = M.destinations.VITRY, R = M.destinations.RIS, PP = M.points_passage;
+  /* ---------------- 7. Méthode ---------------- */
   lier('dest-vitry', `Vitry : entrée du site EDF depuis la rue des Fusillés (${V.lat}, ${V.lon}), d'après le dossier de concertation (p. 50 et 83).`);
   lier('dest-ris', `Ris-Orangis : entrée du Chemin Latéral depuis la RN7 à Grigny (${R.lat}, ${R.lon}), plus ${fmt1(R.forfait_m / 1000)} km jusqu'au portail des camions (dossier p. 54, 55 et 87). Le portail n'est pas visé directement : Google le rattacherait à la RN7, de l'autre côté du RER D.`);
-  lier('variantes', 'Trois itinéraires sont mesurés. (1) Le trajet le plus rapide sans contrainte : c\'est le minimum géographique, mais depuis le nord il traverse des zones urbaines, ce que le dossier exclut. (2) L\'accès final imposé : passage obligé par la D310 à Grigny (A6 → D310 → RN7 → Chemin Latéral), l\'hypothèse la plus favorable au projet. (3) L\'itinéraire décrit dans le dossier : passage obligé par la RN104 (branche est ou ouest, la plus courte des deux), puis par la D310. Chaque tracé obtenu est contrôlé.');
+  const nbMasques = GM.en_mer + GM.royaume_uni;
+  lier('masque-methode', `Sur la carte, ${nbMasques} carrés sont masqués : ${GM.en_mer} dont le centre est en mer et ${GM.royaume_uni} au Royaume-Uni, d'après les frontières et le trait de côte de Natural Earth.`);
+  lier('masque-limite', `${GM.raison} ` + (GM.detour_acces_min_km > 0
+    ? `Ce masque ne favorise pas la démonstration : pour chacun des ${nbMasques} carrés masqués, Ris-Orangis était plus loin que Vitry (de ${signe1(GM.detour_acces_min_km)} à ${signe1(GM.detour_acces_max_km)} km avec l'accès final imposé).`
+    : `Pour les ${nbMasques} carrés masqués, l'écart avec l'accès final imposé allait de ${signe1(GM.detour_acces_min_km)} à ${signe1(GM.detour_acces_max_km)} km.`)
+    + ' Ils restent dans les fichiers téléchargeables.');
   document.getElementById('tableau-parametres').replaceChildren(el('table', { class: 'parametres' }, el('tbody', {},
     [['Arrivée à Vitry', `${V.lat}, ${V.lon}`, 'Dossier p. 50 et 83'],
      ['Arrivée à Ris-Orangis', `${R.lat}, ${R.lon} + ${fmt1(R.forfait_m / 1000)} km`, 'Dossier p. 54, 55 et 87'],
@@ -543,6 +637,7 @@ function urlGoogleMaps(orig, dest, passages) {
      ['Passage RN104 ouest', `${PP.N104_OUEST.lat}, ${PP.N104_OUEST.lon}`, 'Dossier p. 87 ; question n° 118'],
      ['Heures de livraison', 'du lundi au vendredi, de 8 h à 20 h, hors jours fériés et hors août', 'Dossier p. 87'],
      ['Rayon d\'approvisionnement', `${M.grille.rayon_km} km au maximum`, 'Question n° 46'],
+     ['Carrés masqués sur la carte', `${nbMasques} : ${GM.en_mer} en mer, ${GM.royaume_uni} au Royaume-Uni`, 'Natural Earth, 1:10m'],
      ['Collecte', M.collecte, null],
      ['Prévisions', M.previsions, null]]
       .map(([a, b, c]) => el('tr', {}, el('th', {}, a, c ? el('span', { class: 'param-source' }, c) : null), el('td', {}, b))))));
@@ -554,6 +649,8 @@ function urlGoogleMaps(orig, dest, passages) {
     { texte: 'Question n° 119 : pourquoi pas de livraison directe à Vitry', url: F.foncier.source.url },
     { texte: 'Cahier d\'acteur n° 19 de l\'ARQP (répartition par entrée d\'autoroute)', url: 'https://www.thermo-sur-seine-concertation.fr/fi/5BgV7ymDVONo/H5mLi48XkdTbZ/cahier_transport_1_nouvelle_version.pdf' },
     { texte: 'Google : pas de calcul poids lourd en France', url: 'https://developers.google.com/maps/documentation/routes/lvr' },
+    { texte: 'Google Maps : format des liens « Vérifier » (étapes)', url: 'https://developers.google.com/maps/documentation/urls/get-started#directions-action' },
+    { texte: 'Natural Earth : frontières et trait de côte, 1:10m (domaine public)', url: 'https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-0-countries/' },
   ];
   document.getElementById('liste-sources').replaceChildren(...sources.map(s => el('li', {}, lien(s))));
 

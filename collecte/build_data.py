@@ -41,6 +41,31 @@ def km(v):
     return round(int(v) / 1000, 1) if v not in ("", None) else None
 
 
+def dans_anneau(lon, lat, anneau):
+    """Test du point dans un polygone (lancer de rayon)."""
+    dedans, j = False, len(anneau) - 1
+    for i in range(len(anneau)):
+        (xi, yi), (xj, yj) = anneau[i], anneau[j]
+        if (yi > lat) != (yj > lat) and lon < (xj - xi) * (lat - yi) / (yj - yi) + xi:
+            dedans = not dedans
+        j = i
+    return dedans
+
+
+def charger_pays(fichier):
+    with open(os.path.join(COLLECTE, fichier), encoding="utf-8") as f:
+        return [(ft["properties"]["ADM0_A3"], ft["geometry"]["coordinates"]) for ft in json.load(f)["features"]]
+
+
+def pays_du_point(pays, lat, lon):
+    """Code ISO du pays qui contient le point, ou None s'il est en mer."""
+    for code, polygones in pays:
+        for exterieur, *trous in polygones:
+            if dans_anneau(lon, lat, exterieur) and not any(dans_anneau(lon, lat, t) for t in trous):
+                return code
+    return None
+
+
 def main():
     with open(os.path.join(COLLECTE, "config_collecte.json"), encoding="utf-8") as f:
         cfg = json.load(f)
@@ -54,18 +79,29 @@ def main():
         vals = [(km(d[("RIS", v)]["distance_totale_m"]), v) for v in ("impose_est", "impose_ouest") if ("RIS", v) in d]
         return min(vals) if vals else (None, None)
 
-    # --- Grille : [lat, lon, pas_km, vitry, rapide, acces, dossier]
-    grille = []
+    # --- Grille : [lat, lon, pas_km, vitry, rapide, acces, dossier, branche RN104 du dossier ("est" ou "ouest")]
+    # Les carrés dont le centre est en mer ou au Royaume-Uni sont masqués (config_collecte.json > masque_grille).
+    masque = cfg["masque_grille"]
+    pays = charger_pays(masque["fichier"])
+    grille, masques = [], []
     for oid, o in origines.items():
         if o["couche"] != "grille":
             continue
         d = distances.get(oid, {})
         if not all(k in d for k in (("VITRY", "rapide"), ("RIS", "rapide"), ("RIS", "acces_impose"))):
             continue
-        dk, _ = dossier_km(d)
+        dk, dv = dossier_km(d)
         pas = 5 if "pas 5 km" in o["details"] else 20
-        grille.append([float(o["lat"]), float(o["lon"]), pas, km(d[("VITRY", "rapide")]["distance_totale_m"]),
-                       km(d[("RIS", "rapide")]["distance_totale_m"]), km(d[("RIS", "acces_impose")]["distance_totale_m"]), dk])
+        lat, lon = float(o["lat"]), float(o["lon"])
+        cellule = [lat, lon, pas, km(d[("VITRY", "rapide")]["distance_totale_m"]),
+                   km(d[("RIS", "rapide")]["distance_totale_m"]), km(d[("RIS", "acces_impose")]["distance_totale_m"]), dk,
+                   dv.split("_")[1] if dv else None]
+        code = pays_du_point(pays, lat, lon)
+        if code is None or code in masque["pays_exclus"]:
+            masques.append((code, cellule))
+        else:
+            grille.append(cellule)
+    detours_masques = [round(c[5] - c[3], 1) for _, c in masques]
 
     # --- Prévisions : par origine, liste de créneaux {jour, heure, vitry, acces, dossier} en minutes
     prev = defaultdict(lambda: defaultdict(dict))
@@ -115,9 +151,18 @@ def main():
             "points_passage": imp["points_passage"],
             "variantes": imp["variantes_ris"],
             "variantes_note": imp["variantes_note"],
+            "controle": imp["controle"],
             "livraisons": cfg["livraisons"],
             "grille": cfg["grille"],
-            "poids_arqp": {k: v for k, v in cfg["entrees_poids_arqp"].items() if k != "source"},
+            "grille_masque": {
+                "en_mer": sum(1 for code, _ in masques if code is None),
+                "royaume_uni": sum(1 for code, _ in masques if code == "GBR"),
+                "detour_acces_min_km": min(detours_masques, default=None),
+                "detour_acces_max_km": max(detours_masques, default=None),
+                "raison": masque["raison"],
+                "source": masque["source"],
+            },
+            "poids_arqp":{k: v for k, v in cfg["entrees_poids_arqp"].items() if k != "source"},
             "poids_arqp_source": cfg["entrees_poids_arqp"]["source"],
         },
         "faits": {
@@ -129,6 +174,10 @@ def main():
             "graphique_2035": {"valeurs": [163, 154, 148, 121, 96, 54, 33, 0, 42, 118, 154, 158], "note": "Lecture du graphique à ±3 près", "source": dossier(87)},
             "livraisons": {"citation": cfg["livraisons"]["source"].split(" : ", 1)[1], "source": dossier(87)},
             "itineraire": {"citation": "En amont, la RN104 constituera l'itinéraire d'accès principal des livraisons […]. Les camions emprunteront l'A6 puis la D310 pour rejoindre la RN7 sur une courte portion à Grigny (< 1 km)", "source": dossier(87)},
+            "rn104": {"citation": "En amont, la RN104 constituera l'itinéraire d'accès principal des livraisons depuis les grands centres de préparation de CSR situés au nord de Paris, mais aussi depuis les centres situés au sud de Ris-Orangis.", "source": dossier(87)},
+            "acces_final": {"citation": "Les camions emprunteront l'A6 puis la D310 pour rejoindre la RN7 sur une courte portion à Grigny (< 1 km) dans la zone d'activité industrielle et commerciale de la Plaine Basse, avant de rejoindre le chemin latéral à Ris-Orangis.", "source": dossier(87)},
+            "trajet_terminal": {"citation": "A l'approche de la plateforme sur le trajet terminal, l'itinéraire imposé aux transporteurs serait, depuis la RN104, l'A6, la RD310, la RN7 pour 900 m […] puis le Chemin Latéral.", "source": question(118, 170646)},
+            "carte_itineraires": {"constat": "La carte des itinéraires des poids lourds trace la RN104 à l'est et à l'ouest, l'A6 jusqu'à Grigny, mais aussi l'A6 au nord de Grigny, en direction de Paris.", "source": dossier(88)},
             "traversee": {"citation": "Aucun camion ne traversera Ris-Orangis.", "source": question(63, 169499)},
             "opposable": {"citation": "L'inscription des itinéraires dans l'arrêté préfectoral d'exploiter permet de rendre ces engagements opposables.", "source": question(118, 170646)},
             "foncier": {"citation": "Ce choix est dicté par l'impossibilité, sur le foncier de Vitry, d'accueillir une surface supplémentaire […] de l'ordre de 4 à 5 Ha, en sus des 6,7 Ha déjà occupés par la chaufferie.", "source": question(119, 170649)},
@@ -148,6 +197,8 @@ def main():
         json.dump(donnees, f, ensure_ascii=False, separators=(",", ":"))
     taille = os.path.getsize(os.path.join(OUT, "donnees.json")) / 1024
     print(f"donnees.json : {len(points)} points détaillés, {len(grille)} cellules de grille, {taille:.0f} Ko")
+    print(f"masquées : {len(masques)} cellules ({donnees['meta']['grille_masque']['en_mer']} en mer, "
+          f"{donnees['meta']['grille_masque']['royaume_uni']} au Royaume-Uni)")
 
 
 if __name__ == "__main__":

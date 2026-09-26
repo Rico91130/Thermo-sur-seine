@@ -116,7 +116,24 @@ h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; }
 .conf-source { font-size: 0.85rem; }
 .conf-montre { border-top: 1px solid var(--grille); padding-top: 10px; }
 
+/* Règles des itinéraires */
+.regles { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 800px) { .regles { grid-template-columns: 1fr 1fr; } }
+.regle { background: var(--surface); border: 1px solid var(--bordure); border-radius: 12px; padding: 18px; }
+.regle-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.regle-tete h3 { margin: 0; }
+.regle-tete .cle-ligne { width: 22px; height: 4px; margin: 0; }
+.cle-neutre { background: repeating-linear-gradient(90deg, var(--encre-attenuee) 0 4px, transparent 4px 7px); }
+.badge { font-size: 0.78rem; color: var(--encre-2); border: 1px solid var(--base); border-radius: 999px; padding: 1px 8px; }
+.regle-liste { margin: 8px 0 0; }
+.regle-liste dt { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--encre-2); margin-top: 12px; }
+.regle-liste dd { margin: 2px 0 0; }
+.regle-citation { margin: 4px 0 8px; }
+.regle-citation blockquote { margin: 0; font-style: italic; }
+.lien-bouton { font: inherit; color: var(--lien); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+
 /* Carte */
+.controles-aide { font-size: 0.9rem; margin-left: 4px; }
 .controles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 12px; }
 .controles-label { color: var(--encre-2); font-size: 0.9rem; }
 .segment {
@@ -152,6 +169,12 @@ h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; }
 .marqueur.site-confirme { border-radius: 50%; background: var(--encre); }
 .marqueur.site-possible { border-radius: 50%; background: var(--surface); border: 2px solid var(--encre); box-shadow: none; }
 .marqueur.entree { border-radius: 2px; background: var(--encre-2); transform: rotate(45deg); }
+.passage-point { display: inline-block; width: 10px; height: 10px; flex: none; background: var(--encre); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--encre); }
+.passage {
+  position: absolute; display: inline-flex; align-items: center; gap: 4px; transform: translate(-5px, -50%);
+  white-space: nowrap; font-size: 0.75rem; font-weight: 600; color: var(--encre);
+  text-shadow: 0 0 3px var(--surface), 0 0 3px var(--surface), 0 0 3px var(--surface);
+}
 .etiquette-dest {
   background: var(--encre); color: var(--surface); font-weight: 600; font-size: 0.8rem;
   padding: 2px 8px; border-radius: 999px; white-space: nowrap; transform: translate(-50%, -50%); display: inline-block;
@@ -169,6 +192,9 @@ h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; }
 .leaflet-popup-content { margin: 12px 14px; font-size: 0.9rem; }
 .bulle-valeur { font-weight: 600; font-size: 1.05rem; }
 .bulle-texte { color: var(--encre-2); }
+.trajets-bulle { margin-top: 8px; font-size: 0.85rem; }
+.trajets-bulle .etapes { display: block; color: var(--encre-attenuee); font-size: 0.78rem; }
+.bulle-note { font-size: 0.8rem; margin: 8px 0 0; }
 
 /* Graphique heure par heure */
 .filtres { display: flex; flex-wrap: wrap; gap: 12px 20px; margin: 8px 0 16px; }

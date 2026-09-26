@@ -74,6 +74,14 @@
     "source": "Rayon d'approvisionnement de 300 km au maximum : questions n° 46 et 149 ; délibération 2025 SG 36, p. 11. L'origine réelle du CSR ne sera pas connue avant 2027 (question n° 46)."
   },
 
+  "masque_grille": {
+    "description": "Filtre d'affichage appliqué par build_data.py, sans effet sur la collecte : un carré de la grille est masqué sur la carte si son centre est en mer ou au Royaume-Uni. Les données brutes (origines.csv, distances.csv) restent complètes.",
+    "raison": "Un point en mer n'est pas une origine possible : Google le rattache à une ligne de ferry ou à la côte la plus proche. Depuis le Royaume-Uni, le trajet emprunte le tunnel sous la Manche ou un ferry, ce que la mesure ne cherche pas à représenter.",
+    "fichier": "terres_natural-earth.geojson",
+    "pays_exclus": ["GBR"],
+    "source": "Natural Earth, Admin 0 – Countries, 1:10m, version 5.1.2, domaine public (https://www.naturalearthdata.com/)"
+  },
+
   "entrees_poids_arqp": {
     "A1": 26.50, "A4": 12.30, "A5": 3.89, "A6": 10.68,
     "A10": 17.12, "A11": 8.25, "A13": 18.20, "A16": 3.07,

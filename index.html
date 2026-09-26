@@ -17,6 +17,7 @@
       <nav class="sommaire" aria-label="Sommaire">
         <a href="#essentiel">L'essentiel</a>
         <a href="#confrontation">Le dossier et les données</a>
+        <a href="#itineraires">Les itinéraires</a>
         <a href="#carte">La carte</a>
         <a href="#heures">Heure par heure</a>
         <a href="#calculateur">Sur une année</a>
@@ -62,15 +63,24 @@
       <div class="cartes-confrontation" id="cartes-confrontation"></div>
     </section>
 
-    <!-- 3. Carte -->
+    <!-- 3. Règles des itinéraires -->
+    <section id="itineraires" class="conteneur bloc">
+      <h2>Les règles des itinéraires</h2>
+      <p class="intro">Le trajet vers Ris-Orangis est mesuré de trois façons, pour distinguer ce que le maître d'ouvrage impose de ce qu'il décrit seulement. Chaque règle est traduite en points de passage obligés, transmis à Google avec leur sens de circulation, puis contrôlée sur les tracés obtenus.</p>
+      <div class="regles" id="regles-itineraires"></div>
+      <p class="note" id="regles-opposable"></p>
+    </section>
+
+    <!-- 4. Carte -->
     <section id="carte" class="bloc">
       <div class="conteneur">
         <h2>La carte du détour</h2>
-        <p class="intro">Chaque carré est un point de départ possible, dans le rayon d'approvisionnement de 300 km. Sa couleur indique combien de kilomètres en plus (en rouge) ou en moins (en bleu) il faut parcourir pour livrer Ris-Orangis au lieu de Vitry. Cliquez sur un carré pour le vérifier sur Google Maps, ou sur un site pour voir les trajets.</p>
+        <p class="intro">Chaque carré est un point de départ possible, dans le rayon d'approvisionnement de 300 km. Sa couleur indique combien de kilomètres en plus (en rouge) ou en moins (en bleu) il faut parcourir pour livrer Ris-Orangis au lieu de Vitry. Cliquez sur un carré pour le vérifier sur Google Maps, ou sur un site pour voir les trajets. <span data-lie="grille-masque"></span></p>
         <div class="controles" role="group" aria-label="Itinéraire vers Ris-Orangis">
           <span class="controles-label">Itinéraire vers Ris-Orangis :</span>
           <button type="button" class="segment" data-variante="acces" aria-pressed="true">Accès final imposé <span class="segment-note">(le plus favorable au projet)</span></button>
           <button type="button" class="segment" data-variante="dossier" aria-pressed="false">Itinéraire du dossier <span class="segment-note">(par la RN104)</span></button>
+          <a href="#itineraires" class="controles-aide">Quelles règles ?</a>
         </div>
       </div>
       <div class="conteneur carte-disposition">
@@ -90,7 +100,7 @@
       </div>
     </section>
 
-    <!-- 4. Heure par heure -->
+    <!-- 5. Heure par heure -->
     <section id="heures" class="conteneur bloc">
       <h2>Heure par heure</h2>
       <p class="intro">Temps de trajet prévus par Google pour chaque heure de livraison autorisée (du lundi au vendredi, de 8 h à 20 h), semaine du 28 septembre au 2 octobre 2026. Ce sont des temps de voiture : un camion ne peut qu'être plus lent.</p>
@@ -113,7 +123,7 @@
       </figure>
     </section>
 
-    <!-- 5. Calculateur -->
+    <!-- 6. Calculateur -->
     <section id="calculateur" class="conteneur bloc">
       <h2>Sur une année</h2>
       <p class="intro">L'origine du combustible n'est pas connue. Choisissez une hypothèse : le calcul et toutes ses données s'affichent en dessous.</p>
@@ -138,7 +148,7 @@
       <p class="note">Émissions de CO<sub>2</sub> : ce calcul sera ajouté quand le facteur d'émission d'un poids lourd aura été sourcé (Base Empreinte de l'ADEME).</p>
     </section>
 
-    <!-- 6. Méthode -->
+    <!-- 7. Méthode -->
     <section id="methode" class="conteneur bloc">
       <h2>Méthode, sources et données</h2>
       <div class="methode-grille">
@@ -146,8 +156,8 @@
           <h3>Comment les trajets ont été mesurés</h3>
           <ol class="etapes">
             <li><strong>Points d'arrivée.</strong> <span data-lie="dest-vitry"></span> <span data-lie="dest-ris"></span></li>
-            <li><strong>Points de départ.</strong> 8 entrées d'autoroute en limite de l'Île-de-France, 28 installations de préparation de CSR ou de tri de déchets (chacune sourcée), et une grille de points dans un rayon de 300 km autour de Vitry : un point tous les 5 km jusqu'à 60 km, puis tous les 20 km.</li>
-            <li><strong>Itinéraires vers Ris-Orangis.</strong> <span data-lie="variantes"></span></li>
+            <li><strong>Points de départ.</strong> 8 entrées d'autoroute en limite de l'Île-de-France, 28 installations de préparation de CSR ou de tri de déchets (chacune sourcée), et une grille de points dans un rayon de 300 km autour de Vitry : un point tous les 5 km jusqu'à 60 km, puis tous les 20 km. <span data-lie="masque-methode"></span></li>
+            <li><strong>Itinéraires vers Ris-Orangis.</strong> Trois itinéraires sont mesurés : le plus rapide (non autorisé), l'accès final imposé et l'itinéraire du dossier. Leurs règles, leurs sources et leurs points de passage sont détaillés dans <a href="#itineraires">Les règles des itinéraires</a>. Chaque tracé obtenu est contrôlé.</li>
             <li><strong>Calcul.</strong> Google Maps Platform (API Routes), le 26 septembre 2026. Distances sans trafic ; temps prévus avec trafic pour chaque heure de livraison de la semaine du 28 septembre. Chaque requête envoyée est publiée.</li>
           </ol>
           <h3>Limites</h3>
@@ -157,6 +167,8 @@
             <li><strong>Vitry sans contrainte.</strong> Aucun itinéraire n'est imposé vers Vitry, puisque le dossier n'en prévoit aucun. Les trajets obtenus empruntent tous des grands axes (A86, A4, A1, A6, A10, A13).</li>
             <li><strong>Prévisions à valider.</strong> Les temps prévus seront comparés, après le 2 octobre, aux relevés en direct faits la même semaine.</li>
             <li><strong>Origine inconnue.</strong> Les fournisseurs ne seront choisis qu'en 2027. La carte et le calculateur servent précisément à montrer le résultat pour toutes les origines possibles.</li>
+            <li><strong>Carrés masqués.</strong> <span data-lie="masque-limite"></span></li>
+            <li><strong>Liens « Vérifier ».</strong> Ils ouvrent Google Maps avec les mêmes points de passage, sous forme d'étapes. Google Maps ne permet pas d'y préciser le sens de circulation : un petit écart de distance avec la mesure reste possible.</li>
           </ul>
         </div>
         <div>
@@ -183,7 +195,7 @@
   <footer class="pied">
     <div class="conteneur">
       <p>Site citoyen indépendant, sans lien avec la SEMOP, la Ville de Paris ou Google. Éditeur non professionnel ayant choisi de rester anonyme (article 6-III-2 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique). Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</p>
-      <p>Itinéraires calculés avec Google Maps Platform (collecte du 26 septembre 2026). Fond de carte © IGN – Géoplateforme. Bibliothèque cartographique Leaflet. <a href="https://github.com/Rico91130/Thermo-sur-seine">Code source et données</a> : code sous licence MIT, données et textes sous licence <a href="LICENCE-DONNEES.md">CC BY 4.0</a>, hors résultats bruts de Google, fond de carte et citations.</p>
+      <p>Itinéraires calculés avec Google Maps Platform (collecte du 26 septembre 2026). Fond de carte © IGN – Géoplateforme. Frontières et trait de côte : Natural Earth (domaine public). Bibliothèque cartographique Leaflet. <a href="https://github.com/Rico91130/Thermo-sur-seine">Code source et données</a> : code sous licence MIT, données et textes sous licence <a href="LICENCE-DONNEES.md">CC BY 4.0</a>, hors résultats bruts de Google, fond de carte et citations.</p>
     </div>
   </footer>
 
