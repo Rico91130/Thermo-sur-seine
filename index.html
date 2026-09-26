@@ -34,55 +34,105 @@
   </header>
 
   <main>
-    <section id="essentiel" class="conteneur bloc">
-      <h1>Le détour des camions</h1>
-      <p class="chapeau">Le combustible de la future chaufferie de Vitry-sur-Seine sera livré par camion à Ris-Orangis, puis remontera la Seine en barge. Ce site mesure, avec Google Maps, ce que coûte ce détour, et publie toutes ses données et ses sources.</p>
-      <div class="heros">
-        <div class="hero">
-          <p class="hero-valeur" data-lie="hero-km-an">…</p>
-          <p class="hero-texte">de plus chaque année pour livrer Ris-Orangis au lieu de Vitry, soit <strong data-lie="hero-tours">…</strong>, si le combustible vient du centre de préparation de CSR du Plessis-Gassot (Val-d'Oise), au nord de Paris. C'est l'hypothèse <strong>la plus favorable au projet</strong> : seul l'accès final imposé par le dossier est respecté.</p>
-          <p class="hero-calcul" id="hero-calcul"></p>
+    <!-- Récit à faire défiler : chaque étape apparaît et ses chiffres s'animent en entrant dans l'écran (app.js, fonction essentiel).
+         Sans JavaScript ou avec « réduire les animations », tout s'affiche directement avec les valeurs finales. -->
+    <div id="essentiel" class="recit">
+      <section class="etape etape-ouverture">
+        <div class="conteneur etape-contenu">
+          <h1>Le détour des camions</h1>
+          <p class="chapeau">Le combustible de la future chaufferie de Vitry-sur-Seine sera livré par camion à Ris-Orangis, puis remontera la Seine en barge. Ce site mesure, avec Google Maps, ce que coûte ce détour, et publie toutes ses données et ses sources.</p>
+          <p class="defiler">Faites défiler pour découvrir les chiffres <span class="defiler-fleche" aria-hidden="true">↓</span></p>
+          <p class="note"><a href="#fin-du-recit">Passer directement aux liens et aux sources</a></p>
         </div>
-        <div class="tuiles">
-          <div class="tuile">
-            <p class="tuile-label">Pour chaque camion</p>
-            <p class="tuile-valeur" data-lie="tuile-camion">…</p>
-            <p class="tuile-note" data-lie="tuile-camion-note">…</p>
-          </div>
-          <div class="tuile">
-            <p class="tuile-label">Au nord de Vitry</p>
-            <p class="tuile-valeur" data-lie="tuile-nord">…</p>
-            <p class="tuile-note" data-lie="tuile-nord-note">…</p>
-          </div>
-          <div class="tuile">
-            <p class="tuile-label">Temps de conduite en plus chaque année</p>
-            <p class="tuile-valeur" data-lie="tuile-emplois">…</p>
-            <p class="tuile-note" data-lie="tuile-emplois-note">…</p>
-          </div>
+      </section>
+
+      <section class="etape">
+        <div class="conteneur etape-contenu">
+          <p class="etape-amorce">Prenons un camion qui part du centre de préparation de combustible (CSR) du Plessis-Gassot (Val-d'Oise), au nord de Paris.</p>
+          <div class="barres" id="barres-trajet"></div>
+          <p class="etape-valeur"><span data-compteur="detour-trajet">…</span></p>
+          <p class="etape-texte">de plus pour livrer Ris-Orangis au lieu de Vitry, soit <strong data-lie="detour-aller-retour">…</strong> aller et retour.</p>
+          <p class="etape-note">Et c'est l'hypothèse <strong>la plus favorable au projet</strong> : seul l'accès final imposé par le dossier est respecté. Voir <a href="itineraires.html">les règles des itinéraires</a>.</p>
         </div>
-      </div>
-      <h2 class="bilan-titre">Chaque année, ce détour représente aussi</h2>
-      <div class="tuiles tuiles-bilan">
-        <div class="tuile">
-          <p class="tuile-label">Émissions de CO<sub>2</sub></p>
-          <p class="tuile-valeur" data-lie="bilan-co2">…</p>
-          <p class="tuile-note" data-lie="bilan-co2-note">…</p>
+      </section>
+
+      <section class="etape">
+        <div class="conteneur etape-contenu">
+          <p class="etape-amorce">Ce trajet sera répété</p>
+          <p class="etape-valeur"><span data-compteur="camions">…</span></p>
+          <p class="etape-texte">fois par an : c'est le nombre de camions nécessaires pour livrer 450 000 tonnes de combustible, d'après les chiffres du dossier.</p>
+          <p class="etape-note" id="note-camions"></p>
         </div>
-        <div class="tuile">
-          <p class="tuile-label">Gazole</p>
-          <p class="tuile-valeur" data-lie="bilan-carburant">…</p>
-          <p class="tuile-note" data-lie="bilan-carburant-note">…</p>
+      </section>
+
+      <section class="etape etape-epinglee">
+        <div class="conteneur etape-contenu">
+          <p class="etape-amorce">Au total, chaque année, les camions parcourront</p>
+          <p class="etape-valeur"><span data-compteur="km-an">…</span></p>
+          <p class="etape-texte">de plus, soit <strong data-lie="tours-terre">…</strong>.</p>
+          <div class="pictos" id="pictos-terre" aria-hidden="true"></div>
+          <p class="etape-note" id="note-km-an"></p>
         </div>
-        <div class="tuile">
-          <p class="tuile-label">Coût de transport, camion et chauffeur</p>
-          <p class="tuile-valeur" data-lie="bilan-cout">…</p>
-          <p class="tuile-note" data-lie="bilan-cout-note">…</p>
+      </section>
+
+      <section class="etape">
+        <div class="conteneur etape-contenu">
+          <p class="etape-amorce">Ces kilomètres, il faut les conduire :</p>
+          <p class="etape-valeur"><span data-compteur="heures">…</span></p>
+          <p class="etape-texte">de conduite en plus par an, l'équivalent de <strong data-lie="emplois">…</strong>.</p>
+          <div class="pictos" id="pictos-emplois" aria-hidden="true"></div>
+          <p class="etape-note" id="note-heures"></p>
         </div>
-      </div>
-      <p class="note" data-lie="bilan-hypotheses"></p>
-      <p class="encadre" id="encadre-sud"></p>
-      <p class="note" id="essentiel-sources"></p>
-    </section>
+      </section>
+
+      <section class="etape">
+        <div class="conteneur etape-contenu">
+          <p class="etape-amorce">Ils brûleront environ <strong data-lie="litres">…</strong> de gazole en plus, qui émettront</p>
+          <p class="etape-valeur"><span data-compteur="co2">…</span></p>
+          <p class="etape-texte">de CO<sub>2</sub> par an.</p>
+          <p class="etape-note" id="note-co2"></p>
+        </div>
+      </section>
+
+      <section class="etape">
+        <div class="conteneur etape-contenu">
+          <p class="etape-amorce">Et ce détour a un prix :</p>
+          <p class="etape-valeur"><span data-compteur="cout">…</span></p>
+          <p class="etape-texte">de coût de transport en plus par an, camion et chauffeur, dont <strong data-lie="carburant">…</strong> de gazole.</p>
+          <p class="etape-note" id="note-cout"></p>
+        </div>
+      </section>
+
+      <section class="etape">
+        <div class="conteneur etape-contenu">
+          <p class="etape-amorce">Le Plessis-Gassot n'est pas un cas isolé. Au nord de Vitry, Ris-Orangis est plus loin pour</p>
+          <p class="etape-valeur"><span data-compteur="nord">…</span></p>
+          <p class="etape-texte">des points de départ possibles, de <strong data-lie="nord-mediane">…</strong> en médiane par trajet.</p>
+          <p class="etape-note" id="note-nord"></p>
+        </div>
+      </section>
+
+      <section class="etape">
+        <div class="conteneur etape-contenu">
+          <p class="etape-amorce">Mais au sud de Ris-Orangis, c'est l'inverse : Ris-Orangis est plus proche pour</p>
+          <p class="etape-valeur"><span data-compteur="sud">…</span></p>
+          <p class="etape-texte">des points de départ, de <strong data-lie="sud-mediane">…</strong> en médiane.</p>
+          <p class="etape-note" id="note-sud"></p>
+        </div>
+      </section>
+
+      <section class="etape etape-fin" id="fin-du-recit">
+        <div class="conteneur etape-contenu">
+          <h2>Tout dépend de l'origine du combustible</h2>
+          <p class="etape-texte">À vous de tester d'autres hypothèses.</p>
+          <p class="etape-actions">
+            <a class="bouton" href="carte.html">Voir la carte du détour</a>
+            <a class="bouton" href="annee.html">Ouvrir le calculateur</a>
+          </p>
+          <p class="note" id="essentiel-sources"></p>
+        </div>
+      </section>
+    </div>
 
     <section class="conteneur bloc">
       <h2>Pour aller plus loin</h2>
@@ -100,10 +150,12 @@
   <footer class="pied">
     <div class="conteneur">
       <p>Site citoyen indépendant, sans lien avec la SEMOP, la Ville de Paris ou Google. Éditeur non professionnel ayant choisi de rester anonyme (article 6-III-2 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique). Hébergeur : GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</p>
-      <p>Itinéraires calculés avec Google Maps Platform (collecte du 26 septembre 2026). Fond de carte © IGN – Géoplateforme. Frontières et trait de côte : Natural Earth (domaine public). Bibliothèque cartographique Leaflet. <a href="https://github.com/Rico91130/Thermo-sur-seine">Code source et données</a> : code sous licence MIT, données et textes sous licence <a href="LICENCE-DONNEES.md">CC BY 4.0</a>, hors résultats bruts de Google, fond de carte et citations.</p>
+      <p>Itinéraires calculés avec Google Maps Platform (collecte du 26 septembre 2026). Fond de carte © IGN – Géoplateforme. Frontières et trait de côte : Natural Earth (domaine public). Bibliothèque cartographique Leaflet. Animations : GSAP. <a href="https://github.com/Rico91130/Thermo-sur-seine">Code source et données</a> : code sous licence MIT, données et textes sous licence <a href="LICENCE-DONNEES.md">CC BY 4.0</a>, hors résultats bruts de Google, fond de carte et citations.</p>
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

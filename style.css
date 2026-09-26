@@ -92,7 +92,7 @@ h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; }
   .sommaire { gap: 0 14px; font-size: 0.88rem; }
 }
 main h1 { font-size: clamp(1.8rem, 4.5vw, 2.5rem); margin: 0 0 0.8rem; }
-#essentiel h1 { font-size: clamp(2.2rem, 6vw, 3.2rem); }
+#essentiel h1 { font-size: clamp(2.4rem, 7vw, 4rem); }
 main > .bloc:first-child { padding-top: 32px; }
 .chapeau { font-size: 1.1rem; max-width: 760px; margin: 0 0 24px; }
 
@@ -115,20 +115,39 @@ main > .bloc:first-child { padding-top: 32px; }
 .pages-voisines a:hover { border-color: var(--lien); }
 
 /* Chiffres clés */
-.heros { display: grid; grid-template-columns: 1fr; gap: 16px; }
-@media (min-width: 900px) { .heros { grid-template-columns: 1.1fr 1.4fr; } }
-.hero, .tuile, .carte-conf, .panneau, .graphique, .encadre {
+.tuile, .carte-conf, .panneau, .graphique, .encadre {
   background: var(--surface);
   border: 1px solid var(--bordure);
   border-radius: 12px;
 }
-.hero { padding: 24px; }
-.hero-valeur { font-size: clamp(3rem, 9vw, 4.5rem); font-weight: 600; margin: 0; line-height: 1; }
-.hero-texte { margin: 12px 0 0; }
-@media (min-width: 900px) { .heros .tuiles { grid-template-columns: 1fr; } }
-.bilan-titre { font-size: 1.15rem; margin: 28px 0 12px; }
-.tuiles-bilan + .note { margin: 8px 0 0; }
-.hero-calcul { margin: 12px 0 0; font-size: 0.85rem; color: var(--encre-attenuee); }
+
+/* Récit de la page d'accueil : une étape par écran (animations dans app.js, fonction animerRecit) */
+.etape { min-height: 85vh; min-height: 85svh; display: flex; align-items: center; padding: 48px 0; }
+.etape-ouverture { min-height: calc(100vh - 120px); min-height: calc(100svh - 120px); }
+.etape-contenu { max-width: 780px; width: 100%; }
+.etape-amorce { font-size: clamp(1.1rem, 2.6vw, 1.4rem); color: var(--encre-2); margin: 0 0 10px; }
+.etape-valeur { font-size: clamp(3.2rem, 13vw, 7rem); font-weight: 700; line-height: 1; margin: 0; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.etape-texte { font-size: clamp(1.1rem, 2.6vw, 1.4rem); margin: 14px 0 0; }
+.etape-note { font-size: 0.88rem; color: var(--encre-attenuee); margin: 24px 0 0; max-width: 640px; }
+.etape-fin h2 { font-size: clamp(1.8rem, 5vw, 2.8rem); margin: 0; }
+.etape-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0; }
+.bouton { display: inline-block; padding: 10px 18px; border-radius: 999px; background: var(--lien); color: var(--page); font-weight: 600; text-decoration: none; }
+.bouton:hover { filter: brightness(1.1); }
+.defiler { margin: 40px 0 8px; font-weight: 600; }
+.defiler-fleche { display: inline-block; margin-left: 4px; animation: rebond 1.6s ease-in-out infinite; }
+@keyframes rebond { 50% { transform: translateY(6px); } }
+.barres { display: grid; gap: 12px; margin: 8px 0 28px; }
+.barre { display: grid; grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr); align-items: center; gap: 12px; }
+.barre-libelle { display: flex; flex-direction: column; font-size: 0.9rem; color: var(--encre-2); }
+.barre-libelle strong { color: var(--encre); font-size: 1.05rem; }
+.barre-piste { display: block; height: 26px; }
+.barre-remplie { display: block; height: 100%; border-radius: 4px; }
+.pictos { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 0; max-width: 560px; }
+.picto { width: 28px; height: 28px; fill: none; stroke: var(--serie-1); stroke-width: 1.6; }
+.picto .plein { fill: var(--serie-2); stroke: none; }
+.recit-progression { position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 2000; background: var(--serie-2); transform: scaleX(0); transform-origin: left center; pointer-events: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+@media (prefers-reduced-motion: reduce) { .defiler-fleche { animation: none; } }
 .tuiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
 .tuile { padding: 16px; }
 .tuile-label { margin: 0; color: var(--encre-2); font-size: 0.9rem; }

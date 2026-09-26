@@ -79,5 +79,5 @@ Ouvrez un [ticket](https://github.com/Rico91130/Thermo-sur-seine/issues). Toute 
 - **Indépendance.** Site citoyen indépendant, sans lien avec la SEMOP, la Ville de Paris ou Google.
 - **Éditeur.** Éditeur non professionnel ayant choisi de rester anonyme (article 6-III-2 de la loi n° 2004-575 pour la confiance dans l'économie numérique).
 - **Hébergeur.** GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.
-- **Crédits.** Fond de carte © IGN – Géoplateforme. Itinéraires : Google Maps Platform. Frontières et trait de côte : Natural Earth (domaine public).
+- **Crédits.** Fond de carte © IGN – Géoplateforme. Itinéraires : Google Maps Platform. Frontières et trait de côte : Natural Earth (domaine public). Animations de la page d'accueil : GSAP et ScrollTrigger (licence « Standard no-charge », chargés depuis jsdelivr).
 - **Licence.** Le code est sous licence MIT ([`LICENSE`](LICENSE)). Les données et les textes produits pour ce projet sont sous licence CC BY 4.0 ([`LICENCE-DONNEES.md`](LICENCE-DONNEES.md)). Les résultats bruts de Google, le fond de carte IGN et les citations restent soumis aux droits de leurs auteurs.

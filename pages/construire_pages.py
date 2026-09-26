@@ -37,6 +37,10 @@ MENU = [
 OPTIONS = {
     "leaflet": ('  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">\n',
                 '  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>\n'),
+    # Animations du récit de la page d'accueil (GSAP, licence « Standard no-charge », https://gsap.com/standard-license)
+    "recit": ("",
+              '  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>\n'
+              '  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>\n'),
     "redirection": ("""  <script>
     // Anciennes adresses de la version en une seule page (#carte, #point=IDF1…) : redirection vers la bonne page
     (function () {

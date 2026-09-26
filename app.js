@@ -132,52 +132,144 @@ function urlGoogleMaps(orig, dest, passages) {
   // Recolorer si le thème du système change
   if (recolorer) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolorer);
 
-  /* ---------------- L'essentiel ---------------- */
+  /* ---------------- L'essentiel : récit à faire défiler ---------------- */
   function essentiel() {
     // Hypothèse de référence : combustible venant du Plessis-Gassot, accès final imposé (le plus favorable au projet)
     const detourRef = detour(ref, 'acces');
     const kmAn = camionsDossier * 2 * detourRef;
-    lier('hero-km-an', `≈ ${millions(kmAn)} de km`);   // insécables : « ≈ 1 million » puis « de km » sur écran étroit
-    lier('hero-tours', `${fmt0(Math.round(kmAn / F.tour_terre.valeur))} fois le tour de la Terre`);
-    document.getElementById('hero-calcul').replaceChildren(
-      `Calcul : ${fmt0(camionsDossier)} camions par an × 2 (aller et retour) × ${fmt1(detourRef)} km = ${fmt0(arrondi(kmAn, 1000))} km ; tour de la Terre à l'équateur : ${fmt0(F.tour_terre.valeur)} km. `,
-      el('a', { href: 'annee.html' }, 'Refaire le calcul avec une autre origine'), '.');
-
-    lier('tuile-camion', `${signe0(2 * detourRef)} km`);
-    lier('tuile-camion-note', `aller et retour, depuis le Plessis-Gassot (2 × ${fmt1(detourRef)} km)`);
-
+    const heuresAn = camionsDossier * 2 * ref.ecart_min_median.acces / 60;
+    const b = bilan(kmAn, heuresAn);
+    const tours = Math.round(kmAn / F.tour_terre.valeur), emplois = Math.round(heuresAn / F.duree_legale.valeur);
     const ecarts = cells => cells.map(g => g[5] - g[3]);
     const nord = ecarts(D.grille.filter(g => g[0] > V.lat)), sud = ecarts(D.grille.filter(g => g[0] < R.lat));
     const pct = (arr, test) => Math.round(100 * arr.filter(test).length / arr.length);
-    lier('tuile-nord', `${pct(nord, d => d > 0)} %`);
-    lier('tuile-nord-note', `des points de départ sont plus loin de Ris-Orangis que de Vitry : ${signe0(mediane(nord))} km en médiane par trajet`);
-
-    const heuresAn = camionsDossier * 2 * ref.ecart_min_median.acces / 60;
-    lier('tuile-emplois', `≈ ${fmt0(heuresAn / F.duree_legale.valeur)}`);
-    lier('tuile-emplois-note', `emplois à temps plein : ≈ ${fmt0(arrondi(heuresAn, 100))} heures de conduite par an, aller et retour depuis le Plessis-Gassot, ÷ ${fmt0(F.duree_legale.valeur)} heures (durée légale annuelle). Temps de voiture, donc des minimums, encore à valider.`);
-
-    const b = bilan(kmAn, heuresAn);
-    lier('bilan-co2', `≈ ${fmt0(arrondi(b.co2, 10))} tonnes`);
-    lier('bilan-co2-note', `≈ ${fmt0(arrondi(b.litres, 1000))} litres de gazole × ${fmt1(F.co2_gazole.valeur)} kg de CO₂ par litre (ADEME, de l'extraction du pétrole au pot d'échappement)`);
-    lier('bilan-carburant', `≈ ${fmt0(arrondi(b.carburant, 10000))} €`);
-    lier('bilan-carburant-note', `${fmt0(arrondi(b.litres, 1000))} litres × ${fmt2(F.prix_gazole.valeur)} € par litre hors TVA (CNR, prix de décembre 2025 : la hausse du gazole en 2026 n'est pas comptée)`);
-    lier('bilan-cout', `≈ ${millions(b.cout)} d'euros`);
-    lier('bilan-cout-note', `${fmt0(arrondi(kmAn, 1000))} km × ${fmtBrut(F.cout_km.valeur)} €/km + ${fmt0(arrondi(heuresAn, 100))} h × ${fmt2(F.cout_heure.valeur)} €/h (CNR, hors péages et hors TVA)`);
-    lier('bilan-hypotheses', `Même hypothèse : combustible venant du Plessis-Gassot. Consommation : ${fmt1(F.consommation.valeur)} litres aux 100 km, moyenne des semi-remorques mesurée par le Comité national routier. Les camions à fond mouvant prévus consomment sans doute davantage : ces chiffres sont donc prudents.`);
-
     const arqp = Object.entries(M.poids_arqp), totalArqp = arqp.reduce((a, [, w]) => a + w, 0);
     const detourArqp = arqp.reduce((a, [e, w]) => a + w * detour(parId['E_' + e], 'acces'), 0) / totalArqp;
-    document.getElementById('encadre-sud').replaceChildren(el('strong', {}, 'À savoir : '),
-      `au sud de Ris-Orangis, c'est l'inverse. Ris-Orangis y est `, el('em', {}, 'plus proche'),
-      ` que Vitry pour ${pct(sud, d => d < 0)} % des points de départ (${fmt0(-mediane(sud))} km de moins en médiane). Tout dépend donc de l'origine du combustible, que le maître d'ouvrage ne connaîtra qu'en 2027 (`,
-      lien({ texte: 'question n° 46', url: F.fournisseurs.source.url }), `). Avec la répartition par autoroute proposée par l'ARQP, par exemple, le détour tombe à ≈ ${millions(camionsDossier * 2 * detourArqp)} de km par an. La `,
-      el('a', { href: 'carte.html' }, 'carte'), ' montre le détour pour toutes les origines possibles, et le ',
-      el('a', { href: 'annee.html' }, 'calculateur'), ' permet de tester d\'autres hypothèses.');
-    document.getElementById('essentiel-sources').replaceChildren('Sources : nombre de camions calculé d\'après le dossier (',
-      lien(F.tonnage.source), ' ; ', lien(F.barge.source), ') ; tour de la Terre : ', lien({ texte: 'NGA, WGS 84', url: F.tour_terre.source.url }),
+    const note = (id, ...contenu) => document.getElementById(id).replaceChildren(...contenu);
+
+    // Compteurs : la valeur finale est écrite tout de suite (lecture sans animation), l'animation la refait défiler depuis 0.
+    // Les lecteurs d'écran lisent la valeur finale (texte masqué), pas le compteur animé.
+    const compteurs = new Map();
+    const compteur = (cle, valeur, format) => {
+      const span = document.querySelector(`[data-compteur="${cle}"]`);
+      span.textContent = format(valeur);
+      span.setAttribute('aria-hidden', 'true');
+      span.after(el('span', { class: 'sr-only' }, format(valeur)));
+      compteurs.set(span, { valeur, format });
+    };
+    compteur('detour-trajet', detourRef, v => `${signe1(v)} km`);
+    compteur('camions', camionsDossier, v => fmt0(arrondi(v, 100)));
+    compteur('km-an', kmAn, v => `${fmt0(arrondi(v, 1000))} km`);
+    compteur('heures', heuresAn, v => `${fmt0(arrondi(v, 100))} heures`);
+    compteur('co2', b.co2, v => `${fmt0(arrondi(v, 10))} tonnes`);
+    compteur('cout', b.cout, v => `${fmt0(arrondi(v, 1000))} €`);
+    compteur('nord', pct(nord, d => d > 0), v => `${fmt0(v)} %`);
+    compteur('sud', pct(sud, d => d < 0), v => `${fmt0(v)} %`);
+
+    lier('detour-aller-retour', `${signe0(2 * detourRef)} km`);
+    lier('tours-terre', `${fmt0(tours)} fois le tour de la Terre`);
+    lier('emplois', `${fmt0(emplois)} emplois à temps plein`);
+    lier('litres', `${fmt0(arrondi(b.litres, 1000))} litres`);
+    lier('carburant', `${fmt0(arrondi(b.carburant, 10000))} €`);
+    lier('nord-mediane', `${fmt0(mediane(nord))} km`);
+    lier('sud-mediane', `${fmt0(-mediane(sud))} km de moins`);
+
+    // Deux barres : distance vers Vitry et vers Ris-Orangis, depuis le Plessis-Gassot
+    const kmMax = Math.max(ref.km.vitry, ref.km.acces_impose);
+    document.getElementById('barres-trajet').replaceChildren(...[['Vers Vitry', ref.km.vitry, '--serie-1'], ['Vers Ris-Orangis', ref.km.acces_impose, '--serie-2']]
+      .map(([libelle, km, couleur]) => el('div', { class: 'barre' },
+        el('span', { class: 'barre-libelle' }, libelle, el('strong', {}, `${fmt1(km)} km`)),
+        el('span', { class: 'barre-piste' }, el('span', { class: 'barre-remplie', style: `width:${(100 * km / kmMax).toFixed(1)}%;background:var(${couleur})` })))));
+
+    // Pictogrammes : un globe par tour de la Terre, une silhouette par emploi à temps plein
+    const ns = 'http://www.w3.org/2000/svg';
+    const picto = formes => {
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('class', 'picto');
+      for (const [tag, attrs] of formes) {
+        const n = document.createElementNS(ns, tag);
+        for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+        svg.append(n);
+      }
+      return svg;
+    };
+    const globe = () => picto([['circle', { cx: 12, cy: 12, r: 10 }], ['ellipse', { cx: 12, cy: 12, rx: 4.5, ry: 10 }], ['line', { x1: 2, y1: 12, x2: 22, y2: 12 }]]);
+    const silhouette = () => picto([['circle', { cx: 12, cy: 6.5, r: 4, class: 'plein' }], ['path', { d: 'M4 22c0-5 3.6-8.5 8-8.5s8 3.5 8 8.5z', class: 'plein' }]]);
+    document.getElementById('pictos-terre').replaceChildren(...Array.from({ length: tours }, globe));
+    document.getElementById('pictos-emplois').replaceChildren(...Array.from({ length: emplois }, silhouette));
+
+    // Calculs et sources, étape par étape
+    note('note-camions', `Calcul : ${fmt0(F.tonnage.valeur)} t ÷ ${fmt1(CHARGE_DOSSIER)} t par camion (une barge de 2 500 m³ vaut 28 camions, densité de 0,20 t/m³) : `,
+      lien(F.tonnage.source), ' ; ', lien(F.barge.source), '.');
+    note('note-km-an', `Calcul : ${fmt0(camionsDossier)} camions × 2 (aller et retour) × ${fmt1(detourRef)} km. Tour de la Terre à l'équateur : ${fmt0(F.tour_terre.valeur)} km (`,
+      lien({ texte: 'NGA, WGS 84', url: F.tour_terre.source.url }), ').');
+    note('note-heures', `Calcul : ${fmt0(camionsDossier)} camions × 2 × ${fmt1(ref.ecart_min_median.acces)} minutes de trajet en plus (médiane des prévisions Google aux heures de livraison), puis ÷ ${fmt0(F.duree_legale.valeur)} heures, durée légale annuelle du travail (`,
+      lien({ texte: 'service-public.gouv.fr', url: F.duree_legale.source.url }), '). Ce sont des temps de voiture : un camion ne peut qu\'être plus lent.');
+    note('note-co2', `Calcul : ${fmt0(arrondi(kmAn, 1000))} km × ${fmt1(F.consommation.valeur)} litres aux 100 km (`, ...lienCnr('CNR'),
+      `) × ${fmt1(F.co2_gazole.valeur)} kg de CO₂ par litre, de l'extraction du pétrole au pot d'échappement (`, lien({ texte: 'ADEME', url: F.co2_gazole.source.url }),
+      '). Les camions à fond mouvant prévus consomment sans doute davantage : ce chiffre est prudent.');
+    note('note-cout', `Calcul : ${fmt0(arrondi(kmAn, 1000))} km × ${fmtBrut(F.cout_km.valeur)} €/km + ${fmt0(arrondi(heuresAn, 100))} h × ${fmt2(F.cout_heure.valeur)} €/h ; gazole : ${fmt0(arrondi(b.litres, 1000))} litres × ${fmt2(F.prix_gazole.valeur)} € (`,
+      ...lienCnr('CNR, décembre 2025'), '). Hors péages et hors TVA. Le gazole a fortement augmenté en 2026 : ces montants sont sous-estimés.');
+    note('note-nord', 'Le dossier prévoit des livraisons « ', F.nord.citation, ' » (', lien(F.nord.source), ').');
+    note('note-sud', 'Tout dépend donc de l\'origine du combustible, que le maître d\'ouvrage ne connaîtra qu\'en 2027 (', lien({ texte: 'question n° 46', url: F.fournisseurs.source.url }),
+      `). Avec la répartition par autoroute proposée par l'ARQP, par exemple, le détour tombe à ≈ ${millions(camionsDossier * 2 * detourArqp)} de km par an.`);
+    note('essentiel-sources', 'Sources : nombre de camions calculé d\'après le dossier (', lien(F.tonnage.source), ' ; ', lien(F.barge.source),
+      ') ; tour de la Terre : ', lien({ texte: 'NGA, WGS 84', url: F.tour_terre.source.url }),
       ' ; durée légale du travail : ', lien({ texte: 'service-public.gouv.fr', url: F.duree_legale.source.url }),
       ' ; consommation et coûts : ', ...lienCnr('CNR, référentiel régional'), ' ; CO₂ du gazole : ', lien({ texte: 'ADEME, Base Carbone', url: F.co2_gazole.source.url }),
-      ' ; distances et temps : mesures Google du 26 septembre 2026 (', el('a', { href: 'methode.html' }, 'méthode'), ').');
+      ' ; distances et temps : mesures Google du 26 septembre 2026 (', el('a', { href: 'methode.html' }, 'méthode'), '). Toutes les étapes supposent un combustible venant du Plessis-Gassot, sauf les deux dernières, qui portent sur tous les points de départ possibles.');
+
+    animerRecit(compteurs);
+  }
+
+  // Animations du récit (GSAP + ScrollTrigger, chargés par index.html). Sans GSAP ou avec « réduire les animations »,
+  // rien n'est masqué : les valeurs finales restent affichées.
+  function animerRecit(compteurs) {
+    const G = window.gsap, ST = window.ScrollTrigger;
+    if (!G || !ST || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    G.registerPlugin(ST);
+    document.documentElement.classList.add('recit-anime');
+    const compter = (span, duree, ease) => {
+      const { valeur, format } = compteurs.get(span), o = { v: 0 };
+      return G.fromTo(o, { v: 0 }, { v: valeur, duration: duree, ease, onUpdate: () => { span.textContent = format(o.v); } });
+    };
+
+    // Barre de progression de la lecture
+    const progression = el('div', { class: 'recit-progression', 'aria-hidden': 'true' });
+    document.body.append(progression);
+    G.to(progression, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: '#essentiel', start: 'top top', end: 'bottom bottom', scrub: 0.3 } });
+
+    // Ouverture
+    G.from('.etape-ouverture .etape-contenu > *', { y: 30, opacity: 0, duration: 0.9, stagger: 0.15, ease: 'power3.out' });
+
+    // Étapes ordinaires : apparition en cascade, puis compteurs, barres et pictogrammes
+    document.querySelectorAll('.etape:not(.etape-ouverture):not(.etape-epinglee)').forEach(etape => {
+      const tl = G.timeline({ scrollTrigger: { trigger: etape, start: 'top 70%', toggleActions: 'play none none none' } });
+      tl.from(etape.querySelectorAll('.etape-contenu > *'), { y: 40, opacity: 0, duration: 0.8, stagger: 0.12, ease: 'power3.out' });
+      etape.querySelectorAll('[data-compteur]').forEach(s => tl.add(compter(s, 1.6, 'power2.out'), 0.2));
+      const barres = etape.querySelectorAll('.barre-remplie');
+      if (barres.length) tl.from(barres, { scaleX: 0, transformOrigin: 'left center', duration: 1.3, stagger: 0.3, ease: 'power2.out' }, 0.3);
+      const pictos = etape.querySelectorAll('.picto');
+      if (pictos.length) tl.from(pictos, { scale: 0, opacity: 0, duration: 0.45, stagger: 0.08, ease: 'back.out(2.5)' }, 0.6);
+    });
+
+    // Étape épinglée : les kilomètres et les tours de la Terre avancent au rythme du défilement
+    const epinglee = document.querySelector('.etape-epinglee');
+    if (epinglee) {
+      // Le texte apparaît dès l'entrée dans l'écran ; le compteur et les globes suivent ensuite le défilement pendant l'épinglage
+      G.from(epinglee.querySelectorAll('.etape-contenu > :not(.pictos)'), { y: 40, opacity: 0, duration: 0.8, stagger: 0.12, ease: 'power3.out',
+        scrollTrigger: { trigger: epinglee, start: 'top 70%', toggleActions: 'play none none none' } });
+      // Le nombre de tours de la Terre suit le compteur de kilomètres
+      const spanKm = epinglee.querySelector('[data-compteur]'), spanTours = epinglee.querySelector('[data-lie="tours-terre"]');
+      const toursFin = compteurs.get(spanKm).valeur / F.tour_terre.valeur, tours = { v: 0 };
+      G.timeline({ scrollTrigger: { trigger: epinglee, start: 'top top', end: '+=140%', pin: true, scrub: 0.6 } })
+        .add(compter(spanKm, 1, 'none'), 0)
+        .fromTo(tours, { v: 0 }, { v: toursFin, duration: 1, ease: 'none', onUpdate: () => {
+          spanTours.textContent = `${fmt0(tours.v >= toursFin ? Math.round(toursFin) : Math.floor(tours.v))} fois le tour de la Terre`;
+        } }, 0)
+        .from(epinglee.querySelectorAll('.picto'), { scale: 0, opacity: 0, rotation: -90, stagger: 0.035, duration: 0.15, ease: 'back.out(2)' }, 0)
+        .to({}, { duration: 0.2 });   // courte pause en fin d'épinglage
+    }
   }
 
   /* ---------------- Le dossier et les données ---------------- */
