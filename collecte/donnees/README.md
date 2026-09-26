@@ -18,7 +18,7 @@ Ces données ont été produites par [`collecte_v2.py`](../collecte_v2.py) avec 
 ## Colonnes principales
 
 - `variante` : pour Vitry, toujours `rapide`. Pour Ris-Orangis :
-  - `rapide` : minimum géographique, trajet non autorisé ;
+  - `rapide` : trajet que Google choisirait sans contrainte ; non retenu, car il ne respecte pas l'accès final décrit par le maître d'ouvrage (voir la colonne `acces_conforme`) ;
   - `acces_impose` : passage par A6 → D310 → RN7 → Chemin Latéral, l'hypothèse la plus favorable au projet ;
   - `impose_est` et `impose_ouest` : itinéraire du dossier par la RN104.
 - `distance_totale_m` = `distance_m` + `forfait_m`. Le forfait vaut 1 380 m pour Ris-Orangis : c'est le trajet de l'entrée du Chemin Latéral jusqu'au portail. Il vaut 0 pour Vitry.
@@ -34,4 +34,5 @@ Les fichiers de ce dossier sont complets. C'est `build_data.py` qui masque, sur 
 - **Véhicule.** Google calcule des trajets en voiture : il ne propose pas de calcul poids lourd en France. Les temps sont donc des minimums pour un camion. Les distances restent valables si le camion emprunte le même itinéraire.
 - **Choix d'itinéraire.** Google retient l'itinéraire le plus rapide, pas le plus court.
 - **Vitry.** Aucune contrainte n'est imposée au trajet vers Vitry, puisque aucun itinéraire n'y est défini.
+- **Itinéraire du dossier.** Le point de passage de la RN104 impose un sens de circulation (vers l'A6), mais la règle ne dit pas par où rejoindre la RN104. Google prend donc parfois un trajet avec demi-tour sur la RN104 (par exemple depuis l'entrée de l'A6 au sud, ou depuis le Plessis-Gassot par la branche ouest). Les variantes `impose_est` et `impose_ouest` sont à lire avec cette limite.
 - **Prévisions.** Elles restent à valider : il faudra les comparer aux relevés en direct faits pendant la même semaine. Ces relevés seront publiés avec la validation.

@@ -18,4 +18,5 @@ Ce dépôt est publié sous deux licences :
 - **Les résultats d'itinéraires bruts fournis par Google** : distances, durées et tracés figurant dans `collecte/donnees/` et `data/donnees.json`. Ils proviennent de Google Maps Platform et restent soumis aux [conditions d'utilisation de Google](https://cloud.google.com/maps-platform/terms). Ils sont publiés pour permettre la vérification de la méthode.
 - **Le fond de carte** : © IGN – Géoplateforme, selon ses propres conditions.
 - **L'extrait de Natural Earth** (`collecte/terres_natural-earth.geojson`) : frontières et trait de côte, dans le domaine public (https://www.naturalearthdata.com/about/terms-of-use/).
+- **Les valeurs de référence citées** (Comité national routier, ADEME, NGA, service-public.gouv.fr) : elles restent la propriété de leurs auteurs et sont reprises avec leur source.
 - **Les citations du dossier de concertation, des réponses du maître d'ouvrage et des cahiers d'acteurs.** Elles restent la propriété de leurs auteurs et sont reproduites au titre du droit de courte citation, avec leur source.
