@@ -522,12 +522,10 @@ function urlGoogleMaps(orig, dest, passages) {
       svgEl('rect', { x: 15.5, y: -4.5, width: 2, height: 9, rx: 1, class: 'camion-parebrise' }, g);
       return g.parentNode;   // groupe animé (le groupe intérieur porte l'échelle)
     };
-    // Barge vue de dessus, poussée par son pousseur (à l'arrière), orientée vers la droite
+    // Péniche vue de dessus, orientée vers la droite : une seule coque, arrière en demi-cercle, proue en demi-ellipse
     const barge = (parent, echelle = 1) => {
       const g = svgEl('g', { transform: `scale(${echelle})` }, svgEl('g', { class: 'barge' }, parent));
-      svgEl('rect', { x: -12, y: -7, width: 30, height: 14, rx: 3, class: 'barge-coque' }, g);
-      svgEl('rect', { x: -8, y: -4.5, width: 22, height: 9, rx: 1.5, class: 'barge-cargaison' }, g);
-      svgEl('rect', { x: -22, y: -5, width: 9, height: 10, rx: 2.5, class: 'barge-pousseur' }, g);
+      svgEl('path', { d: 'M -15 -7 H 7 A 11 7 0 0 1 7 7 H -15 A 7 7 0 0 1 -15 -7 Z', class: 'barge-coque' }, g);
       return g.parentNode;
     };
     // Tracé sinueux entre deux hauteurs : virages alternés à gauche et à droite, un tous les ~420 px

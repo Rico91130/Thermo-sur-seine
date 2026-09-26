@@ -298,9 +298,7 @@ main > .bloc:first-child { padding-top: 32px; }
 .fleuve-parcouru { fill: none; stroke: var(--serie-1); stroke-width: 24; stroke-linecap: round; opacity: 0.32; }
 .fleuve-reflets { fill: none; stroke: var(--surface); stroke-width: 1.5; stroke-dasharray: 3 14; opacity: 0.9; }
 .route-quai { fill: var(--encre-attenuee); }
-.barge-coque { fill: var(--serie-1); }
-.barge-cargaison { fill: var(--encre-attenuee); }
-.barge-pousseur { fill: var(--encre); }
+.barge-coque { fill: var(--serie-1); stroke: var(--surface); stroke-width: 1.5; }
 .camion-remorque { fill: var(--serie-2); }
 .camion-cabine { fill: var(--encre); }
 .camion-parebrise { fill: var(--accent-fond); }
