@@ -1,0 +1,98 @@
+{
+  "_description": "Paramètres de la collecte v2 (collecte_v2.py). Chaque valeur renvoie à sa source.",
+
+  "destinations": {
+    "VITRY": {
+      "nom": "Chaufferie de Vitry-sur-Seine, entrée rue des Fusillés / voie interne du site EDF (point V1)",
+      "lat": 48.7875,
+      "lon": 2.4154,
+      "forfait_m": 0,
+      "source": "Dossier de concertation p. 50 et 83 ; OpenStreetMap way 35774034"
+    },
+    "RIS": {
+      "nom": "Plateforme de Ris-Orangis, entrée du Chemin Latéral depuis la RN7 à Grigny (point R3)",
+      "lat": 48.6701,
+      "lon": 2.3956,
+      "forfait_m": 1380,
+      "forfait_source": "Reste à parcourir jusqu'au portail camions : 1 251 m de Chemin Latéral (OpenStreetMap way 40134333) + environ 133 m de voie nouvelle à créer (plan du dossier p. 55 calé sur l'orthophoto IGN). Le portail lui-même n'est pas visé directement, car Google le rattacherait à la RN7, de l'autre côté du RER D.",
+      "source": "Dossier de concertation p. 54, 55 et 87 ; questions n° 63 et 118"
+    }
+  },
+
+  "itineraire_impose_ris": {
+    "description": "RN104, puis A6, D310, RN7 sur environ 900 m à Grigny, puis Chemin Latéral",
+    "source": "Dossier de concertation p. 87 ; question n° 63 (https://www.thermo-sur-seine-concertation.fr/posts/169499) ; question n° 118 (https://www.thermo-sur-seine-concertation.fr/posts/170646)",
+    "points_passage": {
+      "N104_EST": {
+        "lat": 48.63175,
+        "lon": 2.49379,
+        "cap": 266,
+        "note": "Francilienne, branche est, chaussée en direction de l'A6 (Tigery), OpenStreetMap way 214260776"
+      },
+      "N104_OUEST": {
+        "lat": 48.62478,
+        "lon": 2.33018,
+        "cap": 91,
+        "note": "Francilienne, branche ouest, chaussée en direction de l'A6 (Bondoufle), OpenStreetMap way 91899967"
+      },
+      "ACCES_D310": {
+        "lat": 48.66057,
+        "lon": 2.40107,
+        "cap": 40,
+        "note": "D310 à Grigny, sens A6 → RN7, environ 250 m avant l'échangeur avec la RN7. Point relevé sur un tracé Google passant par l'A6 puis la D310 ; géocodage inverse : « D 310, Grigny ». Sans ce point, Google arrive depuis la RN104 est par la rue Albert Rémy (RN7) à Ris-Orangis, ce que le dossier exclut (question n° 63 : « Aucun camion ne traversera Ris-Orangis »)."
+      }
+    },
+    "variantes_ris": {
+      "rapide": [],
+      "acces_impose": ["ACCES_D310"],
+      "impose_est": ["N104_EST", "ACCES_D310"],
+      "impose_ouest": ["N104_OUEST", "ACCES_D310"]
+    },
+    "variantes_note": "rapide = minimum géographique, qui peut traverser les villes (non autorisé) ; acces_impose = accès final imposé A6 → D310 → RN7 → Chemin Latéral, sans obligation de passer par la RN104 (hypothèse la plus favorable au projet ; la carte du dossier p. 88 trace aussi l'A6 depuis Paris) ; impose_est / impose_ouest = itinéraire du texte du dossier, avec la RN104 (branche est ou ouest).",
+    "controle": {
+      "nom": "Passage par la D310 à Grigny (accès final imposé)",
+      "point": "ACCES_D310",
+      "tolerance_m": 60
+    }
+  },
+
+  "livraisons": {
+    "jours_semaine": [0, 1, 2, 3, 4],
+    "heure_debut": "08:00",
+    "heure_fin": "20:00",
+    "exclure_feries": true,
+    "exclure_aout": true,
+    "source": "Dossier de concertation p. 87 : « exclusivement en semaine sur une plage horaire comprise entre 8h et 20h et aucune livraison ne sera effectuée le week-end ni les jours fériés. Le trafic sera strictement nul au mois d'août. »"
+  },
+
+  "grille": {
+    "centre": "VITRY",
+    "rayon_km": 300,
+    "rayon_proche_km": 60,
+    "pas_proche_km": 5,
+    "pas_loin_km": 20,
+    "source": "Rayon d'approvisionnement de 300 km au maximum : questions n° 46 et 149 ; délibération 2025 SG 36, p. 11. L'origine réelle du CSR ne sera pas connue avant 2027 (question n° 46)."
+  },
+
+  "entrees_poids_arqp": {
+    "A1": 26.50, "A4": 12.30, "A5": 3.89, "A6": 10.68,
+    "A10": 17.12, "A11": 8.25, "A13": 18.20, "A16": 3.07,
+    "source": "Cahier d'acteur ARQP n° 19, p. 3 : parts calculées selon la population des départements situés dans le rayon de 300 km, hors Île-de-France"
+  },
+
+  "tarifs": {
+    "source": "https://developers.google.com/maps/billing-and-pricing/pricing, consulté le 26/09/2026",
+    "usd_pour_1000": {
+      "ROUTES_ESSENTIALS": 5.0,
+      "ROUTES_PRO": 10.0,
+      "MATRIX_ESSENTIALS": 5.0,
+      "MATRIX_PRO": 10.0
+    },
+    "franchise_mensuelle": {
+      "ROUTES_ESSENTIALS": 10000,
+      "ROUTES_PRO": 5000,
+      "MATRIX_ESSENTIALS": 10000,
+      "MATRIX_PRO": 5000
+    }
+  }
+}

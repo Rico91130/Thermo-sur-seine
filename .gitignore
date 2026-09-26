@@ -1,0 +1,5 @@
+# Clé Google : ne jamais publier
+.env
+__pycache__/
+*.pyc
+.~lock*
