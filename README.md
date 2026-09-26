@@ -2,7 +2,7 @@
 
 Site citoyen qui mesure ce que coûte, en kilomètres et en temps, le choix de livrer le combustible de la future chaufferie de Vitry-sur-Seine (projet Thermo-sur-Seine) par camion à **Ris-Orangis**, plutôt que directement à **Vitry**.
 
-- **Site** : sept pages statiques publiées avec GitHub Pages : `index.html` (l'essentiel), `dossier.html`, `itineraires.html`, `carte.html`, `heures.html`, `annee.html` et `methode.html`. Elles partagent `style.css` et `app.js`, qui n'exécute que le code de la page affichée (`<body data-page="…">`). Ces pages HTML sont **générées** : voir « Modifier les pages » ci-dessous.
+- **Site** : huit pages statiques publiées avec GitHub Pages : `presentation.html` (le projet en bref et son calendrier), `index.html` (l'essentiel : le détour en chiffres), `dossier.html` (questions du public, réponses du maître d'ouvrage et faits, en conversation de groupe), `itineraires.html`, `carte.html`, `heures.html`, `annee.html` et `methode.html`. Elles partagent `style.css` et `app.js`, qui n'exécute que le code de la page affichée (`<body data-page="…">`). Ces pages HTML sont **générées** : voir « Modifier les pages » ci-dessous.
 - **Données et code de la mesure** : dossier [`collecte/`](collecte/).
 - **Principe** : chaque chiffre renvoie à sa source (page du dossier de concertation, question publiée sur la plateforme de la concertation), et chaque mesure peut être refaite par n'importe qui.
 
@@ -66,13 +66,13 @@ Sans l'option `--go`, rien n'est envoyé à Google : le script affiche seulement
 
 L'en-tête, le menu et le pied de page ne sont écrits qu'une fois. Les pages HTML de la racine sont construites à partir de :
 - [`pages/gabarit.html`](pages/gabarit.html) : en-tête, menu et pied de page, communs à toutes les pages ;
-- [`pages/contenu/`](pages/contenu/) : le contenu propre à chaque page, précédé de son titre, de sa description et de ses options (`leaflet` pour la carte, `recit` pour les animations de l'accueil, `redirection` pour les anciennes adresses) ;
+- [`pages/contenu/`](pages/contenu/) : le contenu propre à chaque page, précédé de son titre, de sa description et de ses options (`leaflet` pour la carte, `recit` pour les récits animés de l'accueil et de la présentation, `redirection` pour les anciennes adresses) ;
 - [`pages/construire_pages.py`](pages/construire_pages.py) : l'ordre et les libellés du menu.
 
 Après une modification de ces fichiers :
 
 ```bash
-python pages/construire_pages.py              # régénère les sept pages
+python pages/construire_pages.py              # régénère les huit pages
 python pages/construire_pages.py --verifier   # avant un commit : vérifie qu'aucune page n'a été modifiée à la main ou oubliée
 ```
 
@@ -89,7 +89,7 @@ python -m http.server 8000
 
 Le fond de carte vient de l'IGN (Géoplateforme) et ne demande aucune clé. Le site n'appelle jamais Google quand on le consulte. Les liens « Vérifier » ouvrent simplement Google Maps avec le même trajet.
 
-La page d'accueil est un récit à faire défiler : chaque chiffre s'anime quand il entre dans l'écran, et un petit camion descend la page. Les animations utilisent GSAP (chargé depuis jsdelivr). Sans GSAP, ou si le navigateur demande de réduire les animations, toutes les valeurs s'affichent directement.
+La page d'accueil et la page de présentation sont des récits à faire défiler : chaque chiffre s'anime quand il entre dans l'écran ; un petit camion descend l'accueil, une barge descend la Seine sur la présentation. Les animations utilisent GSAP (chargé depuis jsdelivr). Sans GSAP, ou si le navigateur demande de réduire les animations, toutes les valeurs s'affichent directement.
 
 ## Signaler une erreur
 

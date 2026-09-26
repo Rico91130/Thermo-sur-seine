@@ -22,6 +22,7 @@
     <div class="conteneur">
       <p class="surtitre"><a class="marque" href="./">Le détour des camions</a> <span class="surtitre-suite">Thermo-sur-Seine · concertation préalable jusqu'au 1er novembre 2026</span></p>
       <nav class="sommaire" aria-label="Pages du site">
+        <a href="presentation.html">Présentation</a>
         <a href="./" aria-current="page">L'essentiel</a>
         <a href="dossier.html">Le dossier et les données</a>
         <a href="itineraires.html">Les itinéraires</a>
@@ -40,84 +41,14 @@
       <section class="etape etape-ouverture">
         <div class="conteneur etape-contenu">
           <h1>Le détour des camions</h1>
-          <p class="chapeau">Thermo-sur-Seine, c'est une future chaufferie à Vitry-sur-Seine, dont le combustible arrivera par camion à Ris-Orangis, puis par la Seine en barge. Ce site présente le projet, puis mesure avec Google Maps ce que coûte ce détour aux camions. Toutes ses données et ses sources sont publiées.</p>
-          <p class="defiler">Faites défiler pour découvrir le projet <span class="defiler-fleche" aria-hidden="true">↓</span></p>
-          <p class="note"><a href="#zoom-detour">Passer directement aux chiffres du détour</a> · <a href="#fin-du-recit">aux liens et aux sources</a></p>
-        </div>
-      </section>
-
-      <!-- Le projet dans son ensemble, avant le zoom sur le détour des camions -->
-      <section class="etape">
-        <div class="conteneur etape-contenu">
-          <p class="etape-amorce">Le projet, c'est d'abord une chaufferie à Vitry-sur-Seine, sur le site de l'ancienne centrale à charbon d'EDF. Elle produira</p>
-          <p class="etape-valeur"><span data-compteur="chaleur">…</span></p>
-          <p class="etape-texte">de chaleur par an pour le réseau de chauffage urbain de Paris et de 16 communes, qui chauffe plus d'un million d'habitants.</p>
-          <p class="etape-note" id="note-chaleur"></p>
-        </div>
-      </section>
-
-      <section class="etape">
-        <div class="conteneur etape-contenu">
-          <p class="etape-amorce">Pour la faire tourner, il faudra brûler chaque année</p>
-          <p class="etape-valeur"><span data-compteur="tonnage">…</span></p>
-          <p class="etape-texte">de combustibles solides de récupération (CSR) : des déchets qui ne peuvent pas être recyclés, triés et préparés pour être brûlés.</p>
-          <p class="etape-note" id="note-tonnage"></p>
-        </div>
-      </section>
-
-      <section class="etape">
-        <div class="conteneur etape-contenu">
-          <p class="etape-amorce">Ce combustible n'arrivera pas directement à Vitry.</p>
-          <figure class="chaine" id="chaine-projet">
-            <div class="chaine-schema" aria-hidden="true">
-              <div class="chaine-etape">
-                <svg class="chaine-icone" viewBox="0 0 32 32"><rect x="4" y="16" width="11" height="11" rx="1.5"/><rect x="17" y="16" width="11" height="11" rx="1.5"/><rect x="10.5" y="4" width="11" height="11" rx="1.5"/></svg>
-                <strong>Centres de préparation</strong><span>dans un rayon de 300 km</span>
-              </div>
-              <div class="chaine-lien chaine-lien-camion">
-                <span class="chaine-mode">camions</span>
-                <span class="chaine-piste"><svg class="chaine-mobile" viewBox="0 0 32 20"><rect x="1" y="3" width="19" height="11" rx="1.5" class="chaine-remorque"/><path d="M21 6h5.5l4 4.5V14H21z" class="chaine-cabine"/><circle cx="7" cy="16" r="2.6"/><circle cx="25" cy="16" r="2.6"/></svg></span>
-              </div>
-              <div class="chaine-etape chaine-etape-ris">
-                <svg class="chaine-icone" viewBox="0 0 32 32"><path d="M6 27V9h3v18M9 10l14-5v4L9 12"/><path d="M20 9v6"/><rect x="16" y="15" width="8" height="5" rx="1"/><path d="M2 29c2.5-1.6 4.5-1.6 7 0s4.5 1.6 7 0 4.5-1.6 7 0 4.5 1.6 7 0"/></svg>
-                <strong>Plateforme de Ris-Orangis</strong><span>chargement des barges</span>
-              </div>
-              <div class="chaine-lien chaine-lien-barge">
-                <span class="chaine-mode">barges sur la Seine</span>
-                <span class="chaine-piste"><svg class="chaine-mobile" viewBox="0 0 32 20"><path d="M1 10h30l-4 7H5z" class="chaine-coque"/><rect x="6" y="5" width="18" height="5" rx="1" class="chaine-cargaison"/></svg></span>
-              </div>
-              <div class="chaine-etape">
-                <svg class="chaine-icone" viewBox="0 0 32 32"><path d="M3 28V16l7 4v-4l7 4v-4l7 4V6h5v22z"/><path d="M26.5 3c-1.5 1-1.5 2 0 3"/></svg>
-                <strong>Chaufferie de Vitry</strong><span>production de vapeur</span>
-              </div>
-              <div class="chaine-lien chaine-lien-reseau">
-                <span class="chaine-mode">réseau de chaleur</span>
-                <span class="chaine-piste"></span>
-              </div>
-              <div class="chaine-etape">
-                <svg class="chaine-icone" viewBox="0 0 32 32"><path d="M3 15 11 8l8 7v13H3z"/><path d="M19 13l5-4 5 4v15h-10"/><rect x="8.5" y="20" width="5" height="8"/></svg>
-                <strong>Paris et 16 communes</strong><span>chauffage et eau chaude</span>
-              </div>
-            </div>
-            <figcaption class="sr-only">Schéma : centres de préparation du combustible, puis camions jusqu'à la plateforme de Ris-Orangis, puis barges sur la Seine jusqu'à la chaufferie de Vitry, puis réseau de chaleur de Paris et de 16 communes.</figcaption>
-          </figure>
-          <p class="etape-texte">Des camions le livreront à une plateforme fluviale à Ris-Orangis. Des barges l'amèneront ensuite par la Seine jusqu'à Vitry : <strong data-lie="trajet-fluvial">…</strong> aller et retour.</p>
-          <p class="etape-note" id="note-chaine"></p>
-        </div>
-      </section>
-
-      <section class="etape">
-        <div class="conteneur etape-contenu">
-          <p class="etape-amorce">Pourquoi ne pas livrer directement Vitry ? Le maître d'ouvrage répond :</p>
-          <blockquote class="etape-citation" id="citation-foncier"></blockquote>
-          <p class="etape-texte">Ce choix a un coût que le dossier ne chiffre pas : <strong>le détour des camions</strong>. C'est ce que mesure ce site.</p>
-          <p class="etape-note" id="note-foncier"></p>
+          <p class="chapeau">Le combustible de la future chaufferie de Vitry-sur-Seine sera livré par camion à Ris-Orangis, puis acheminé par la Seine en barge. Ce site mesure, avec Google Maps, ce que coûte ce détour, et publie toutes ses données et ses sources.</p>
+          <p class="defiler">Faites défiler pour découvrir les chiffres <span class="defiler-fleche" aria-hidden="true">↓</span></p>
+          <p class="note">Vous découvrez le projet ? <a href="presentation.html">Commencez par sa présentation</a>. · <a href="#fin-du-recit">Passer directement aux liens et aux sources</a></p>
         </div>
       </section>
 
       <section class="etape" id="zoom-detour">
         <div class="conteneur etape-contenu">
-          <p class="etape-surtitre">Zoom sur le détour des camions</p>
           <p class="etape-amorce">Prenons un camion qui part du centre de préparation de combustible (CSR) du Plessis-Gassot (Val-d'Oise), au nord de Paris.</p>
           <div class="barres" id="barres-trajet"></div>
           <p class="etape-valeur"><span data-compteur="detour-trajet">…</span></p>
@@ -222,7 +153,8 @@
     <section class="conteneur bloc">
       <h2>Pour aller plus loin</h2>
       <div class="pages-liens">
-        <a class="page-lien" href="dossier.html"><strong>Le dossier et les données</strong><span>Les affirmations du dossier, confrontées aux mesures.</span></a>
+        <a class="page-lien" href="presentation.html"><strong>Présentation</strong><span>Le projet Thermo-sur-Seine en quelques chiffres, et son calendrier.</span></a>
+        <a class="page-lien" href="dossier.html"><strong>Le dossier et les données</strong><span>Les questions du public, les réponses du maître d'ouvrage, et les faits.</span></a>
         <a class="page-lien" href="itineraires.html"><strong>Les itinéraires</strong><span>Les règles imposées aux camions, leurs sources et leurs points de passage.</span></a>
         <a class="page-lien" href="carte.html"><strong>La carte</strong><span>Le détour pour toutes les origines possibles, dans un rayon de 300 km.</span></a>
         <a class="page-lien" href="heures.html"><strong>Heure par heure</strong><span>Les temps de trajet prévus pour chaque heure de livraison.</span></a>

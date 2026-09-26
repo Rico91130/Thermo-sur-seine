@@ -24,6 +24,8 @@ Q_URL = "https://www.thermo-sur-seine-concertation.fr/posts/"
 CNR_REGIONAL = {"texte": "CNR, référentiel de prix de revient « régional », ensemble articulé gazole, échantillon 2025, conditions économiques de décembre 2025",
                 "url": "https://www.cnr.fr/espace-standard/3",
                 "archive": "http://web.archive.org/web/20260310155217/https://cnr.fr/espace-standard/3"}
+ESSENTIEL_PROJET = {"texte": "L'essentiel du projet (juillet 2026), p. 3",
+                    "url": "https://www.thermo-sur-seine-concertation.fr/fi/f3LPiQaOKwu23/xl92oZf1yjujW/Thermo-sur-Seine_Essentiel-du-projet_Juillet2026_web.pdf#page=3"}
 # Seule source officielle donnant la consommation des pousseurs par km de convoi (la Base Carbone ne donne plus que des t.km)
 GUIDE_GES = {"texte": "Ministère de la Transition écologique, « Information GES des prestations de transport », guide méthodologique, septembre 2018, p. 50, tableaux 11 et 12 (consulté le 26/09/2026)",
              "url": "https://www.ecologie.gouv.fr/sites/default/files/publications/Info%20GES_Guide%20m%C3%A9thodo.pdf#page=52"}
@@ -182,6 +184,29 @@ def main():
             "csr": {"citation": "Ils proviennent de déchets impossibles à recycler (refus de tri, encombrants, activités économiques et bâtiment) qui sont sélectionnés et préparés pour être valorisés en énergie.", "source": dossier(7)},
             "chaine": {"citation": "Alimentée par des combustibles de récupération préalablement collectés, triés, puis acheminés par voie fluviale depuis une plateforme située à Ris-Orangis (91), elle produira de la vapeur destinée au réseau de chaleur.", "source": dossier(42)},
             "trajet_fluvial": {"valeur": 36, "citation": "des pousseurs de lignes déplaceront les barges sur le trajet de 36 km aller/retour qui sépare les sites de Vitry et Ris-Orangis", "source": dossier(56)},
+            # Calendrier du projet (page Présentation), d'après le dossier p. 97 et la question n° 46
+            "calendrier": {"etapes": [
+                {"annee": "2026", "texte": "Concertation préalable, du 1er septembre au 1er novembre", "citation": "Du 1er septembre au 1er novembre 2026, toutes les personnes intéressées sont invitées à poser leurs questions, soumettre des contributions et participer aux temps de rencontres.", "source": ESSENTIEL_PROJET},
+                {"annee": "2027", "texte": "Enquête publique et choix des fournisseurs de combustible", "citation": "En 2027, une enquête publique se déroulera sous l'égide d'une commission d'enquête indépendante", "source": dossier(97), "autre_source": question(46, 168716)},
+                {"annee": "2028", "texte": "Début des travaux ; plateforme de Ris-Orangis construite de 2028 à 2030", "citation": "les travaux pourraient démarrer dès 2028", "source": dossier(97)},
+                {"annee": "2031", "texte": "Mise en service de la 1re ligne de production et de la plateforme fluviale de Ris-Orangis", "citation": "Le début de l'exploitation industrielle de la nouvelle chaufferie de Vitry-sur-Seine est envisagé en 2031, date programmée pour la mise en service de la première ligne de production et de la plateforme fluviale à Ris-Orangis.", "source": dossier(97)},
+                {"annee": "2033", "texte": "2e ligne de production", "citation": "La 2e ligne de production et les chaudières électriques entreront en activité en 2033", "source": dossier(97)},
+                {"annee": "2034", "texte": "3e ligne : la chaufferie à pleine puissance", "citation": "puis la 3e ligne de production en 2034", "source": dossier(97)},
+            ]},
+            # Conversation de groupe (page « Le dossier et les données ») : questions réelles du public, publiées sans nom d'auteur,
+            # et réponses du maître d'ouvrage, citées mot pour mot. Statut des réponses vérifié le 26/09/2026.
+            "public_camions": {"citation": "Combien de camions en plus pour alimenter le monstre ?", "source": question(36, 168047)},
+            "public_a86": {"citation": "Quel sera l'impact sur le trafic, la pollution co2 et la saturation de l'A86 des camions qui ne manqueront pas d'apporter leurs déchets jusqu'à Vitry ?", "source": question(36, 168047)},
+            "public_ris": {"citation": "Comment allez-vous acheminer les déchets au niveau de ris orangis ? Par camion avec tout ce que cela engendrera en terme de circulation , de pollution et de gêne", "source": question(63, 169499)},
+            "public_plateforme": {"citation": "Le projet de chaufferie peut-il fonctionner sans cette plateforme ?", "source": question(119, 170649)},
+            "public_vitry": {"citation": "Pourquoi l'alternative d'une livraison directe des déchets à Vitry-sur-Seine n'est -elle pas présentée ?", "source": question(195, 172449), "sans_reponse": "26/09/2026"},
+            "public_fluvial": {"citation": "Le transport fluvial réduit-il réellement les nuisances routières, ou ne fait-il que les déplacer ?", "source": question(95, 170113), "sans_reponse": "26/09/2026"},
+            "public_origine": {"citation": "Quelles seront les installations et leurs implantations précises qui fourniront les CSR incinérés à Vitry-sur-Seine", "source": question(46, 168716)},
+            "public_bilan": {"citation": "Pourquoi le transport des déchets n'est-il pas pris en compte dans le bilan de pollution ?", "source": question(228, 172454), "sans_reponse": "26/09/2026"},
+            "mo_camions": {"citation": "Le trafic moyen est estimé entre 60 et 130 camions par jour selon la période de l'année, une fois les trois chaudières de Vitry en service.", "source": question(36, 168047)},
+            "mo_itineraire": {"citation": "les camions emprunteront la RN104, l'A6 et la D310, puis 900 mètres sur la RN7 à Grigny dans la zone industrielle de la Plaine Basse avant de rejoindre le site par le chemin latéral, à l'écart de toute zone résidentielle. Aucun camion ne traversera Ris-Orangis.", "source": question(63, 169499)},
+            "mo_barge": {"citation": "Une barge peut transporter l'équivalent d'environ 28 camions, ce qui permet de limiter les circulations routières jusqu'au site de Vitry.", "source": question(36, 168047)},
+            "mo_plateforme": {"citation": "Le projet de chaufferie de Vitry ne peut pas fonctionner sans une plateforme logistique fluviale capable d'accueillir et de rassembler les combustibles.", "source": question(119, 170649)},
             # Volet fluvial : ce que le dossier en dit, et la consommation des pousseurs (guide officiel « Information GES », par km de convoi)
             "atout_fluvial": {"citation": "Le transport fluvial contribue à réduire les distances parcourues par les camions jusqu'au point de livraison final.", "source": dossier(56)},
             "pousseurs_thermiques": {"citation": "La flotte de pousseurs qui manœuvreront les barges est aujourd'hui majoritairement équipée de moteur thermique.", "source": dossier(56)},

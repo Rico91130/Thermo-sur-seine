@@ -18,8 +18,16 @@
   --lien: #1c5cab;
   --accent-fond: #cde2fb;
   --tuiles-filtre: grayscale(1) opacity(0.6);
-  --bulle-recue: #e9e8e3;
-  --bulle-envoyee: #1c5cab;   /* texte blanc : contraste 6,6:1 */
+  --wa-fond: #efeae2;
+  --wa-entete: #f0f2f5;
+  --wa-recu: #ffffff;
+  --wa-envoye: #d9fdd3;
+  --wa-texte: #111b21;
+  --wa-meta: #54656f;
+  --wa-nom-public: #a8491a;
+  --wa-nom-mo: #0b6a88;
+  --wa-systeme: #fff3c4;
+  --wa-systeme-texte: #54656f;
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
@@ -41,8 +49,16 @@
     --lien: #86b6ef;
     --accent-fond: #184f95;
     --tuiles-filtre: grayscale(1) invert(1) brightness(0.85) contrast(0.9);
-    --bulle-recue: #2c2c2a;
-    --bulle-envoyee: #184f95;
+    --wa-fond: #0b141a;
+    --wa-entete: #202c33;
+    --wa-recu: #202c33;
+    --wa-envoye: #005c4b;
+    --wa-texte: #e9edef;
+    --wa-meta: #aebac1;
+    --wa-nom-public: #f5a45d;
+    --wa-nom-mo: #53bdeb;
+    --wa-systeme: #182229;
+    --wa-systeme-texte: #ffd279;
   }
 }
 :root[data-theme="dark"] {
@@ -64,8 +80,16 @@
   --lien: #86b6ef;
   --accent-fond: #184f95;
   --tuiles-filtre: grayscale(1) invert(1) brightness(0.85) contrast(0.9);
-  --bulle-recue: #2c2c2a;
-  --bulle-envoyee: #184f95;
+  --wa-fond: #0b141a;
+  --wa-entete: #202c33;
+  --wa-recu: #202c33;
+  --wa-envoye: #005c4b;
+  --wa-texte: #e9edef;
+  --wa-meta: #aebac1;
+  --wa-nom-public: #f5a45d;
+  --wa-nom-mo: #53bdeb;
+  --wa-systeme: #182229;
+  --wa-systeme-texte: #ffd279;
 }
 
 * { box-sizing: border-box; }
@@ -138,6 +162,7 @@ main > .bloc:first-child { padding-top: 32px; }
 .etape-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0; }
 .bouton { display: inline-block; padding: 10px 18px; border-radius: 999px; background: var(--lien); color: var(--page); font-weight: 600; text-decoration: none; }
 .bouton:hover { filter: brightness(1.1); }
+.bouton-second { background: transparent; color: var(--lien); box-shadow: inset 0 0 0 2px var(--lien); }
 .defiler { margin: 40px 0 8px; font-weight: 600; }
 .defiler-fleche { display: inline-block; margin-left: 4px; animation: rebond 1.6s ease-in-out infinite; }
 @keyframes rebond { 50% { transform: translateY(6px); } }
@@ -196,6 +221,21 @@ main > .bloc:first-child { padding-top: 32px; }
   .chaine-mobile { left: calc(var(--avance) * (100% - 30px)); top: 50%; transform: translateY(-65%); }
   .chaine-mode { font-size: 0.78rem; text-align: center; line-height: 1.2; }
 }
+/* Frise chronologique (page Présentation) : --trace (0 à 1) dessine le trait ; verticale sur mobile, horizontale sur grand écran */
+.frise { --trace: 1; position: relative; list-style: none; margin: 18px 0 8px; padding: 0 0 0 30px; display: grid; gap: 18px; }
+.frise::before {
+  content: ""; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 3px; border-radius: 2px;
+  background: var(--serie-1); transform: scaleY(var(--trace)); transform-origin: top;
+}
+.frise-etape { position: relative; display: grid; gap: 2px; align-content: start; }
+.frise-point { position: absolute; left: -28px; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: var(--page); border: 3px solid var(--serie-1); }
+.frise-annee { font-size: 1.4rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.frise-texte { color: var(--encre-2); font-size: 0.95rem; line-height: 1.35; }
+@media (min-width: 820px) {
+  .frise { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 14px; padding: 34px 0 0; }
+  .frise::before { left: 0; right: 0; top: 9px; bottom: auto; width: auto; height: 3px; transform: scaleX(var(--trace)); transform-origin: left; }
+  .frise-point { left: 0; top: -32px; }
+}
 /* Route sinueuse et camion (app.js, fonction routeDuCamion) */
 .recit { position: relative; }
 .recit .etape { position: relative; z-index: 1; }
@@ -203,6 +243,13 @@ main > .bloc:first-child { padding-top: 32px; }
 .route-chaussee { fill: none; stroke: var(--grille); stroke-width: 16; stroke-linecap: round; }
 .route-parcourue { fill: none; stroke: var(--serie-2); stroke-width: 16; stroke-linecap: round; opacity: 0.35; }
 .route-ligne { fill: none; stroke: var(--surface); stroke-width: 1.5; stroke-dasharray: 8 10; }
+/* Sur la page Présentation : la Seine et une barge poussée */
+.route-fleuve .route-chaussee { stroke: var(--serie-1); stroke-width: 26; opacity: 0.18; }
+.route-fleuve .route-parcourue { stroke: var(--serie-1); stroke-width: 26; opacity: 0.32; }
+.route-fleuve .route-ligne { stroke: var(--page); stroke-width: 1.5; stroke-dasharray: 3 16; opacity: 0.9; }
+.barge-coque { fill: var(--serie-1); }
+.barge-cargaison { fill: var(--encre-attenuee); }
+.barge-pousseur { fill: var(--encre); }
 .camion-remorque { fill: var(--serie-2); }
 .camion-cabine { fill: var(--encre); }
 .camion-parebrise { fill: var(--accent-fond); }
@@ -217,57 +264,77 @@ main > .bloc:first-child { padding-top: 32px; }
 .tuile-note { margin: 0; color: var(--encre-attenuee); font-size: 0.85rem; }
 .encadre { padding: 14px 18px; margin: 16px 0 0; }
 
-/* Le dossier et les données : un échange de SMS (app.js, fonctions confrontation et animerConversation) */
+/* Le dossier et les données : conversation de groupe (app.js, fonctions confrontation et animerConversation) */
 .sms {
-  max-width: 760px; padding: 0 16px 20px; background: var(--surface);
+  max-width: 780px; padding: 0 14px 20px; background: var(--wa-fond); color: var(--wa-texte);
   border: 1px solid var(--bordure); border-radius: 24px; overflow: hidden;
 }
 .sms-entete {
-  display: flex; align-items: center; gap: 12px; margin: 0 -16px 4px; padding: 12px 16px;
-  border-bottom: 1px solid var(--bordure); background: var(--page);
+  display: flex; align-items: center; gap: 12px; margin: 0 -14px 4px; padding: 12px 16px;
+  background: var(--wa-entete); border-bottom: 1px solid var(--bordure);
 }
 .sms-entete strong { display: block; line-height: 1.2; }
-.sms-entete-sous { display: block; font-size: 0.82rem; color: var(--encre-2); }
-.sms-avatar {
-  flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--base); color: var(--encre); font-weight: 700; font-size: 0.85rem;
+.sms-entete-sous { display: block; font-size: 0.82rem; color: var(--wa-meta); }
+.sms-avatar, .wa-avatar {
+  flex: none; border-radius: 50%; display: grid; place-items: center; font-weight: 700;
 }
-.fil { display: flex; flex-direction: column; gap: 6px; }
+.sms-avatar { width: 42px; height: 42px; font-size: 0.85rem; background: var(--serie-1); color: #fff; }
+.fil { display: flex; flex-direction: column; gap: 4px; }
 .fil-sujet {
-  align-self: center; margin: 22px 0 6px; padding: 3px 12px; border-radius: 999px; text-align: center;
-  font-size: 0.8rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--encre-2); background: var(--page);
+  align-self: center; margin: 22px 0 8px; padding: 4px 12px; border-radius: 8px; text-align: center;
+  font-size: 0.82rem; font-weight: 600; color: var(--wa-meta); background: var(--wa-entete);
 }
-.message { position: relative; display: flex; flex-direction: column; max-width: min(85%, 560px); }
-.message-recu { align-self: flex-start; align-items: flex-start; }
-.message-envoye { align-self: flex-end; align-items: flex-end; }
-.bulle { margin: 0; padding: 9px 14px; border-radius: 20px; line-height: 1.45; overflow-wrap: anywhere; }
-.message-recu .bulle { background: var(--bulle-recue); color: var(--encre); border-bottom-left-radius: 6px; }
-.message-envoye .bulle { background: var(--bulle-envoyee); color: #fff; border-bottom-right-radius: 6px; }
-.message-envoye .bulle a { color: #fff; }
-.message-envoye .bulle strong { font-size: 1.08em; }
-.bulle-meta { margin: 3px 8px 6px; font-size: 0.78rem; color: var(--encre-attenuee); }
+.message { position: relative; display: flex; align-items: flex-end; gap: 6px; max-width: min(88%, 580px); }
+.message-recu { align-self: flex-start; }
+.message-envoye { align-self: flex-end; }
+.message.suite { margin-top: -1px; }
+.wa-avatar { width: 30px; height: 30px; font-size: 0.7rem; align-self: flex-start; margin-top: 2px; color: #fff; }
+.de-public .wa-avatar { background: var(--wa-nom-public); }
+.de-mo .wa-avatar { background: var(--wa-nom-mo); }
+.message.suite .wa-avatar { visibility: hidden; }
+.bulle { padding: 6px 10px 5px; border-radius: 10px; line-height: 1.45; overflow-wrap: anywhere; box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13); }
+.message-recu .bulle { background: var(--wa-recu); border-top-left-radius: 3px; }
+.message-envoye .bulle { background: var(--wa-envoye); border-top-right-radius: 3px; }
+.message.suite .bulle { border-top-left-radius: 10px; border-top-right-radius: 10px; }
+.bulle-nom { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 1px; }
+.de-public .bulle-nom { color: var(--wa-nom-public); }
+.de-mo .bulle-nom { color: var(--wa-nom-mo); }
+.message.suite .bulle-nom { display: none; }
+.bulle-texte { margin: 0; }
+blockquote.bulle-texte { font-style: normal; }
+.bulle a { color: inherit; }
+.bulle-texte strong { font-size: 1.06em; }
+.bulle-meta { display: block; margin-top: 3px; text-align: right; font-size: 0.74rem; color: var(--wa-meta); }
+.bulle-meta a { color: var(--wa-meta); }
+.message-systeme { align-self: center; max-width: min(92%, 520px); }
+.bulle-systeme {
+  margin: 6px 0; padding: 6px 12px; border-radius: 8px; text-align: center; font-size: 0.82rem;
+  background: var(--wa-systeme); color: var(--wa-systeme-texte);
+}
+.bulle-systeme .bulle-meta { display: inline; margin: 0; font-size: inherit; color: inherit; }
+.bulle-systeme .bulle-meta a { color: inherit; }
 /* « En train d'écrire » : trois points dans une petite bulle, à la place du message qui arrive */
 .sms-frappe { display: none; }
 .sms-anime .message { opacity: 0; transform: translateY(10px) scale(0.97); transition: opacity 0.3s ease, transform 0.3s ease; }
 .sms-anime .message-recu { transform-origin: left bottom; }
 .sms-anime .message-envoye { transform-origin: right bottom; }
 .sms-anime .message.en-frappe, .sms-anime .message.lu { opacity: 1; transform: none; }
-.sms-anime .message.en-frappe > :not(.sms-frappe) { visibility: hidden; }
+.sms-anime .message.en-frappe > .bulle { visibility: hidden; }
 .sms-anime .message.en-frappe .sms-frappe {
-  display: inline-flex; gap: 4px; position: absolute; top: 0; padding: 12px 14px; border-radius: 20px;
+  display: inline-flex; gap: 4px; position: absolute; top: 0; padding: 12px 14px; border-radius: 10px; color: var(--wa-meta);
 }
-.message-recu .sms-frappe { left: 0; background: var(--bulle-recue); }
-.message-envoye .sms-frappe { right: 0; background: var(--bulle-envoyee); }
+.message-recu .sms-frappe { left: 36px; background: var(--wa-recu); }
+.message-envoye .sms-frappe { right: 0; background: var(--wa-envoye); }
 .sms-frappe i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.4; animation: points 1s infinite ease-in-out; }
-.message-recu .sms-frappe { color: var(--encre-2); }
-.message-envoye .sms-frappe { color: #fff; }
 .sms-frappe i:nth-child(2) { animation-delay: 0.15s; }
 .sms-frappe i:nth-child(3) { animation-delay: 0.3s; }
 @keyframes points { 30% { opacity: 1; transform: translateY(-3px); } }
 @media (max-width: 600px) {
-  .sms { border-radius: 18px; padding: 0 10px 14px; }
-  .sms-entete { margin: 0 -10px 4px; padding: 10px; }
-  .message { max-width: 90%; }
+  .sms { border-radius: 18px; padding: 0 8px 14px; }
+  .sms-entete { margin: 0 -8px 4px; padding: 10px; }
+  .message { max-width: 94%; }
+  .wa-avatar { width: 26px; height: 26px; }
+  .message-recu .sms-frappe { left: 32px; }
 }
 
 /* Règles des itinéraires */

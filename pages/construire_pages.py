@@ -24,6 +24,7 @@ RACINE = os.path.dirname(ICI)
 
 # (nom de la page pour app.js, fichier, adresse dans le menu, libellé du menu)
 MENU = [
+    ("presentation", "presentation.html", "presentation.html", "Présentation"),
     ("essentiel", "index.html", "./", "L'essentiel"),
     ("dossier", "dossier.html", "dossier.html", "Le dossier et les données"),
     ("itineraires", "itineraires.html", "itineraires.html", "Les itinéraires"),
@@ -86,9 +87,11 @@ def menu(courant):
 
 
 def voisines(i):
-    if i == 0:   # la page d'accueil a ses propres liens vers les autres pages
+    if MENU[i][1] == "index.html":   # la page d'accueil a ses propres liens vers les autres pages
         return ""
-    liens = [f'      <a href="{MENU[i - 1][2]}" rel="prev"><span>Page précédente</span>{MENU[i - 1][3]}</a>']
+    liens = []
+    if i > 0:
+        liens.append(f'      <a href="{MENU[i - 1][2]}" rel="prev"><span>Page précédente</span>{MENU[i - 1][3]}</a>')
     if i + 1 < len(MENU):
         liens.append(f'      <a href="{MENU[i + 1][2]}" rel="next"><span>Page suivante</span>{MENU[i + 1][3]}</a>')
     return ('\n    <nav class="conteneur pages-voisines" aria-label="Pages précédente et suivante">\n'

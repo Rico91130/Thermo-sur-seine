@@ -142,10 +142,52 @@ function urlGoogleMaps(orig, dest, passages) {
   const noteBarges = b => [`${fmt0(F.tonnage.valeur)} t ÷ ${fmt0(T_PAR_BARGE)} t par barge (2 500 m³ × ${fmt2(F.densite.valeur)} t/m³) = ${fmt0(b.convois)} convois ; × ${fmt0(F.trajet_fluvial.valeur)} km aller et retour = ${fmt0(b.km)} km de pousseur ; × ${fmt2(F.pousseur_conso.valeurs.moins_590_kw)} à ${fmt2(F.pousseur_conso.valeurs['590_879_kw'])} litres de gazole non routier par km (pousseur de moins de 590 kW ou de 590 à 879 kW : la puissance n'est pas publiée) × ${fmt2(F.co2_gnr.valeur)} kg de CO₂ par litre (`,
     lienGuide('guide officiel « Information GES des prestations de transport », 2018, tableaux 11 et 12'), '). Hypothèses : un pousseur par barge ; pousseurs de manœuvre non comptés. Les facteurs actuels de l\'ADEME, exprimés par tonne-kilomètre, supposent des convois bien plus chargés : ils ne conviennent pas à des barges de CSR, très léger, qui n\'emportent que 500 t.'];
 
-  const PAGES = { essentiel, dossier: confrontation, itineraires, carte: carteDuDetour, heures: heureParHeure, annee: surUneAnnee, methode };
+  const note = (id, ...contenu) => document.getElementById(id).replaceChildren(...contenu.flat(Infinity).filter(c => c !== null && c !== undefined && c !== false));
+  const citation = f => [`« ${f.citation} » (`, lien(f.source), ')'];
+  // Compteurs des récits : la valeur finale est écrite tout de suite (lecture sans animation), l'animation la refait défiler depuis 0.
+  // Les lecteurs d'écran lisent la valeur finale (texte masqué), pas le compteur animé.
+  const nouveauxCompteurs = () => {
+    const compteurs = new Map();
+    const compteur = (cle, valeur, format) => {
+      const span = document.querySelector(`[data-compteur="${cle}"]`);
+      span.textContent = format(valeur);
+      span.setAttribute('aria-hidden', 'true');
+      span.after(el('span', { class: 'sr-only' }, format(valeur)));
+      compteurs.set(span, { valeur, format });
+    };
+    return { compteurs, compteur };
+  };
+
+  const PAGES = { presentation, essentiel, dossier: confrontation, itineraires, carte: carteDuDetour, heures: heureParHeure, annee: surUneAnnee, methode };
   const recolorer = PAGES[page] ? PAGES[page]() : null;
   // Recolorer si le thème du système change
   if (recolorer) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolorer);
+
+  /* ---------------- Présentation du projet : récit à faire défiler ---------------- */
+  function presentation() {
+    const { compteurs, compteur } = nouveauxCompteurs();
+    compteur('chaleur', F.chaleur.valeur, v => `${fmt1(v)} TWh`);
+    compteur('tonnage', F.tonnage.valeur, v => `${fmt0(arrondi(v, 1000))} tonnes`);
+    lier('trajet-fluvial', `${fmt0(F.trajet_fluvial.valeur)} km`);
+    note('note-chaleur', 'Dossier de concertation : ', ...citation(F.projet), ' ; ', ...citation(F.reseau), ' ; ', ...citation(F.chaleur), ' ; ', ...citation(F.chaufferie),
+      '. Le maître d\'ouvrage est une société d\'économie mixte à opération unique (SEMOP), créée pour exploiter le réseau de chaleur parisien pendant 25 ans (', lien(F.maitrise_ouvrage.source), ').');
+    note('note-tonnage', 'Dossier de concertation : « ', F.tonnage.citation, ' » (', lien(F.tonnage.source), ') ; ', ...citation(F.csr),
+      '. Les fournisseurs ne seront choisis qu\'en 2027, dans un rayon de 300 km au maximum (', lien(F.fournisseurs.source), ').');
+    note('note-chaine', 'Dossier de concertation : ', ...citation(F.chaine), ' ; ', ...citation(F.trajet_fluvial), '.');
+    // Frise chronologique : une année, ce qui s'y passe, et la citation qui le dit
+    const etapes = F.calendrier.etapes;
+    document.getElementById('frise-projet').replaceChildren(...etapes.map(e => el('li', { class: 'frise-etape' },
+      el('span', { class: 'frise-point', 'aria-hidden': 'true' }),
+      el('strong', { class: 'frise-annee' }, e.annee),
+      el('span', { class: 'frise-texte' }, e.texte))));
+    note('note-frise', 'Sources : ', etapes.map((e, i) => [i ? ' ; ' : '', `${e.annee} : « ${e.citation} » (`, lien(e.source), e.autre_source ? [' ; ', lien(e.autre_source)] : null, ')']),
+      '. Ce calendrier est celui annoncé par le maître d\'ouvrage ; il dépend de l\'issue de l\'enquête publique.');
+    document.getElementById('citation-foncier').replaceChildren(`« ${F.foncier.citation} »`, el('footer', {}, '— ', lien(F.foncier.source)));
+    note('note-foncier', F.transport_absent.constat.replace(/\.$/, ''), ' (', lien(F.transport_absent.source), ').');
+    note('presentation-sources', 'Toutes les citations viennent du ', lien({ texte: 'dossier de concertation (juillet 2026)', url: urlDossier }),
+      ', de ', lien({ texte: 'L\'essentiel du projet', url: F.calendrier.etapes[0].source.url }), ' ou des réponses publiées par le maître d\'ouvrage sur la plateforme de la concertation.');
+    animerRecit(compteurs, document.getElementById('presentation'), 'barge');
+  }
 
   /* ---------------- L'essentiel : récit à faire défiler ---------------- */
   function essentiel() {
@@ -159,21 +201,7 @@ function urlGoogleMaps(orig, dest, passages) {
     const ecarts = cells => cells.map(g => g[5] - g[3]);
     const nord = ecarts(D.grille.filter(g => g[0] > V.lat));
     const pct = (arr, test) => Math.round(100 * arr.filter(test).length / arr.length);
-    const note =(id, ...contenu) => document.getElementById(id).replaceChildren(...contenu);
-
-    // Compteurs : la valeur finale est écrite tout de suite (lecture sans animation), l'animation la refait défiler depuis 0.
-    // Les lecteurs d'écran lisent la valeur finale (texte masqué), pas le compteur animé.
-    const compteurs = new Map();
-    const compteur = (cle, valeur, format) => {
-      const span = document.querySelector(`[data-compteur="${cle}"]`);
-      span.textContent = format(valeur);
-      span.setAttribute('aria-hidden', 'true');
-      span.after(el('span', { class: 'sr-only' }, format(valeur)));
-      compteurs.set(span, { valeur, format });
-    };
-    // Le projet dans son ensemble (chiffres et citations du dossier), puis le détour
-    compteur('chaleur', F.chaleur.valeur, v => `${fmt1(v)} TWh`);
-    compteur('tonnage', F.tonnage.valeur, v => `${fmt0(arrondi(v, 1000))} tonnes`);
+    const { compteurs, compteur } = nouveauxCompteurs();
     compteur('detour-trajet', detourRef, v => `${signe1(v)} km`);
     compteur('camions', camionsDossier, v => fmt0(arrondi(v, 100)));
     compteur('km-an', kmAn, v => `${fmt0(arrondi(v, 1000))} km`);
@@ -186,7 +214,6 @@ function urlGoogleMaps(orig, dest, passages) {
     compteur('chaine', chaineRef, v => `${fmt0(v)} km`);
     compteur('co2-barges', fl.co2.haut, v => `${fmt0(arrondi(v * fl.co2.bas / fl.co2.haut, 10))} à ${fmt0(arrondi(v, 10))} tonnes`);
 
-    lier('trajet-fluvial', `${fmt0(F.trajet_fluvial.valeur)} km`);
     lier('detour-aller-retour', `${signe0(2 * detourRef)} km`);
     lier('tours-terre', `${fmt0(tours)} fois le tour de la Terre`);
     lier('emplois', `${fmt0(emplois)} emplois à temps plein`);
@@ -237,14 +264,6 @@ function urlGoogleMaps(orig, dest, passages) {
     document.getElementById('pictos-co2').replaceChildren(...Array.from({ length: vols }, avion));   // un avion par aller-retour
 
     // Calculs et sources, étape par étape
-    const citation = f => [`« ${f.citation} » (`, lien(f.source), ')'];
-    note('note-chaleur', 'Dossier de concertation : ', ...citation(F.projet), ' ; ', ...citation(F.reseau), ' ; ', ...citation(F.chaleur), ' ; ', ...citation(F.chaufferie),
-      '. Le maître d\'ouvrage est une société d\'économie mixte à opération unique (SEMOP), créée pour exploiter le réseau de chaleur parisien pendant 25 ans (', lien(F.maitrise_ouvrage.source), ').');
-    note('note-tonnage', 'Dossier de concertation : « ', F.tonnage.citation, ' » (', lien(F.tonnage.source), ') ; ', ...citation(F.csr),
-      '. Les fournisseurs ne seront choisis qu\'en 2027, dans un rayon de 300 km au maximum (', lien(F.fournisseurs.source), ').');
-    note('note-chaine', 'Dossier de concertation : ', ...citation(F.chaine), ' ; ', ...citation(F.trajet_fluvial), '.');
-    document.getElementById('citation-foncier').replaceChildren(`« ${F.foncier.citation} »`, el('footer', {}, '— ', lien(F.foncier.source)));
-    note('note-foncier', F.transport_absent.constat.replace(/\.$/, ''), ' (', lien(F.transport_absent.source), ').');
     note('note-camions', `Calcul : ${fmt0(F.tonnage.valeur)} t ÷ ${fmt1(CHARGE_DOSSIER)} t par camion (une barge de 2 500 m³ vaut 28 camions, densité de 0,20 t/m³) : `,
       lien(F.tonnage.source), ' ; ', lien(F.barge.source), '.');
     note('note-km-an', `Calcul : ${fmt0(camionsDossier)} camions × 2 (aller et retour) × ${fmt1(detourRef)} km. Tour de la Terre à l'équateur : ${fmt0(F.tour_terre.valeur)} km (`,
@@ -261,7 +280,7 @@ function urlGoogleMaps(orig, dest, passages) {
       lien(F.trajet_fluvial.source), `) ; livraison directe : ${fmt1(ref.km.vitry)} km. Depuis le sud, c'est différent : depuis Écharcon (Essonne), ${fmt1(SUD.km.acces_impose)} km de camion puis ${fmt0(KM_SEINE)} km de barge font ${fmt1(SUD.km.acces_impose + KM_SEINE)} km, contre ${fmt1(SUD.km.vitry)} km directement.`);
     note('note-co2-barges', 'Moteurs thermiques : ', lien(F.pousseurs_thermiques.source), '. Calcul : ', ...noteBarges(fl), ` Le dossier annonce « ${F.barges_jour.citation.replace(/\.$/, '')} » (`, lien(F.barges_jour.source), '), ce qui est du même ordre.');
     note('note-nord', 'Le dossier prévoit des livraisons « ', F.nord.citation, ' » (', lien(F.nord.source), ').');
-    note('essentiel-sources', 'Sources : présentation du projet d\'après le dossier de concertation (pages citées à chaque étape) ; nombre de camions calculé d\'après le dossier (', lien(F.tonnage.source), ' ; ', lien(F.barge.source),
+    note('essentiel-sources', 'Sources : nombre de camions calculé d\'après le dossier (', lien(F.tonnage.source), ' ; ', lien(F.barge.source),
       ') ; tour de la Terre : ', lien({ texte: 'NGA, WGS 84', url: F.tour_terre.source.url }),
       ' ; durée légale du travail : ', lien({ texte: 'service-public.gouv.fr', url: F.duree_legale.source.url }),
       ' ; consommation et coûts : ', ...lienCnr('CNR, référentiel régional'), ' ; CO₂ du gazole : ', lien({ texte: 'ADEME, Base Carbone', url: F.co2_gazole.source.url }),
@@ -269,13 +288,13 @@ function urlGoogleMaps(orig, dest, passages) {
       ' ; distances et temps : mesures Google du 26 septembre 2026 (', el('a', { href: 'methode.html' }, 'méthode'), '). Les étapes chiffrées du détour supposent un combustible venant du Plessis-Gassot, sauf la dernière, qui porte sur tous les points de départ situés au nord de Vitry. Les fournisseurs ne seront choisis qu\'en 2027 (',
       lien({ texte: 'question n° 46', url: F.fournisseurs.source.url }), ').');
 
-    animerRecit(compteurs);
+    animerRecit(compteurs, document.getElementById('essentiel'), 'camion');
   }
 
   // Animations du récit (GSAP + ScrollTrigger, chargés par index.html). Chaque étape se joue en entier, toute seule,
   // dès qu'elle apparaît à l'écran : pas besoin de continuer à faire défiler. Sans GSAP ou avec « réduire les animations »,
   // rien n'est masqué : les valeurs finales restent affichées.
-  function animerRecit(compteurs) {
+  function animerRecit(compteurs, recit, vehicule) {
     const G = window.gsap, ST = window.ScrollTrigger;
     if (!G || !ST || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     G.registerPlugin(ST);
@@ -297,8 +316,8 @@ function urlGoogleMaps(orig, dest, passages) {
     // Barre de progression de la lecture
     const progression = el('div', { class: 'recit-progression', 'aria-hidden': 'true' });
     document.body.append(progression);
-    G.to(progression, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: '#essentiel', start: 'top top', end: 'bottom bottom', scrub: 0.3 } });
-    if (window.MotionPathPlugin) routeDuCamion(G, ST);
+    G.to(progression, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: recit, start: 'top top', end: 'bottom bottom', scrub: 0.3 } });
+    if (window.MotionPathPlugin) routeDuCamion(G, ST, recit, vehicule);
 
     // Ouverture
     G.from('.etape-ouverture .etape-contenu > *', { y: 30, opacity: 0, duration: 0.9, stagger: 0.15, ease: 'power3.out' });
@@ -328,15 +347,22 @@ function urlGoogleMaps(orig, dest, passages) {
           tl.from(maillons[i + 1], apparait, debut + 1);
         });
       }
+      // Frise chronologique : le trait se trace, puis chaque année apparaît à son tour
+      const frise = etape.querySelector('.frise');
+      if (frise) {
+        tl.fromTo(frise, { '--trace': 0 }, { '--trace': 1, duration: 2.2, ease: 'power1.inOut' }, 0.4);
+        tl.from(frise.querySelectorAll('.frise-etape'), { opacity: 0, y: 12, duration: 0.45, stagger: 0.36, ease: 'power2.out' }, 0.5);
+      }
     });
   }
 
   // Un petit camion (vu de dessus) descend le récit au rythme du défilement.
   // Grand écran : il suit une route sinueuse dans la marge de droite et reste à hauteur du milieu de l'écran.
   // Petit écran : pas de place à côté du texte, il roule le long de la barre de progression, en haut.
-  function routeDuCamion(G, ST) {
+  // Sur la page Présentation, c'est une barge poussée qui descend une Seine sinueuse.
+  function routeDuCamion(G, ST, recit, vehicule) {
     G.registerPlugin(window.MotionPathPlugin);
-    const ns = 'http://www.w3.org/2000/svg', recit = document.getElementById('essentiel');
+    const ns = 'http://www.w3.org/2000/svg';
     const svgEl = (tag, attrs, parent) => {
       const n = document.createElementNS(ns, tag);
       for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
@@ -351,14 +377,23 @@ function urlGoogleMaps(orig, dest, passages) {
       svgEl('rect', { x: 15.5, y: -4.5, width: 2, height: 9, rx: 1, class: 'camion-parebrise' }, g);
       return g.parentNode;   // groupe animé (le groupe intérieur porte l'échelle)
     };
+    // Barge vue de dessus, poussée par son pousseur (à l'arrière), orientée vers la droite
+    const barge = (parent, echelle = 1) => {
+      const g = svgEl('g', { transform: `scale(${echelle})` }, svgEl('g', { class: 'barge' }, parent));
+      svgEl('rect', { x: -12, y: -7, width: 30, height: 14, rx: 3, class: 'barge-coque' }, g);
+      svgEl('rect', { x: -8, y: -4.5, width: 22, height: 9, rx: 1.5, class: 'barge-cargaison' }, g);
+      svgEl('rect', { x: -22, y: -5, width: 9, height: 10, rx: 2.5, class: 'barge-pousseur' }, g);
+      return g.parentNode;
+    };
+    const dessiner = vehicule === 'barge' ? barge : camion;
     const mm = G.matchMedia();
 
     mm.add('(min-width: 1000px)', () => {
-      const svg = svgEl('svg', { class: 'route', 'aria-hidden': 'true' });
+      const svg = svgEl('svg', { class: vehicule === 'barge' ? 'route route-fleuve' : 'route', 'aria-hidden': 'true' });
       const chaussee = svgEl('path', { class: 'route-chaussee' }, svg);
       const parcourue = svgEl('path', { class: 'route-parcourue' }, svg);
       const ligne = svgEl('path', { class: 'route-ligne' }, svg);
-      const vehicule = camion(svg, 1.5);
+      const mobile = dessiner(svg, 1.5);
       recit.append(svg);
       let longueur = 0;
       // Géométrie recalculée à chaque rafraîchissement (hauteur du récit, largeur de la marge)
@@ -382,7 +417,7 @@ function urlGoogleMaps(orig, dest, passages) {
       ST.addEventListener('refreshInit', geometrie);
       // Le milieu de l'écran parcourt le récit de haut en bas : le camion y reste, à la même hauteur
       const defilement = { trigger: recit, start: 'top center', end: 'bottom center', scrub: 0.6, invalidateOnRefresh: true };
-      G.to(vehicule, { ease: 'none', scrollTrigger: defilement,
+      G.to(mobile, { ease: 'none', scrollTrigger: defilement,
         motionPath: { path: chaussee, align: chaussee, alignOrigin: [0.5, 0.5], autoRotate: true } });
       G.fromTo(parcourue, { strokeDashoffset: () => longueur }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { ...defilement } });
       return () => { ST.removeEventListener('refreshInit', geometrie); svg.remove(); };
@@ -390,7 +425,7 @@ function urlGoogleMaps(orig, dest, passages) {
 
     mm.add('(max-width: 999px)', () => {
       const svg = svgEl('svg', { class: 'camion-barre', viewBox: '-20 -10 40 20', 'aria-hidden': 'true' });
-      camion(svg);
+      dessiner(svg);
       document.body.append(svg);
       G.fromTo(svg, { x: 0 }, { x: () => window.innerWidth - 34, ease: 'none', scrollTrigger: {
         trigger: recit, start: 'top top', end: 'bottom bottom', scrub: 0.3, invalidateOnRefresh: true } });
@@ -398,8 +433,10 @@ function urlGoogleMaps(orig, dest, passages) {
     });
   }
 
-  /* ---------------- Le dossier et les données : un échange de SMS ---------------- */
-  // Bulles grises : le maître d'ouvrage, cité mot pour mot avec sa source. Bulles bleues : ce que montrent les données.
+  /* ---------------- Le dossier et les données : une conversation de groupe ---------------- */
+  // Trois participants. « Le public » : de vraies questions de la plateforme de la concertation, citées mot pour mot, sans nom d'auteur.
+  // « Le maître d'ouvrage » : ses réponses publiées ou le dossier de concertation, cités mot pour mot. « Les faits » : nos mesures
+  // et les chiffres du dossier. Chaque message renvoie à sa source.
   function confrontation() {
     const au8 = ecartHeure(ref, 'acces', 8), au17 = ecartHeure(ref, 'acces', 17);
     const cellulesNord = D.grille.filter(g => g[0] > V.lat);
@@ -408,67 +445,125 @@ function urlGoogleMaps(orig, dest, passages) {
     const kmParKmDetour = 2 * camionsDossier;
     const fl = barges(F.tonnage.valeur);
     const co2Camions = bilan(camionsDossier * 2 * detour(ref, 'acces'), 0).co2;   // même hypothèse que l'accueil (Plessis-Gassot, accès imposé)
+    const g35 = F.graphique_2035.valeurs;                                          // camions par jour, de janvier à décembre 2035
     const fort = t => el('strong', {}, t);
-    // Chaque échange : un sujet, les citations du maître d'ouvrage, puis les réponses (une bulle par élément de « montre »)
-    const echanges = [
-      { titre: 'Les bouchons de l\'A86', dit: [F.congestion],
-        montre: [['Depuis le Plessis-Gassot, le trajet vers Ris-Orangis reste plus long que vers Vitry, même aux heures de pointe :'],
-          [fort(`${signe0(au8)} min à 8 h`), ' et ', fort(`${signe0(au17)} min à 17 h`), '.'],
-          ['Médianes de la semaine du 28 septembre, prévisions Google en voiture. Le détail est sur la page ', el('a', { href: 'heures.html' }, 'Heure par heure'), '.']] },
-      { titre: 'L\'itinéraire imposé', dit: [F.itineraire, F.traversee],
-        montre: [['Cet itinéraire rallonge encore le trajet : ', fort(`${signe0(detour(ref, 'dossier'))} km`), ` depuis le Plessis-Gassot, contre ${signe0(detour(ref, 'acces'))} km si l'on respecte seulement l'accès final.`],
-          ['Sans point de passage imposé, Google ferait passer les camions par la RN7, dans Ris-Orangis. Voir ', el('a', { href: 'itineraires.html' }, 'les règles des itinéraires'), '.']] },
-      { titre: 'Le nombre de camions', dit: [F.camions_texte],
-        montre: [['Le graphique de la même page monte à ', fort(`${F.graphique_2035.valeurs[0]} camions par jour`), ' en janvier 2035.'],
-          [`Avec les chiffres du dossier (une barge de 2 500 m³ équivaut à 28 camions ; densité de 0,20 t/m³), on obtient ${fmt1(CHARGE_DOSSIER)} t par camion, soit environ `, fort(`${fmt0(arrondi(camionsDossier, 100))} camions par an`), '.']],
-        sourcesMontre: [F.graphique_2035.source, F.barge.source] },
-      { titre: 'Le choix de Ris-Orangis', dit: [F.foncier],
-        montre: [['La parcelle EDF de Vitry fait 38 ha, dont 6,7 ha pour la chaufferie. Ce que ce choix coûte en kilomètres n\'est chiffré nulle part.'],
-          [`Or, avec ${fmt0(arrondi(camionsDossier, 100))} camions par an, chaque kilomètre de détour moyen représente environ `, fort(`${fmt0(arrondi(kmParKmDetour, 100))} km de plus par an`), ', aller et retour.']],
-        sourcesMontre: [F.parcelle.source, F.transport_absent.source] },
-      { titre: 'L\'atout du fluvial', dit: [F.atout_fluvial, F.pousseurs_thermiques],
-        montre: [['Depuis le nord, la barge ne remplace aucun kilomètre de camion : elle s\'y ajoute.'],
-          [`Depuis le Plessis-Gassot, livré directement à Vitry, le combustible ferait ${fmt1(ref.km.vitry)} km. Par Ris-Orangis : ${fmt1(ref.km.acces_impose)} km de camion, puis ${fmt0(KM_SEINE)} km de barge, soit `, fort(`${fmt1(ref.km.acces_impose + KM_SEINE)} km`), '.'],
-          [`Et les ${fmt0(arrondi(fl.convois, 10))} convois par an émettraient `, fort(`${fourchetteCo2(fl.co2.bas, fl.co2.haut)} de CO₂`), `, en plus des ${fmt0(arrondi(co2Camions, 10))} t du détour des camions.`],
-          [`Depuis le sud, en revanche, la barge remplace une partie de la route : depuis Écharcon, ${fmt1(SUD.km.acces_impose + KM_SEINE)} km par Ris-Orangis, contre ${fmt1(SUD.km.vitry)} km directement.`]],
-        sourcesMontre: [F.trajet_fluvial.source, F.pousseur_conso.source] },
-      { titre: 'L\'origine du combustible', dit: [F.fournisseurs, F.nord],
-        montre: [['La ', el('a', { href: 'carte.html' }, 'carte du détour'), ' donne le résultat pour toutes les origines possibles.'],
-          ['Avec l\'accès final imposé, Ris-Orangis est plus loin que Vitry pour ', fort(`${part(cellulesNord, g => g[5] - g[3] > 0)} %`), ' des points situés au nord de Vitry…'],
-          ['… et plus proche pour ', fort(`${part(cellulesSud, g => g[5] - g[3] < 0)} %`), ' des points situés au sud de Ris-Orangis.']] },
+    const lienPage = (href, texte) => el('a', { href }, texte);
+
+    // Les messages : qui parle, ce qu'il dit, et ses sources
+    const pub = f => ({ qui: 'public', cite: f.citation, sources: [f.source] });
+    const mo = f => ({ qui: 'mo', cite: f.citation, sources: [f.source] });
+    const faits = (contenu, sources) => ({ qui: 'faits', contenu, sources });
+    const silence = f => ({ qui: 'systeme', contenu: [`Toujours sans réponse du maître d'ouvrage au ${f.sans_reponse} :`], sources: [f.source] });
+
+    const fils = [
+      { titre: 'Combien de camions ?', messages: [
+        pub(F.public_camions),
+        mo(F.mo_camions),
+        faits(['Le graphique du dossier monte pourtant à ', fort(`${g35[0]} camions par jour`), ` en janvier 2035, et reste à ${Math.min(g35[10], g35[11], g35[0], g35[1])} ou plus de novembre à février. Les « 60 à 130 » sont des moyennes par saison.`], [F.graphique_2035.source]),
+        faits([`Avec les chiffres du dossier (une barge de 2 500 m³ vaut 28 camions ; densité de 0,20 t/m³), un camion porte ${fmt1(CHARGE_DOSSIER)} t : il en faut environ `, fort(`${fmt0(arrondi(camionsDossier, 100))} par an`), '.'], [F.barge.source, F.tonnage.source]),
+      ] },
+      { titre: 'Et les bouchons de l\'A86 ?', messages: [
+        pub(F.public_a86),
+        mo(F.congestion),
+        faits(['Depuis le Plessis-Gassot, livrer Ris-Orangis prend plus de temps que livrer Vitry, même aux heures de pointe :']),
+        faits([fort(`${signe0(au8)} min à 8 h`), ' et ', fort(`${signe0(au17)} min à 17 h`), '.']),
+        faits(['Médianes de la semaine du 28 septembre, prévisions Google en voiture : un camion ne peut qu\'être plus lent. Le détail est sur la page ', lienPage('heures.html', 'Heure par heure'), '.']),
+      ] },
+      { titre: 'Les camions traverseront-ils Ris-Orangis ?', messages: [
+        pub(F.public_ris),
+        mo(F.mo_itineraire),
+        faits(['Cet itinéraire par la RN104 rallonge encore le trajet : ', fort(`${signe1(detour(ref, 'dossier'))} km`), ` depuis le Plessis-Gassot, contre ${signe1(detour(ref, 'acces'))} km par le seul accès final.`]),
+        mo(F.opposable),
+        faits(['Encore faudra-t-il le faire respecter : sans point de passage imposé, l\'itinéraire le plus rapide fait passer les camions par la RN7, dans Ris-Orangis. Voir ', lienPage('itineraires.html', 'les règles des itinéraires'), '.']),
+      ] },
+      { titre: 'Pourquoi pas directement à Vitry ?', messages: [
+        pub(F.public_plateforme),
+        mo(F.mo_plateforme),
+        mo(F.foncier),
+        faits(['La parcelle EDF de Vitry fait 38 ha, dont 6,7 ha pour la chaufferie.'], [F.parcelle.source]),
+        faits(['Ce que ce choix coûte en kilomètres n\'est chiffré nulle part. Or, avec ', `${fmt0(arrondi(camionsDossier, 100))} camions par an, chaque kilomètre de détour moyen représente `, fort(`${fmt0(arrondi(kmParKmDetour, 100))} km de plus par an`), ', aller et retour.']),
+        pub(F.public_vitry),
+        silence(F.public_vitry),
+      ] },
+      { titre: 'La barge, c\'est plus écologique ?', messages: [
+        pub(F.public_fluvial),
+        mo(F.mo_barge),
+        mo(F.atout_fluvial),
+        faits(['Depuis le nord, la barge ne remplace aucun kilomètre de camion : elle s\'y ajoute.']),
+        faits([`Depuis le Plessis-Gassot, livré directement à Vitry, le combustible ferait ${fmt1(ref.km.vitry)} km. Par Ris-Orangis : ${fmt1(ref.km.acces_impose)} km de camion, puis ${fmt0(KM_SEINE)} km de barge, soit `, fort(`${fmt1(ref.km.acces_impose + KM_SEINE)} km`), '.'], [F.trajet_fluvial.source]),
+        mo(F.pousseurs_thermiques),
+        faits([`Ces ${fmt0(arrondi(fl.convois, 10))} convois par an émettraient `, fort(`${fourchetteCo2(fl.co2.bas, fl.co2.haut)} de CO₂`), `, en plus des ${fmt0(arrondi(co2Camions, 10))} t du détour des camions.`], [F.pousseur_conso.source]),
+        faits([`Depuis le sud, en revanche, la barge remplace une partie de la route : depuis Écharcon, ${fmt1(SUD.km.acces_impose + KM_SEINE)} km par Ris-Orangis, contre ${fmt1(SUD.km.vitry)} km directement.`]),
+        silence(F.public_fluvial),
+      ] },
+      { titre: 'D\'où viendront les déchets ?', messages: [
+        pub(F.public_origine),
+        mo(F.fournisseurs),
+        mo(F.rn104),
+        faits(['Tant que l\'origine n\'est pas connue, la ', lienPage('carte.html', 'carte du détour'), ' donne le résultat pour toutes les origines possibles.']),
+        faits(['Avec l\'accès final imposé, Ris-Orangis est plus loin que Vitry pour ', fort(`${part(cellulesNord, g => g[5] - g[3] > 0)} %`), ' des points situés au nord de Vitry…']),
+        faits(['… et plus proche pour ', fort(`${part(cellulesSud, g => g[5] - g[3] < 0)} %`), ' des points situés au sud de Ris-Orangis.']),
+      ] },
+      { titre: 'Et la pollution du transport ?', messages: [
+        pub(F.public_bilan),
+        silence(F.public_bilan),
+        faits(['Le dossier ne chiffre ni les kilomètres parcourus par les camions ni leurs émissions.']),
+        faits(['Nos calculs depuis le Plessis-Gassot : ', fort(`${fmt0(arrondi(co2Camions, 10))} t de CO₂ par an`), ' pour le seul détour des camions, et ', fort(fourchetteCo2(fl.co2.bas, fl.co2.haut)), ' pour les barges. Le détail est sur la page ', lienPage('./', 'L\'essentiel'), '.'], [F.co2_gazole.source, F.pousseur_conso.source]),
+      ] },
     ];
-    // Un message : sa bulle, sa ligne de source, et l'indicateur « en train d'écrire » (utilisé seulement par l'animation)
+
+    const PARTICIPANTS = { public: { nom: 'Le public', initiales: 'P' }, mo: { nom: 'Le maître d\'ouvrage', initiales: 'MO' }, faits: { nom: 'Les faits' } };
     const frappe = () => el('span', { class: 'sms-frappe', 'aria-hidden': 'true' }, el('i'), el('i'), el('i'));
-    const recu = f => el('div', { class: 'message message-recu' }, frappe(),
-      el('blockquote', { class: 'bulle' }, el('span', { class: 'sr-only' }, 'Le maître d\'ouvrage : '), `« ${f.citation} »`),
-      el('p', { class: 'bulle-meta' }, lien(f.source)));
-    const envoye = (contenu, sources) => el('div', { class: 'message message-envoye' }, frappe(),
-      el('p', { class: 'bulle' }, el('span', { class: 'sr-only' }, 'Les données : '), contenu),
-      sources ? el('p', { class: 'bulle-meta' }, 'Sources : ', sources.map((s, i) => [i ? ' ; ' : '', lien(s)])) : null);
+    const meta = sources => sources && sources.length
+      ? el('span', { class: 'bulle-meta' }, sources.map((s, i) => [i ? ' ; ' : '', lien(s)])) : null;
+    const message = (m, suite) => {
+      if (m.qui === 'systeme') return el('div', { class: 'message message-systeme', 'data-qui': 'systeme' },
+        el('p', { class: 'bulle-systeme' }, m.contenu, ' ', meta(m.sources)));
+      const p = PARTICIPANTS[m.qui], envoye = m.qui === 'faits';
+      const corps = m.cite ? el('blockquote', { class: 'bulle-texte' }, `« ${m.cite} »`) : el('p', { class: 'bulle-texte' }, m.contenu);
+      return el('div', { class: `message ${envoye ? 'message-envoye' : 'message-recu'} de-${m.qui}${suite ? ' suite' : ''}`, 'data-qui': m.qui },
+        envoye ? null : el('span', { class: 'wa-avatar', 'aria-hidden': 'true' }, p.initiales),
+        frappe(),
+        el('div', { class: 'bulle' },
+          envoye ? el('span', { class: 'sr-only' }, 'Les faits : ') : el('span', { class: 'bulle-nom' }, p.nom, el('span', { class: 'sr-only' }, ' : ')),
+          corps, meta(m.sources)));
+    };
+    const statut = el('span', { class: 'sms-entete-sous', 'aria-hidden': 'true' }, 'Le public, Le maître d\'ouvrage, Les faits');
     document.getElementById('cartes-confrontation').replaceChildren(
       el('div', { class: 'sms-entete' },
-        el('span', { class: 'sms-avatar', 'aria-hidden': 'true' }, 'MO'),
-        el('span', {}, el('strong', {}, 'Le maître d\'ouvrage'), el('span', { class: 'sms-entete-sous' }, 'dossier de concertation et réponses publiées'))),
-      ...echanges.map(c => el('section', { class: 'fil' },
-        el('h2', { class: 'fil-sujet' }, c.titre),
-        c.dit.map(recu),
-        c.montre.map((contenu, i) => envoye(contenu, i === c.montre.length - 1 ? c.sourcesMontre : null)))));
-    animerConversation();
+        el('span', { class: 'sms-avatar', 'aria-hidden': 'true' }, 'TS'),
+        el('span', {}, el('strong', {}, 'Thermo-sur-Seine : le transport'), statut,
+          el('span', { class: 'sr-only' }, 'Conversation de groupe entre le public, le maître d\'ouvrage et les faits.'))),
+      ...fils.map(f => el('section', { class: 'fil' },
+        el('h2', { class: 'fil-sujet' }, f.titre),
+        f.messages.map((m, i) => message(m, i > 0 && f.messages[i - 1].qui === m.qui)))));
+    animerConversation(statut, PARTICIPANTS);
   }
 
-  // Chaque échange se joue tout seul quand il apparaît à l'écran : « en train d'écrire », puis la bulle, message après message.
-  // Les bulles gardent leur place pendant l'animation (pas de saut de mise en page). Sans IntersectionObserver ou avec
-  // « réduire les animations », tout reste affiché directement.
-  function animerConversation() {
+  // Chaque échange se joue tout seul quand il apparaît à l'écran : « … est en train d'écrire » dans l'en-tête et dans la bulle,
+  // puis le message, l'un après l'autre. Les bulles gardent leur place pendant l'animation (pas de saut de mise en page).
+  // Sans IntersectionObserver ou avec « réduire les animations », tout reste affiché directement.
+  function animerConversation(statut, participants) {
     if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     document.documentElement.classList.add('sms-anime');
+    const membres = statut.textContent;
+    let enCours = 0;
     const attendre = ms => new Promise(r => setTimeout(r, ms));
     const jouer = async fil => {
       for (const m of fil.querySelectorAll('.message')) {
+        const qui = m.dataset.qui;
+        if (qui === 'systeme') {
+          await attendre(500);
+          m.classList.add('lu');
+          continue;
+        }
+        enCours++;
+        statut.textContent = `${participants[qui].nom} est en train d'écrire…`;
         m.classList.add('en-frappe');
-        await attendre(Math.min(1100, 350 + m.querySelector('.bulle').textContent.length * 2.5));
+        await attendre(Math.min(1300, 400 + m.querySelector('.bulle-texte').textContent.length * 2.5));
         m.classList.replace('en-frappe', 'lu');
-        await attendre(200);
+        if (--enCours === 0) statut.textContent = membres;
+        await attendre(250);
       }
     };
     const observateur = new IntersectionObserver(entrees => entrees.forEach(e => {
