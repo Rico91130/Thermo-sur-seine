@@ -221,6 +221,52 @@ main > .bloc:first-child { padding-top: 32px; }
   .chaine-mobile { left: calc(var(--avance) * (100% - 30px)); top: 50%; transform: translateY(-65%); }
   .chaine-mode { font-size: 0.78rem; text-align: center; line-height: 1.2; }
 }
+/* Diaporama de la page Présentation (app.js, fonction diaporama). Sans JavaScript, les diapositives s'affichent
+   l'une sous l'autre ; avec, une seule est visible et la barre de navigation reste collée en bas de l'écran. */
+.diapo { padding: 40px 0; }
+.diaporama-actif .diapo { min-height: calc(100vh - 230px); min-height: calc(100svh - 230px); display: flex; align-items: center; padding: 32px 0 24px; }
+.diaporama-actif .diapo[hidden] { display: none; }
+.diapo .etape-contenu { max-width: 880px; }
+.diapo-ouverture h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); }
+.diapo-aide { margin-top: 18px; }
+.diapo-sources { margin-top: 22px; max-width: 760px; }
+.diapo-sources summary { cursor: pointer; color: var(--lien); font-size: 0.9rem; }
+.diapo-sources .etape-note { margin-top: 8px; }
+.diapo-barre { position: sticky; bottom: 0; z-index: 10; background: var(--page); border-top: 1px solid var(--bordure); }
+.diapo-nav { display: flex; align-items: center; gap: 14px; padding-top: 10px; padding-bottom: 12px; }
+.diapo-fleche {
+  flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: var(--surface); color: var(--encre); border: 1px solid var(--base);
+}
+.diapo-fleche svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.diapo-fleche:hover:not(:disabled) { border-color: var(--lien); color: var(--lien); }
+.diapo-fleche:disabled { opacity: 0.35; cursor: default; }
+/* La Seine : une bande bleue, un point par diapositive, et la barge au-dessus du point courant (--position, de 0 à 1) */
+.diapo-fleuve { --position: 0; position: relative; flex: 1 1 auto; min-width: 0; height: 52px; }
+.diapo-fleuve::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 34px; height: 8px; border-radius: 4px;
+  background: var(--serie-1); opacity: 0.25;
+}
+.diapo-points { position: absolute; left: 0; right: 0; top: 24px; display: flex; justify-content: space-between; }
+.diapo-point { width: 28px; height: 28px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+.diapo-point::before {
+  content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--page); border: 2px solid var(--serie-1);
+  transition: transform 0.25s ease, background-color 0.25s ease;
+}
+.diapo-point[aria-current="step"]::before { background: var(--serie-1); transform: scale(1.2); }
+.diapo-point:hover::before { transform: scale(1.2); }
+.diapo-barge {
+  position: absolute; top: 2px; width: 34px; height: 21px; pointer-events: none;
+  left: calc(var(--position) * (100% - 28px) + 14px); transform: translateX(-50%); transition: left 0.6s ease;
+}
+.diapo-compte { flex: none; min-width: 3.2em; text-align: right; font-size: 0.85rem; color: var(--encre-2); font-variant-numeric: tabular-nums; }
+@media (max-width: 600px) {
+  .diaporama-actif .diapo { align-items: flex-start; min-height: calc(100svh - 300px); padding-top: 24px; }
+  .diapo-nav { gap: 8px; }
+  .diapo-fleche { width: 42px; height: 42px; }
+  .diapo-compte { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .diapo-barge, .diapo-point::before { transition: none; } }
 /* Frise chronologique (page Présentation) : --trace (0 à 1) dessine le trait ; verticale sur mobile, horizontale sur grand écran */
 .frise { --trace: 1; position: relative; list-style: none; margin: 18px 0 8px; padding: 0 0 0 30px; display: grid; gap: 18px; }
 .frise::before {
@@ -243,13 +289,6 @@ main > .bloc:first-child { padding-top: 32px; }
 .route-chaussee { fill: none; stroke: var(--grille); stroke-width: 16; stroke-linecap: round; }
 .route-parcourue { fill: none; stroke: var(--serie-2); stroke-width: 16; stroke-linecap: round; opacity: 0.35; }
 .route-ligne { fill: none; stroke: var(--surface); stroke-width: 1.5; stroke-dasharray: 8 10; }
-/* Sur la page Présentation : la Seine et une barge poussée */
-.route-fleuve .route-chaussee { stroke: var(--serie-1); stroke-width: 26; opacity: 0.18; }
-.route-fleuve .route-parcourue { stroke: var(--serie-1); stroke-width: 26; opacity: 0.32; }
-.route-fleuve .route-ligne { stroke: var(--page); stroke-width: 1.5; stroke-dasharray: 3 16; opacity: 0.9; }
-.barge-coque { fill: var(--serie-1); }
-.barge-cargaison { fill: var(--encre-attenuee); }
-.barge-pousseur { fill: var(--encre); }
 .camion-remorque { fill: var(--serie-2); }
 .camion-cabine { fill: var(--encre); }
 .camion-parebrise { fill: var(--accent-fond); }

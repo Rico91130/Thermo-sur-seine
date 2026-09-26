@@ -1,40 +1,42 @@
 <!--
 titre: Présentation du projet · Le détour des camions
 description: Thermo-sur-Seine en bref : une chaufferie à Vitry-sur-Seine, 450 000 tonnes de combustible par an, une plateforme fluviale à Ris-Orangis, et le calendrier du projet, d'après le dossier de concertation.
-options: recit
+options: diaporama
 -->
-    <!-- Récit de présentation du projet (app.js, fonction presentation) : mêmes principes que l'accueil,
-         mais une barge descend la Seine dans la marge. Sans JavaScript ou avec « réduire les animations », tout s'affiche directement. -->
-    <div id="presentation" class="recit recit-fleuve">
-      <section class="etape etape-ouverture">
-        <div class="conteneur etape-contenu">
+    <!-- Présentation du projet en diaporama horizontal (app.js, fonctions presentation et diaporama) : flèches, points,
+         touches ← → et balayage au doigt. Sans JavaScript, les diapositives s'affichent l'une sous l'autre. -->
+    <div id="presentation" class="diaporama" role="region" aria-roledescription="carrousel" aria-label="Présentation du projet">
+      <div class="diapos conteneur" aria-live="polite">
+      <section class="diapo diapo-ouverture" data-titre="Thermo-sur-Seine en bref">
+        <div class="etape-contenu">
           <p class="etape-surtitre">Présentation</p>
           <h1>Thermo-sur-Seine en bref</h1>
           <p class="chapeau">Avant de mesurer le détour des camions, voici le projet tel que le décrit son maître d'ouvrage dans le dossier de concertation : ce qu'il produira, ce qu'il brûlera, comment le combustible arrivera, et quand.</p>
-          <p class="defiler">Faites défiler pour découvrir le projet <span class="defiler-fleche" aria-hidden="true">↓</span></p>
+          <p class="etape-actions"><button type="button" class="bouton" data-diapo-suivante>Découvrir le projet →</button></p>
+          <p class="note diapo-aide">Passez d'une diapositive à l'autre avec les flèches, les points ou les touches ← → du clavier, ou en faisant glisser du doigt.</p>
         </div>
       </section>
 
-      <section class="etape">
-        <div class="conteneur etape-contenu">
+      <section class="diapo" data-titre="La chaufferie">
+        <div class="etape-contenu">
           <p class="etape-amorce">Le projet, c'est d'abord une chaufferie à Vitry-sur-Seine, sur le site de l'ancienne centrale à charbon d'EDF. Elle produira</p>
           <p class="etape-valeur"><span data-compteur="chaleur">…</span></p>
           <p class="etape-texte">de chaleur par an pour le réseau de chauffage urbain de Paris et de 16 communes, qui chauffe plus d'un million d'habitants.</p>
-          <p class="etape-note" id="note-chaleur"></p>
+          <details class="diapo-sources"><summary>Sources et citations</summary><p class="etape-note" id="note-chaleur"></p></details>
         </div>
       </section>
 
-      <section class="etape">
-        <div class="conteneur etape-contenu">
+      <section class="diapo" data-titre="Le combustible">
+        <div class="etape-contenu">
           <p class="etape-amorce">Pour la faire tourner, il faudra brûler chaque année</p>
           <p class="etape-valeur"><span data-compteur="tonnage">…</span></p>
           <p class="etape-texte">de combustibles solides de récupération (CSR) : des déchets qui ne peuvent pas être recyclés, triés et préparés pour être brûlés.</p>
-          <p class="etape-note" id="note-tonnage"></p>
+          <details class="diapo-sources"><summary>Sources et citations</summary><p class="etape-note" id="note-tonnage"></p></details>
         </div>
       </section>
 
-      <section class="etape">
-        <div class="conteneur etape-contenu">
+      <section class="diapo" data-titre="Le trajet du combustible">
+        <div class="etape-contenu">
           <p class="etape-amorce">Ce combustible n'arrivera pas directement à Vitry.</p>
           <figure class="chaine" id="chaine-projet">
             <div class="chaine-schema" aria-hidden="true">
@@ -70,27 +72,40 @@ options: recit
             <figcaption class="sr-only">Schéma : centres de préparation du combustible, puis camions jusqu'à la plateforme de Ris-Orangis, puis barges sur la Seine jusqu'à la chaufferie de Vitry, puis réseau de chaleur de Paris et de 16 communes.</figcaption>
           </figure>
           <p class="etape-texte">Des camions le livreront à une plateforme fluviale à Ris-Orangis. Des barges l'amèneront ensuite par la Seine jusqu'à Vitry : <strong data-lie="trajet-fluvial">…</strong> aller et retour.</p>
-          <p class="etape-note" id="note-chaine"></p>
+          <details class="diapo-sources"><summary>Sources et citations</summary><p class="etape-note" id="note-chaine"></p></details>
         </div>
       </section>
 
-      <section class="etape">
-        <div class="conteneur etape-contenu">
-          <p class="etape-amorce">Le calendrier annoncé par le maître d'ouvrage :</p>
+      <section class="diapo" data-titre="Le calendrier">
+        <div class="etape-contenu">
+          <p class="etape-amorce">Le calendrier annoncé par le maître d'ouvrage&nbsp;:</p>
           <ol class="frise" id="frise-projet"></ol>
-          <p class="etape-note" id="note-frise"></p>
+          <details class="diapo-sources"><summary>Sources et citations</summary><p class="etape-note" id="note-frise"></p></details>
         </div>
       </section>
 
-      <section class="etape">
-        <div class="conteneur etape-contenu">
-          <p class="etape-amorce">Pourquoi ne pas livrer directement Vitry ? Le maître d'ouvrage répond :</p>
+      <section class="diapo" data-titre="Pourquoi Ris-Orangis ?">
+        <div class="etape-contenu">
+          <p class="etape-amorce">Pourquoi ne pas livrer directement Vitry ? Le maître d'ouvrage répond&nbsp;:</p>
           <blockquote class="etape-citation" id="citation-foncier"></blockquote>
           <p class="etape-texte">Ce choix a un coût que le dossier ne chiffre pas : <strong>le détour des camions</strong>. C'est ce que mesure ce site.</p>
-          <p class="etape-actions"><a class="bouton" href="./">Voir le détour en chiffres</a> <a class="bouton bouton-second" href="dossier.html">Les questions du public</a></p>
-          <p class="etape-note" id="note-foncier"></p>
+          <p class="etape-actions"><a class="bouton" href="./">Voir le détour en chiffres</a> <a class="bouton bouton-second" href="dossier.html">Questions / réponses</a></p>
+          <details class="diapo-sources"><summary>Sources et citations</summary><p class="etape-note" id="note-foncier"></p></details>
         </div>
       </section>
 
+      </div>
+      <!-- Navigation : flèches, un point par diapositive le long de la Seine, et une barge qui avance jusqu'au point courant -->
+      <div class="diapo-barre" id="diapo-barre" hidden>
+        <nav class="diapo-nav conteneur" aria-label="Diapositives">
+          <button type="button" class="diapo-fleche" id="diapo-precedente" aria-label="Diapositive précédente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+          <div class="diapo-fleuve" id="diapo-fleuve">
+            <div class="diapo-points" id="diapo-points"></div>
+            <svg class="diapo-barge" viewBox="0 0 32 20" aria-hidden="true"><path d="M1 10h30l-4 7H5z" class="chaine-coque"/><rect x="6" y="5" width="18" height="5" rx="1" class="chaine-cargaison"/></svg>
+          </div>
+          <button type="button" class="diapo-fleche" id="diapo-suivante" aria-label="Diapositive suivante"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+          <span class="diapo-compte" id="diapo-compte" aria-hidden="true"></span>
+        </nav>
+      </div>
     </div>
     <p class="conteneur note" id="presentation-sources"></p>

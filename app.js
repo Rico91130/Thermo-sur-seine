@@ -163,7 +163,7 @@ function urlGoogleMaps(orig, dest, passages) {
   // Recolorer si le thème du système change
   if (recolorer) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolorer);
 
-  /* ---------------- Présentation du projet : récit à faire défiler ---------------- */
+  /* ---------------- Présentation du projet : diaporama horizontal ---------------- */
   function presentation() {
     const { compteurs, compteur } = nouveauxCompteurs();
     compteur('chaleur', F.chaleur.valeur, v => `${fmt1(v)} TWh`);
@@ -186,7 +186,7 @@ function urlGoogleMaps(orig, dest, passages) {
     note('note-foncier', F.transport_absent.constat.replace(/\.$/, ''), ' (', lien(F.transport_absent.source), ').');
     note('presentation-sources', 'Toutes les citations viennent du ', lien({ texte: 'dossier de concertation (juillet 2026)', url: urlDossier }),
       ', de ', lien({ texte: 'L\'essentiel du projet', url: F.calendrier.etapes[0].source.url }), ' ou des réponses publiées par le maître d\'ouvrage sur la plateforme de la concertation.');
-    animerRecit(compteurs, document.getElementById('presentation'), 'barge');
+    diaporama(compteurs);
   }
 
   /* ---------------- L'essentiel : récit à faire défiler ---------------- */
@@ -288,79 +288,148 @@ function urlGoogleMaps(orig, dest, passages) {
       ' ; distances et temps : mesures Google du 26 septembre 2026 (', el('a', { href: 'methode.html' }, 'méthode'), '). Les étapes chiffrées du détour supposent un combustible venant du Plessis-Gassot, sauf la dernière, qui porte sur tous les points de départ situés au nord de Vitry. Les fournisseurs ne seront choisis qu\'en 2027 (',
       lien({ texte: 'question n° 46', url: F.fournisseurs.source.url }), ').');
 
-    animerRecit(compteurs, document.getElementById('essentiel'), 'camion');
+    animerRecit(compteurs, document.getElementById('essentiel'));
   }
 
-  // Animations du récit (GSAP + ScrollTrigger, chargés par index.html). Chaque étape se joue en entier, toute seule,
-  // dès qu'elle apparaît à l'écran : pas besoin de continuer à faire défiler. Sans GSAP ou avec « réduire les animations »,
-  // rien n'est masqué : les valeurs finales restent affichées.
-  function animerRecit(compteurs, recit, vehicule) {
-    const G = window.gsap, ST = window.ScrollTrigger;
-    if (!G || !ST || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    G.registerPlugin(ST);
-    document.documentElement.classList.add('recit-anime');
-
-    // Le nombre de tours de la Terre suit le compteur de kilomètres
+  // Compteur animé : refait défiler la valeur depuis 0. Le nombre de tours de la Terre suit le compteur de kilomètres.
+  function compteurAnime(G, compteurs) {
     const spanTours = document.querySelector('[data-lie="tours-terre"]'), toursFin = kmFin => kmFin / F.tour_terre.valeur;
     const suivis = new Map([[document.querySelector('[data-compteur="km-an"]'), (v, fin) => {
       spanTours.textContent = `${fmt0(v >= fin ? Math.round(toursFin(fin)) : Math.floor(toursFin(v)))} fois le tour de la Terre`;
     }]]);
-    const compter = (span, duree, ease) => {
+    return (span, duree, ease) => {
       const { valeur, format } = compteurs.get(span), o = { v: 0 }, suivi = suivis.get(span);
       return G.fromTo(o, { v: 0 }, { v: valeur, duration: duree, ease, onUpdate: () => {
         span.textContent = format(o.v);
         if (suivi) suivi(o.v, valeur);
       } });
     };
+  }
+
+  // Animation d'une étape (récit de l'accueil ou diapositive de la présentation) : apparition en cascade, puis compteurs,
+  // barres, pictogrammes, schéma de la chaîne et frise chronologique, joués d'un seul tenant. Renvoie une timeline en pause.
+  function animationEtape(G, etape, compter) {
+    const contenu = etape.querySelector('.etape-contenu');
+    const tl = G.timeline({ paused: true });
+    tl.from(contenu.children, { y: 40, opacity: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out' });
+    const pictos = etape.querySelectorAll('.picto');
+    // Avec des pictogrammes, le compteur avance au même rythme qu'eux (un globe par tour de la Terre, etc.)
+    const duree = pictos.length ? Math.min(3, 1.2 + pictos.length * 0.03) : 1.6;
+    etape.querySelectorAll('[data-compteur]').forEach(s => tl.add(compter(s, duree, pictos.length ? 'none' : 'power2.out'), 0.3));
+    if (pictos.length) tl.from(pictos, { scale: 0, opacity: 0, duration: 0.35, ease: 'back.out(2.5)', stagger: duree / pictos.length }, 0.3);
+    const barres = etape.querySelectorAll('.barre-remplie');
+    if (barres.length) tl.from(barres, { scaleX: 0, transformOrigin: 'left center', duration: 1.3, stagger: 0.3, ease: 'power2.out' }, 0.3);
+    // Schéma de la chaîne du projet : chaque maillon apparaît, puis le camion et la barge font leur trajet jusqu'au suivant
+    const chaine = etape.querySelector('.chaine');
+    if (chaine) {
+      const maillons = chaine.querySelectorAll('.chaine-etape'), apparait = { y: 14, opacity: 0, duration: 0.45, ease: 'power2.out' };
+      tl.from(maillons[0], apparait, 0.4);
+      chaine.querySelectorAll('.chaine-lien').forEach((lienChaine, i) => {
+        const debut = 0.8 + i * 1.3;
+        tl.from(lienChaine, { opacity: 0, duration: 0.3 }, debut);
+        if (lienChaine.querySelector('.chaine-mobile')) tl.fromTo(lienChaine, { '--avance': 0 }, { '--avance': 1, duration: 1.1, ease: 'power1.inOut' }, debut);
+        tl.from(maillons[i + 1], apparait, debut + 1);
+      });
+    }
+    // Frise chronologique : le trait se trace, puis chaque année apparaît à son tour
+    const frise = etape.querySelector('.frise');
+    if (frise) {
+      tl.fromTo(frise, { '--trace': 0 }, { '--trace': 1, duration: 2.2, ease: 'power1.inOut' }, 0.4);
+      tl.from(frise.querySelectorAll('.frise-etape'), { opacity: 0, y: 12, duration: 0.45, stagger: 0.36, ease: 'power2.out' }, 0.5);
+    }
+    return tl;
+  }
+
+  // Animations du récit de l'accueil (GSAP + ScrollTrigger). Chaque étape se joue en entier, toute seule, dès qu'elle
+  // apparaît à l'écran : pas besoin de continuer à faire défiler. Sans GSAP ou avec « réduire les animations »,
+  // rien n'est masqué : les valeurs finales restent affichées.
+  function animerRecit(compteurs, recit) {
+    const G = window.gsap, ST = window.ScrollTrigger;
+    if (!G || !ST || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    G.registerPlugin(ST);
+    document.documentElement.classList.add('recit-anime');
+    const compter = compteurAnime(G, compteurs);
 
     // Barre de progression de la lecture
     const progression = el('div', { class: 'recit-progression', 'aria-hidden': 'true' });
     document.body.append(progression);
     G.to(progression, { scaleX: 1, ease: 'none', scrollTrigger: { trigger: recit, start: 'top top', end: 'bottom bottom', scrub: 0.3 } });
-    if (window.MotionPathPlugin) routeDuCamion(G, ST, recit, vehicule);
+    if (window.MotionPathPlugin) routeDuCamion(G, ST, recit);
 
-    // Ouverture
+    // Ouverture, puis chaque étape quand elle entre dans l'écran
     G.from('.etape-ouverture .etape-contenu > *', { y: 30, opacity: 0, duration: 0.9, stagger: 0.15, ease: 'power3.out' });
-
-    // Étapes : apparition en cascade, puis compteur, barres et pictogrammes, joués d'un seul tenant
-    document.querySelectorAll('.etape:not(.etape-ouverture)').forEach(etape => {
-      const contenu = etape.querySelector('.etape-contenu');
-      const tl = G.timeline({ paused: true });
-      ST.create({ trigger: contenu, start: 'top 80%', once: true, onEnter: () => tl.play() });
-      tl.from(contenu.children, { y: 40, opacity: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out' });
-      const pictos = etape.querySelectorAll('.picto');
-      // Avec des pictogrammes, le compteur avance au même rythme qu'eux (un globe par tour de la Terre, etc.)
-      const duree = pictos.length ? Math.min(3, 1.2 + pictos.length * 0.03) : 1.6;
-      etape.querySelectorAll('[data-compteur]').forEach(s => tl.add(compter(s, duree, pictos.length ? 'none' : 'power2.out'), 0.3));
-      if (pictos.length) tl.from(pictos, { scale: 0, opacity: 0, duration: 0.35, ease: 'back.out(2.5)', stagger: duree / pictos.length }, 0.3);
-      const barres = etape.querySelectorAll('.barre-remplie');
-      if (barres.length) tl.from(barres, { scaleX: 0, transformOrigin: 'left center', duration: 1.3, stagger: 0.3, ease: 'power2.out' }, 0.3);
-      // Schéma de la chaîne du projet : chaque maillon apparaît, puis le camion et la barge font leur trajet jusqu'au suivant
-      const chaine = etape.querySelector('.chaine');
-      if (chaine) {
-        const maillons = chaine.querySelectorAll('.chaine-etape'), apparait = { y: 14, opacity: 0, duration: 0.45, ease: 'power2.out' };
-        tl.from(maillons[0], apparait, 0.4);
-        chaine.querySelectorAll('.chaine-lien').forEach((lienChaine, i) => {
-          const debut = 0.8 + i * 1.3;
-          tl.from(lienChaine, { opacity: 0, duration: 0.3 }, debut);
-          if (lienChaine.querySelector('.chaine-mobile')) tl.fromTo(lienChaine, { '--avance': 0 }, { '--avance': 1, duration: 1.1, ease: 'power1.inOut' }, debut);
-          tl.from(maillons[i + 1], apparait, debut + 1);
-        });
-      }
-      // Frise chronologique : le trait se trace, puis chaque année apparaît à son tour
-      const frise = etape.querySelector('.frise');
-      if (frise) {
-        tl.fromTo(frise, { '--trace': 0 }, { '--trace': 1, duration: 2.2, ease: 'power1.inOut' }, 0.4);
-        tl.from(frise.querySelectorAll('.frise-etape'), { opacity: 0, y: 12, duration: 0.45, stagger: 0.36, ease: 'power2.out' }, 0.5);
-      }
+    recit.querySelectorAll('.etape:not(.etape-ouverture)').forEach(etape => {
+      const tl = animationEtape(G, etape, compter);
+      ST.create({ trigger: etape.querySelector('.etape-contenu'), start: 'top 80%', once: true, onEnter: () => tl.play() });
     });
+  }
+
+  // Présentation : un diaporama horizontal. Flèches, points, touches ← →, balayage au doigt ; une barge avance sur la Seine
+  // d'un point à l'autre. Chaque diapositive rejoue ses animations quand elle s'affiche, et l'adresse garde sa position (#diapo-3).
+  // Sans JavaScript, toutes les diapositives s'affichent l'une sous l'autre ; sans GSAP ou avec « réduire les animations »,
+  // elles changent sans animation, avec leurs valeurs finales.
+  function diaporama(compteurs) {
+    const racine = document.getElementById('presentation');
+    const diapos = [...racine.querySelectorAll('.diapo')], n = diapos.length;
+    const precedent = document.getElementById('diapo-precedente'), suivant = document.getElementById('diapo-suivante');
+    const points = document.getElementById('diapo-points'), fleuve = document.getElementById('diapo-fleuve'), compte = document.getElementById('diapo-compte');
+    const G = window.gsap, anime = !!G && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const compter = anime ? compteurAnime(G, compteurs) : null;
+    const timelines = anime ? diapos.map(d => animationEtape(G, d, compter)) : [];
+    racine.classList.add('diaporama-actif');
+    document.getElementById('diapo-barre').hidden = false;
+    diapos.forEach((d, i) => {
+      d.setAttribute('role', 'group');
+      d.setAttribute('aria-roledescription', 'diapositive');
+      d.setAttribute('aria-label', `${i + 1} sur ${n} : ${d.dataset.titre}`);
+    });
+    const boutons = diapos.map((d, i) => el('button', { type: 'button', class: 'diapo-point', 'aria-label': `Diapositive ${i + 1} : ${d.dataset.titre}`, onclick: () => aller(i) }));
+    points.replaceChildren(...boutons);
+
+    let courante = -1;
+    function aller(i, depuisAdresse = false) {
+      i = Math.max(0, Math.min(n - 1, i));
+      if (i === courante) return;
+      const sens = i > courante ? 1 : -1;
+      diapos.forEach((d, k) => { d.hidden = k !== i; });
+      boutons.forEach((b, k) => b.setAttribute('aria-current', k === i ? 'step' : 'false'));
+      precedent.disabled = i === 0;
+      suivant.disabled = i === n - 1;
+      compte.textContent = `${i + 1} / ${n}`;
+      fleuve.style.setProperty('--position', n > 1 ? i / (n - 1) : 0);
+      if (anime && courante >= 0) G.fromTo(diapos[i], { x: 60 * sens, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' });
+      if (anime) timelines[i].restart();
+      if (courante >= 0 && !depuisAdresse) history.replaceState(null, '', `#diapo-${i + 1}`);
+      // Après un changement, le haut de la diapositive reste en vue
+      if (courante >= 0 && racine.getBoundingClientRect().top < 0) racine.scrollIntoView({ block: 'start' });
+      courante = i;
+    }
+    precedent.addEventListener('click', () => aller(courante - 1));
+    suivant.addEventListener('click', () => aller(courante + 1));
+    racine.querySelectorAll('[data-diapo-suivante]').forEach(b => b.addEventListener('click', () => aller(courante + 1)));
+    document.addEventListener('keydown', e => {
+      if (e.altKey || e.ctrlKey || e.metaKey || /^(input|select|textarea)$/i.test(e.target.tagName)) return;
+      if (e.key === 'ArrowRight') { aller(courante + 1); e.preventDefault(); }
+      else if (e.key === 'ArrowLeft') { aller(courante - 1); e.preventDefault(); }
+    });
+    // Balayage horizontal au doigt (un geste surtout vertical reste un défilement)
+    let depart = null;
+    racine.addEventListener('touchstart', e => { depart = [e.touches[0].clientX, e.touches[0].clientY]; }, { passive: true });
+    racine.addEventListener('touchend', e => {
+      if (!depart) return;
+      const dx = e.changedTouches[0].clientX - depart[0], dy = e.changedTouches[0].clientY - depart[1];
+      if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) aller(courante + (dx < 0 ? 1 : -1));
+      depart = null;
+    });
+    const numeroDansAdresse = () => { const m = /^#diapo-(\d+)$/.exec(location.hash); return m ? +m[1] - 1 : 0; };
+    aller(numeroDansAdresse(), true);
+    window.addEventListener('hashchange', () => aller(numeroDansAdresse(), true));
   }
 
   // Un petit camion (vu de dessus) descend le récit au rythme du défilement.
   // Grand écran : il suit une route sinueuse dans la marge de droite et reste à hauteur du milieu de l'écran.
   // Petit écran : pas de place à côté du texte, il roule le long de la barre de progression, en haut.
-  // Sur la page Présentation, c'est une barge poussée qui descend une Seine sinueuse.
-  function routeDuCamion(G, ST, recit, vehicule) {
+  function routeDuCamion(G, ST, recit) {
     G.registerPlugin(window.MotionPathPlugin);
     const ns = 'http://www.w3.org/2000/svg';
     const svgEl = (tag, attrs, parent) => {
@@ -377,23 +446,14 @@ function urlGoogleMaps(orig, dest, passages) {
       svgEl('rect', { x: 15.5, y: -4.5, width: 2, height: 9, rx: 1, class: 'camion-parebrise' }, g);
       return g.parentNode;   // groupe animé (le groupe intérieur porte l'échelle)
     };
-    // Barge vue de dessus, poussée par son pousseur (à l'arrière), orientée vers la droite
-    const barge = (parent, echelle = 1) => {
-      const g = svgEl('g', { transform: `scale(${echelle})` }, svgEl('g', { class: 'barge' }, parent));
-      svgEl('rect', { x: -12, y: -7, width: 30, height: 14, rx: 3, class: 'barge-coque' }, g);
-      svgEl('rect', { x: -8, y: -4.5, width: 22, height: 9, rx: 1.5, class: 'barge-cargaison' }, g);
-      svgEl('rect', { x: -22, y: -5, width: 9, height: 10, rx: 2.5, class: 'barge-pousseur' }, g);
-      return g.parentNode;
-    };
-    const dessiner = vehicule === 'barge' ? barge : camion;
     const mm = G.matchMedia();
 
     mm.add('(min-width: 1000px)', () => {
-      const svg = svgEl('svg', { class: vehicule === 'barge' ? 'route route-fleuve' : 'route', 'aria-hidden': 'true' });
+      const svg = svgEl('svg', { class: 'route', 'aria-hidden': 'true' });
       const chaussee = svgEl('path', { class: 'route-chaussee' }, svg);
       const parcourue = svgEl('path', { class: 'route-parcourue' }, svg);
       const ligne = svgEl('path', { class: 'route-ligne' }, svg);
-      const mobile = dessiner(svg, 1.5);
+      const vehicule = camion(svg, 1.5);
       recit.append(svg);
       let longueur = 0;
       // Géométrie recalculée à chaque rafraîchissement (hauteur du récit, largeur de la marge)
@@ -417,7 +477,7 @@ function urlGoogleMaps(orig, dest, passages) {
       ST.addEventListener('refreshInit', geometrie);
       // Le milieu de l'écran parcourt le récit de haut en bas : le camion y reste, à la même hauteur
       const defilement = { trigger: recit, start: 'top center', end: 'bottom center', scrub: 0.6, invalidateOnRefresh: true };
-      G.to(mobile, { ease: 'none', scrollTrigger: defilement,
+      G.to(vehicule, { ease: 'none', scrollTrigger: defilement,
         motionPath: { path: chaussee, align: chaussee, alignOrigin: [0.5, 0.5], autoRotate: true } });
       G.fromTo(parcourue, { strokeDashoffset: () => longueur }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { ...defilement } });
       return () => { ST.removeEventListener('refreshInit', geometrie); svg.remove(); };
@@ -425,7 +485,7 @@ function urlGoogleMaps(orig, dest, passages) {
 
     mm.add('(max-width: 999px)', () => {
       const svg = svgEl('svg', { class: 'camion-barre', viewBox: '-20 -10 40 20', 'aria-hidden': 'true' });
-      dessiner(svg);
+      camion(svg);
       document.body.append(svg);
       G.fromTo(svg, { x: 0 }, { x: () => window.innerWidth - 34, ease: 'none', scrollTrigger: {
         trigger: recit, start: 'top top', end: 'bottom bottom', scrub: 0.3, invalidateOnRefresh: true } });
@@ -512,7 +572,7 @@ function urlGoogleMaps(orig, dest, passages) {
       ] },
     ];
 
-    const PARTICIPANTS = { public: { nom: 'Le public', initiales: 'P' }, mo: { nom: 'Le maître d\'ouvrage', initiales: 'MO' }, faits: { nom: 'Les faits' } };
+    const PARTICIPANTS = { public: { nom: 'Le public', initiales: 'P', ecrit: 'est' }, mo: { nom: 'Le maître d\'ouvrage', initiales: 'MO', ecrit: 'est' }, faits: { nom: 'Les faits', ecrit: 'sont' } };
     const frappe = () => el('span', { class: 'sms-frappe', 'aria-hidden': 'true' }, el('i'), el('i'), el('i'));
     const meta = sources => sources && sources.length
       ? el('span', { class: 'bulle-meta' }, sources.map((s, i) => [i ? ' ; ' : '', lien(s)])) : null;
@@ -534,6 +594,9 @@ function urlGoogleMaps(orig, dest, passages) {
         el('span', { class: 'sms-avatar', 'aria-hidden': 'true' }, 'TS'),
         el('span', {}, el('strong', {}, 'Thermo-sur-Seine : le transport'), statut,
           el('span', { class: 'sr-only' }, 'Conversation de groupe entre le public, le maître d\'ouvrage et les faits.'))),
+      // Notice, comme le bandeau d'information d'une messagerie : ce ne sont pas des messages inventés
+      el('div', { class: 'message message-systeme lu' }, el('p', { class: 'bulle-systeme' },
+        'Questions réelles du public (sans nom d\'auteur) et réponses du maître d\'ouvrage, citées mot pour mot avec leur source. « Les faits » répondent avec nos mesures et les chiffres du dossier.')),
       ...fils.map(f => el('section', { class: 'fil' },
         el('h2', { class: 'fil-sujet' }, f.titre),
         f.messages.map((m, i) => message(m, i > 0 && f.messages[i - 1].qui === m.qui)))));
@@ -558,7 +621,7 @@ function urlGoogleMaps(orig, dest, passages) {
           continue;
         }
         enCours++;
-        statut.textContent = `${participants[qui].nom} est en train d'écrire…`;
+        statut.textContent = `${participants[qui].nom} ${participants[qui].ecrit} en train d'écrire…`;
         m.classList.add('en-frappe');
         await attendre(Math.min(1300, 400 + m.querySelector('.bulle-texte').textContent.length * 2.5));
         m.classList.replace('en-frappe', 'lu');
