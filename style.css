@@ -293,6 +293,14 @@ main > .bloc:first-child { padding-top: 32px; }
 .route-chaussee { fill: none; stroke: var(--grille); stroke-width: 16; stroke-linecap: round; }
 .route-parcourue { fill: none; stroke: var(--serie-2); stroke-width: 16; stroke-linecap: round; opacity: 0.35; }
 .route-ligne { fill: none; stroke: var(--surface); stroke-width: 1.5; stroke-dasharray: 8 10; }
+/* À partir de « Et la barge ? » : la Seine, plus large, et la barge qui prend le relais */
+.fleuve-lit { fill: none; stroke: var(--serie-1); stroke-width: 24; stroke-linecap: round; opacity: 0.16; }
+.fleuve-parcouru { fill: none; stroke: var(--serie-1); stroke-width: 24; stroke-linecap: round; opacity: 0.32; }
+.fleuve-reflets { fill: none; stroke: var(--surface); stroke-width: 1.5; stroke-dasharray: 3 14; opacity: 0.9; }
+.route-quai { fill: var(--encre-attenuee); }
+.barge-coque { fill: var(--serie-1); }
+.barge-cargaison { fill: var(--encre-attenuee); }
+.barge-pousseur { fill: var(--encre); }
 .camion-remorque { fill: var(--serie-2); }
 .camion-cabine { fill: var(--encre); }
 .camion-parebrise { fill: var(--accent-fond); }

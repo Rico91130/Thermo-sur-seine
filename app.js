@@ -371,7 +371,7 @@ function urlGoogleMaps(orig, dest, passages) {
       ' ; durée légale du travail : ', lien({ texte: 'service-public.gouv.fr', url: F.duree_legale.source.url }),
       ' ; consommation et coûts : ', ...lienCnr('CNR, référentiel régional'), ' ; CO₂ du gazole : ', lien({ texte: 'ADEME, Base Carbone', url: F.co2_gazole.source.url }),
       ' ; barges : dossier (', lien(F.trajet_fluvial.source), ') et ', lienGuide('guide officiel « Information GES des prestations de transport »'),
-      ' ; distances et temps : mesures Google du 26 septembre 2026 (', el('a', { href: 'methode.html' }, 'méthode'), '). Les étapes chiffrées du détour supposent un combustible venant du Plessis-Gassot, sauf la dernière, qui porte sur tous les points de départ situés au nord de Vitry. Les fournisseurs ne seront choisis qu\'en 2027 (',
+      ' ; distances et temps : mesures Google du 26 septembre 2026 (', el('a', { href: 'methode.html' }, 'méthode'), '). Les étapes chiffrées supposent un combustible venant du Plessis-Gassot, sauf celle qui porte sur tous les points de départ situés au nord de Vitry. Les fournisseurs ne seront choisis qu\'en 2027 (',
       lien({ texte: 'question n° 46', url: F.fournisseurs.source.url }), ').');
 
     animerRecit(compteurs, document.getElementById('essentiel'));
@@ -501,12 +501,13 @@ function urlGoogleMaps(orig, dest, passages) {
     window.addEventListener('hashchange', () => aller(numeroDansAdresse(), true));
   }
 
-  // Un petit camion (vu de dessus) descend le récit au rythme du défilement.
-  // Grand écran : il suit une route sinueuse dans la marge de droite et reste à hauteur du milieu de l'écran.
-  // Petit écran : pas de place à côté du texte, il roule le long de la barre de progression, en haut.
+  // Un petit camion (vu de dessus) descend le récit au rythme du défilement ; à l'étape « Et la barge ? » (#etape-barge),
+  // il s'arrête au bout de la route et une barge prend le relais sur la Seine jusqu'en bas du récit.
+  // Grand écran : route puis fleuve sinueux dans la marge de droite, le véhicule reste à hauteur du milieu de l'écran.
+  // Petit écran : pas de place à côté du texte, le véhicule roule (puis navigue) le long de la barre de progression, en haut.
   function routeDuCamion(G, ST, recit) {
     G.registerPlugin(window.MotionPathPlugin);
-    const ns = 'http://www.w3.org/2000/svg';
+    const ns = 'http://www.w3.org/2000/svg', relais = document.getElementById('etape-barge');
     const svgEl = (tag, attrs, parent) => {
       const n = document.createElementNS(ns, tag);
       for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
@@ -521,50 +522,83 @@ function urlGoogleMaps(orig, dest, passages) {
       svgEl('rect', { x: 15.5, y: -4.5, width: 2, height: 9, rx: 1, class: 'camion-parebrise' }, g);
       return g.parentNode;   // groupe animé (le groupe intérieur porte l'échelle)
     };
+    // Barge vue de dessus, poussée par son pousseur (à l'arrière), orientée vers la droite
+    const barge = (parent, echelle = 1) => {
+      const g = svgEl('g', { transform: `scale(${echelle})` }, svgEl('g', { class: 'barge' }, parent));
+      svgEl('rect', { x: -12, y: -7, width: 30, height: 14, rx: 3, class: 'barge-coque' }, g);
+      svgEl('rect', { x: -8, y: -4.5, width: 22, height: 9, rx: 1.5, class: 'barge-cargaison' }, g);
+      svgEl('rect', { x: -22, y: -5, width: 9, height: 10, rx: 2.5, class: 'barge-pousseur' }, g);
+      return g.parentNode;
+    };
+    // Tracé sinueux entre deux hauteurs : virages alternés à gauche et à droite, un tous les ~420 px
+    const sinueux = (y0, y1, milieu, amplitude, sensDepart) => {
+      const n = Math.max(1, Math.round((y1 - y0) / 420)), pas = (y1 - y0) / n;
+      let d = `M ${milieu} ${y0}`;
+      for (let i = 0; i < n; i++) {
+        const x = milieu + ((i + sensDepart) % 2 ? -amplitude : amplitude), y = y0 + i * pas;
+        d += ` C ${x} ${y + pas * 0.25}, ${x} ${y + pas * 0.75}, ${milieu} ${y + pas}`;
+      }
+      return { d, virages: n };
+    };
     const mm = G.matchMedia();
 
     mm.add('(min-width: 1000px)', () => {
       const svg = svgEl('svg', { class: 'route', 'aria-hidden': 'true' });
+      const fleuve = svgEl('path', { class: 'fleuve-lit' }, svg);
+      const fleuveParcouru = svgEl('path', { class: 'fleuve-parcouru' }, svg);
+      const fleuveReflets = svgEl('path', { class: 'fleuve-reflets' }, svg);
       const chaussee = svgEl('path', { class: 'route-chaussee' }, svg);
       const parcourue = svgEl('path', { class: 'route-parcourue' }, svg);
       const ligne = svgEl('path', { class: 'route-ligne' }, svg);
-      const vehicule = camion(svg, 1.5);
+      const quai = svgEl('rect', { class: 'route-quai', width: 26, height: 8, rx: 2 }, svg);
+      const vehicule = camion(svg, 1.5), bateau = barge(svg, 1.5);
       recit.append(svg);
-      let longueur = 0;
-      // Géométrie recalculée à chaque rafraîchissement (hauteur du récit, largeur de la marge)
+      let longueurRoute = 0, longueurFleuve = 0;
+      // Géométrie recalculée à chaque rafraîchissement (hauteur du récit, position de l'étape de la barge, largeur de la marge)
       const geometrie = () => {
         const r = recit.getBoundingClientRect(), c = recit.querySelector('.etape-contenu').getBoundingClientRect();
         const gauche = Math.round(c.right - r.left + 40), largeur = Math.max(80, Math.min(220, r.width - gauche - 24)), H = recit.offsetHeight;
+        // La route s'arrête là où le milieu de l'écran rencontre le haut de l'étape de la barge
+        const Y = Math.min(H - 200, Math.max(200, relais.getBoundingClientRect().top - r.top));
         Object.assign(svg.style, { left: `${gauche}px`, width: `${largeur}px`, height: `${H}px` });
         svg.setAttribute('viewBox', `0 0 ${largeur} ${H}`);
-        // Virages alternés à gauche et à droite, un tous les ~420 px
-        const n = Math.max(2, Math.round(H / 420)), pas = H / n, milieu = largeur / 2, a = milieu - 20;
-        let d = `M ${milieu} 0`;
-        for (let i = 0; i < n; i++) {
-          const x = milieu + (i % 2 ? -a : a), y = i * pas;
-          d += ` C ${x} ${y + pas * 0.25}, ${x} ${y + pas * 0.75}, ${milieu} ${y + pas}`;
-        }
-        [chaussee, parcourue, ligne].forEach(p => p.setAttribute('d', d));
-        longueur = chaussee.getTotalLength();
-        parcourue.style.strokeDasharray = `${longueur}`;
+        const milieu = largeur / 2, a = milieu - 20;
+        const route = sinueux(0, Y, milieu, a, 0), riviere = sinueux(Y, H, milieu, a, route.virages);
+        [chaussee, parcourue, ligne].forEach(p => p.setAttribute('d', route.d));
+        [fleuve, fleuveParcouru, fleuveReflets].forEach(p => p.setAttribute('d', riviere.d));
+        quai.setAttribute('x', milieu - 13); quai.setAttribute('y', Y - 4);
+        longueurRoute = chaussee.getTotalLength(); longueurFleuve = fleuve.getTotalLength();
+        parcourue.style.strokeDasharray = `${longueurRoute}`;
+        fleuveParcouru.style.strokeDasharray = `${longueurFleuve}`;
       };
       geometrie();
       ST.addEventListener('refreshInit', geometrie);
-      // Le milieu de l'écran parcourt le récit de haut en bas : le camion y reste, à la même hauteur
-      const defilement = { trigger: recit, start: 'top center', end: 'bottom center', scrub: 0.6, invalidateOnRefresh: true };
-      G.to(vehicule, { ease: 'none', scrollTrigger: defilement,
-        motionPath: { path: chaussee, align: chaussee, alignOrigin: [0.5, 0.5], autoRotate: true } });
-      G.fromTo(parcourue, { strokeDashoffset: () => longueur }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { ...defilement } });
+      // Le milieu de l'écran parcourt le récit : d'abord la route (jusqu'à l'étape de la barge), puis le fleuve
+      const surRoute = { trigger: recit, start: 'top center', endTrigger: relais, end: 'top center', scrub: 0.6, invalidateOnRefresh: true };
+      const surFleuve = { trigger: relais, start: 'top center', endTrigger: recit, end: 'bottom center', scrub: 0.6, invalidateOnRefresh: true };
+      G.to(vehicule, { ease: 'none', scrollTrigger: surRoute, motionPath: { path: chaussee, align: chaussee, alignOrigin: [0.5, 0.5], autoRotate: true } });
+      G.fromTo(parcourue, { strokeDashoffset: () => longueurRoute }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { ...surRoute } });
+      G.to(bateau, { ease: 'none', scrollTrigger: { ...surFleuve }, motionPath: { path: fleuve, align: fleuve, alignOrigin: [0.5, 0.5], autoRotate: true } });
+      G.fromTo(fleuveParcouru, { strokeDashoffset: () => longueurFleuve }, { strokeDashoffset: 0, ease: 'none', scrollTrigger: { ...surFleuve } });
+      // La barge n'apparaît qu'au relais : avant, elle attend, invisible, au début du fleuve
+      G.set(bateau, { autoAlpha: 0 });
+      ST.create({ trigger: relais, start: 'top center', onEnter: () => G.to(bateau, { autoAlpha: 1, duration: 0.4 }), onLeaveBack: () => G.to(bateau, { autoAlpha: 0, duration: 0.3 }) });
       return () => { ST.removeEventListener('refreshInit', geometrie); svg.remove(); };
     });
 
     mm.add('(max-width: 999px)', () => {
-      const svg = svgEl('svg', { class: 'camion-barre', viewBox: '-20 -10 40 20', 'aria-hidden': 'true' });
-      camion(svg);
-      document.body.append(svg);
-      G.fromTo(svg, { x: 0 }, { x: () => window.innerWidth - 34, ease: 'none', scrollTrigger: {
+      const svgCamion = svgEl('svg', { class: 'camion-barre', viewBox: '-20 -10 40 20', 'aria-hidden': 'true' });
+      const svgBarge = svgEl('svg', { class: 'camion-barre', viewBox: '-24 -10 44 20', 'aria-hidden': 'true' });
+      camion(svgCamion); barge(svgBarge);
+      document.body.append(svgCamion, svgBarge);
+      G.set(svgBarge, { autoAlpha: 0 });
+      G.fromTo([svgCamion, svgBarge], { x: 0 }, { x: () => window.innerWidth - 34, ease: 'none', scrollTrigger: {
         trigger: recit, start: 'top top', end: 'bottom bottom', scrub: 0.3, invalidateOnRefresh: true } });
-      return () => svg.remove();
+      // Au relais, le camion laisse la place à la barge
+      ST.create({ trigger: relais, start: 'top center',
+        onEnter: () => { G.to(svgCamion, { autoAlpha: 0, duration: 0.3 }); G.to(svgBarge, { autoAlpha: 1, duration: 0.3 }); },
+        onLeaveBack: () => { G.to(svgCamion, { autoAlpha: 1, duration: 0.3 }); G.to(svgBarge, { autoAlpha: 0, duration: 0.3 }); } });
+      return () => { svgCamion.remove(); svgBarge.remove(); };
     });
   }
 
