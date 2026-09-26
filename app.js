@@ -13,6 +13,8 @@ const nf0 = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
 const espace = s => s.replace(/ /g, ' ');   // espace insécable normale, plus lisible que l'espace fine
 const fmt1 = v => espace(nf1.format(v)).replace('-', MOINS);
 const fmt0 = v => espace(nf0.format(v)).replace('-', MOINS);
+const fmt2 = v => espace(new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v));   // euros
+const fmtBrut = v => espace(v.toLocaleString('fr-FR'));   // constante affichée telle que publiée (ex. 0,496)
 const signe1 = v => (v > 0 ? '+' : v < 0 ? MOINS : '') + espace(nf1.format(Math.abs(v)));
 const signe0 = v => (v > 0 ? '+' : v < 0 ? MOINS : '') + espace(nf0.format(Math.abs(v)));
 const arrondi = (v, pas) => Math.round(v / pas) * pas;
@@ -116,6 +118,14 @@ function urlGoogleMaps(orig, dest, passages) {
   const lier = (cle, texte) => document.querySelectorAll(`[data-lie="${cle}"]`).forEach(n => { n.textContent = texte; });
   const ref = parId[REFERENCE_NORD];
   const camionsDossier = camionsAn(F.tonnage.valeur, CHARGE_DOSSIER);
+  // Conversion des kilomètres et des heures de conduite en plus : gazole, CO2 et coût (constantes CNR et ADEME, voir D.faits)
+  const bilan = (km, heures) => {
+    const litres = km * F.consommation.valeur / 100;
+    return { litres, co2: litres * F.co2_gazole.valeur / 1000, carburant: litres * F.prix_gazole.valeur,
+             cout: km * F.cout_km.valeur + heures * F.cout_heure.valeur };
+  };
+  const millions = v => { const r = Math.round(v / 1e5) / 10; return `${Number.isInteger(r) ? fmt0(r) : fmt1(r)} million${r >= 2 ? 's' : ''}`; };
+  const lienCnr = texte => [lien({ texte, url: F.consommation.source.url }), ' (', lien({ texte: 'copie archivée', url: F.consommation.source.archive }), ')'];
 
   const PAGES = { essentiel, dossier: confrontation, itineraires, carte: carteDuDetour, heures: heureParHeure, annee: surUneAnnee, methode };
   const recolorer = PAGES[page] ? PAGES[page]() : null;
@@ -124,10 +134,50 @@ function urlGoogleMaps(orig, dest, passages) {
 
   /* ---------------- L'essentiel ---------------- */
   function essentiel() {
-    lier('hero-km', signe0(detour(ref, 'acces')) + ' km');
-    lier('tuile-dossier', signe0(detour(ref, 'dossier')) + ' km');
-    lier('tuile-min', signe0(ref.ecart_min_median.acces) + ' min');
-    lier('tuile-camions', '≈ ' + fmt0(arrondi(camionsDossier, 100)));
+    // Hypothèse de référence : combustible venant du Plessis-Gassot, accès final imposé (le plus favorable au projet)
+    const detourRef = detour(ref, 'acces');
+    const kmAn = camionsDossier * 2 * detourRef;
+    lier('hero-km-an', `≈ ${millions(kmAn)} de km`);   // insécables : « ≈ 1 million » puis « de km » sur écran étroit
+    lier('hero-tours', `${fmt0(Math.round(kmAn / F.tour_terre.valeur))} fois le tour de la Terre`);
+    document.getElementById('hero-calcul').replaceChildren(
+      `Calcul : ${fmt0(camionsDossier)} camions par an × 2 (aller et retour) × ${fmt1(detourRef)} km = ${fmt0(arrondi(kmAn, 1000))} km ; tour de la Terre à l'équateur : ${fmt0(F.tour_terre.valeur)} km. `,
+      el('a', { href: 'annee.html' }, 'Refaire le calcul avec une autre origine'), '.');
+
+    lier('tuile-camion', `${signe0(2 * detourRef)} km`);
+    lier('tuile-camion-note', `aller et retour, depuis le Plessis-Gassot (2 × ${fmt1(detourRef)} km)`);
+
+    const ecarts = cells => cells.map(g => g[5] - g[3]);
+    const nord = ecarts(D.grille.filter(g => g[0] > V.lat)), sud = ecarts(D.grille.filter(g => g[0] < R.lat));
+    const pct = (arr, test) => Math.round(100 * arr.filter(test).length / arr.length);
+    lier('tuile-nord', `${pct(nord, d => d > 0)} %`);
+    lier('tuile-nord-note', `des points de départ sont plus loin de Ris-Orangis que de Vitry : ${signe0(mediane(nord))} km en médiane par trajet`);
+
+    const heuresAn = camionsDossier * 2 * ref.ecart_min_median.acces / 60;
+    lier('tuile-emplois', `≈ ${fmt0(heuresAn / F.duree_legale.valeur)}`);
+    lier('tuile-emplois-note', `emplois à temps plein : ≈ ${fmt0(arrondi(heuresAn, 100))} heures de conduite par an, aller et retour depuis le Plessis-Gassot, ÷ ${fmt0(F.duree_legale.valeur)} heures (durée légale annuelle). Temps de voiture, donc des minimums, encore à valider.`);
+
+    const b = bilan(kmAn, heuresAn);
+    lier('bilan-co2', `≈ ${fmt0(arrondi(b.co2, 10))} tonnes`);
+    lier('bilan-co2-note', `≈ ${fmt0(arrondi(b.litres, 1000))} litres de gazole × ${fmt1(F.co2_gazole.valeur)} kg de CO₂ par litre (ADEME, de l'extraction du pétrole au pot d'échappement)`);
+    lier('bilan-carburant', `≈ ${fmt0(arrondi(b.carburant, 10000))} €`);
+    lier('bilan-carburant-note', `${fmt0(arrondi(b.litres, 1000))} litres × ${fmt2(F.prix_gazole.valeur)} € par litre hors TVA (CNR, prix de décembre 2025 : la hausse du gazole en 2026 n'est pas comptée)`);
+    lier('bilan-cout', `≈ ${millions(b.cout)} d'euros`);
+    lier('bilan-cout-note', `${fmt0(arrondi(kmAn, 1000))} km × ${fmtBrut(F.cout_km.valeur)} €/km + ${fmt0(arrondi(heuresAn, 100))} h × ${fmt2(F.cout_heure.valeur)} €/h (CNR, hors péages et hors TVA)`);
+    lier('bilan-hypotheses', `Même hypothèse : combustible venant du Plessis-Gassot. Consommation : ${fmt1(F.consommation.valeur)} litres aux 100 km, moyenne des semi-remorques mesurée par le Comité national routier. Les camions à fond mouvant prévus consomment sans doute davantage : ces chiffres sont donc prudents.`);
+
+    const arqp = Object.entries(M.poids_arqp), totalArqp = arqp.reduce((a, [, w]) => a + w, 0);
+    const detourArqp = arqp.reduce((a, [e, w]) => a + w * detour(parId['E_' + e], 'acces'), 0) / totalArqp;
+    document.getElementById('encadre-sud').replaceChildren(el('strong', {}, 'À savoir : '),
+      `au sud de Ris-Orangis, c'est l'inverse. Ris-Orangis y est `, el('em', {}, 'plus proche'),
+      ` que Vitry pour ${pct(sud, d => d < 0)} % des points de départ (${fmt0(-mediane(sud))} km de moins en médiane). Tout dépend donc de l'origine du combustible, que le maître d'ouvrage ne connaîtra qu'en 2027 (`,
+      lien({ texte: 'question n° 46', url: F.fournisseurs.source.url }), `). Avec la répartition par autoroute proposée par l'ARQP, par exemple, le détour tombe à ≈ ${millions(camionsDossier * 2 * detourArqp)} de km par an. La `,
+      el('a', { href: 'carte.html' }, 'carte'), ' montre le détour pour toutes les origines possibles, et le ',
+      el('a', { href: 'annee.html' }, 'calculateur'), ' permet de tester d\'autres hypothèses.');
+    document.getElementById('essentiel-sources').replaceChildren('Sources : nombre de camions calculé d\'après le dossier (',
+      lien(F.tonnage.source), ' ; ', lien(F.barge.source), ') ; tour de la Terre : ', lien({ texte: 'NGA, WGS 84', url: F.tour_terre.source.url }),
+      ' ; durée légale du travail : ', lien({ texte: 'service-public.gouv.fr', url: F.duree_legale.source.url }),
+      ' ; consommation et coûts : ', ...lienCnr('CNR, référentiel régional'), ' ; CO₂ du gazole : ', lien({ texte: 'ADEME, Base Carbone', url: F.co2_gazole.source.url }),
+      ' ; distances et temps : mesures Google du 26 septembre 2026 (', el('a', { href: 'methode.html' }, 'méthode'), ').');
   }
 
   /* ---------------- Le dossier et les données ---------------- */
@@ -673,9 +723,18 @@ function urlGoogleMaps(orig, dest, passages) {
         cellule('Camions par an', fmt0(arrondi(n, 10)), `${fmt0(tonnage)} t ÷ ${fmt1(charge)} t par camion`),
         cellule('Détour moyen par trajet', `${signe1(det.acces)} km`, `itinéraire du dossier : ${signe1(det.dossier)} km`),
         cellule('Kilomètres en plus par an', `${signe0(arrondi(kmAn('acces'), 1000))} km`, `itinéraire du dossier : ${signe0(arrondi(kmAn('dossier'), 1000))} km`, 'aller et retour'),
-        cellule('Heures de conduite en plus par an', `${signe0(arrondi(hAn('acces'), 10))} h`, `itinéraire du dossier : ${signe0(arrondi(hAn('dossier'), 10))} h`, 'au moins : temps de voiture'));
+        cellule('Heures de conduite en plus par an', `${signe0(arrondi(hAn('acces'), 10))} h`, `itinéraire du dossier : ${signe0(arrondi(hAn('dossier'), 10))} h`, 'au moins : temps de voiture'),
+      ...(() => {
+        const b = bilan(kmAn('acces'), hAn('acces')), bd = bilan(kmAn('dossier'), hAn('dossier'));
+        return [
+          cellule('Émissions de CO₂ en plus par an', `${signe0(arrondi(b.co2, 10))} t`, `itinéraire du dossier : ${signe0(arrondi(bd.co2, 10))} t`, `${signe0(arrondi(b.litres, 1000))} litres de gazole`),
+          cellule('Gazole en plus par an', `${signe0(arrondi(b.carburant, 1000))} €`, `itinéraire du dossier : ${signe0(arrondi(bd.carburant, 1000))} €`, 'hors TVA, prix de décembre 2025'),
+          cellule('Coût de transport en plus par an', `${signe0(arrondi(b.cout, 1000))} €`, `itinéraire du dossier : ${signe0(arrondi(bd.cout, 1000))} €`, 'camion et chauffeur, hors péages'),
+        ];
+      })());
       document.getElementById('calc-formule').textContent =
-        `Calcul : kilomètres en plus par an = camions par an × 2 (aller et retour) × détour moyen = ${fmt0(n)} × 2 × ${fmt1(det.acces)} km = ${fmt0(kmAn('acces'))} km (accès final imposé). Le retour se fait vers le point de départ, avec ou sans chargement. Le détour moyen est la moyenne des détours des origines ci-dessous, pondérée par leur part.`;
+        `Calcul : kilomètres en plus par an = camions par an × 2 (aller et retour) × détour moyen = ${fmt0(n)} × 2 × ${fmt1(det.acces)} km = ${fmt0(kmAn('acces'))} km (accès final imposé). Le retour se fait vers le point de départ, avec ou sans chargement. Le détour moyen est la moyenne des détours des origines ci-dessous, pondérée par leur part. `
+        + `Litres de gazole = kilomètres × ${fmt1(F.consommation.valeur)} ÷ 100 ; CO₂ = litres × ${fmt1(F.co2_gazole.valeur)} kg ; gazole en euros = litres × ${fmt2(F.prix_gazole.valeur)} € ; coût de transport = kilomètres × ${fmtBrut(F.cout_km.valeur)} € + heures × ${fmt2(F.cout_heure.valeur)} €.`;
       document.getElementById('calc-tableau').replaceChildren(el('div', { class: 'tableau-defilant' }, el('table', { class: 'tableau-donnees' },
         el('thead', {}, el('tr', {}, el('th', {}, 'Origine'), el('th', {}, 'Part'), el('th', {}, 'Vers Vitry'),
           el('th', {}, 'Détour, accès imposé'), el('th', {}, 'Détour, dossier'), el('th', {}, 'Écart de temps, accès imposé'))),
@@ -685,6 +744,11 @@ function urlGoogleMaps(orig, dest, passages) {
           el('td', {}, `${signe1(detour(p, 'acces'))} km`), el('td', {}, `${signe1(detour(p, 'dossier'))} km`),
           el('td', {}, p.ecart_min_median.acces != null ? `${signe0(p.ecart_min_median.acces)} min` : '—')))))));
     }
+    document.getElementById('calc-constantes').replaceChildren(
+      `Constantes : consommation de ${fmt1(F.consommation.valeur)} litres aux 100 km, gazole à ${fmt2(F.prix_gazole.valeur)} € le litre hors TVA, ${fmtBrut(F.cout_km.valeur)} € par km et ${fmt2(F.cout_heure.valeur)} € par heure de conduite (`,
+      ...lienCnr('CNR, référentiel régional, décembre 2025'), `) ; ${fmt1(F.co2_gazole.valeur)} kg de CO₂ par litre de gazole, de l'extraction du pétrole au pot d'échappement (`,
+      lien({ texte: 'ADEME, Base Carbone, élément 25775', url: F.co2_gazole.source.url }),
+      '). Le prix du gazole a fortement augmenté en 2026 : les montants en euros sont sous-estimés. Les camions à fond mouvant consomment sans doute plus que la moyenne : tous ces chiffres sont prudents.');
     [calcScenario, calcTonnage, calcCharge].forEach(n => n.addEventListener('input', calculer));
     calculer();
   }
@@ -708,6 +772,10 @@ function urlGoogleMaps(orig, dest, passages) {
        ['Heures de livraison', 'du lundi au vendredi, de 8 h à 20 h, hors jours fériés et hors août', 'Dossier p. 87'],
        ['Rayon d\'approvisionnement', `${M.grille.rayon_km} km au maximum`, 'Question n° 46'],
        ['Carrés masqués sur la carte', `${nbMasques} : ${GM.en_mer} en mer, ${GM.royaume_uni} au Royaume-Uni`, 'Natural Earth, 1:10m'],
+       ['Consommation d\'un semi-remorque', `${fmt1(F.consommation.valeur)} L/100 km`, 'CNR, référentiel régional, échantillon 2025'],
+       ['Prix du gazole', `${fmt2(F.prix_gazole.valeur)} €/L hors TVA`, 'CNR, décembre 2025'],
+       ['Coût d\'un semi-remorque', `${fmtBrut(F.cout_km.valeur)} €/km + ${fmt2(F.cout_heure.valeur)} €/h`, 'CNR, hors péages'],
+       ['CO₂ du gazole', `${fmt1(F.co2_gazole.valeur)} kg CO₂e/L`, 'ADEME, Base Carbone, élément 25775'],
        ['Collecte', M.collecte, null],
        ['Prévisions', M.previsions, null]]
         .map(([a, b, c]) => el('tr', {}, el('th', {}, a, c ? el('span', { class: 'param-source' }, c) : null), el('td', {}, b))))));
@@ -721,7 +789,9 @@ function urlGoogleMaps(orig, dest, passages) {
       { texte: 'Google : pas de calcul poids lourd en France', url: 'https://developers.google.com/maps/documentation/routes/lvr' },
       { texte: 'Google Maps : format des liens « Vérifier » (étapes)', url: 'https://developers.google.com/maps/documentation/urls/get-started#directions-action' },
       { texte: 'Natural Earth : frontières et trait de côte, 1:10m (domaine public)', url: 'https://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-0-countries/' },
+      { texte: 'ADEME, Base Carbone : facteur d\'émission du gazole routier (élément 25775)', url: F.co2_gazole.source.url },
     ];
-    document.getElementById('liste-sources').replaceChildren(...sources.map(s => el('li', {}, lien(s))));
+    document.getElementById('liste-sources').replaceChildren(...sources.map(s => el('li', {}, lien(s))),
+      el('li', {}, lienCnr('Comité national routier : consommation, prix du gazole et coûts d\'un semi-remorque (référentiel régional, décembre 2025)')));
   }
 })();

@@ -20,6 +20,10 @@ OUT = os.path.join(RACINE, "data")
 
 DOSSIER_URL = "https://www.debatpublic.fr/sites/default/files/2026-08/Thermo-sur-Seine_Dossier-de-concertation_Juillet2026_web.pdf"
 Q_URL = "https://www.thermo-sur-seine-concertation.fr/posts/"
+# cnr.fr refuse les outils automatiques : les valeurs ont été lues sur la copie archivée ci-dessous, à revérifier dans un navigateur
+CNR_REGIONAL = {"texte": "CNR, référentiel de prix de revient « régional », ensemble articulé gazole, échantillon 2025, conditions économiques de décembre 2025",
+                "url": "https://www.cnr.fr/espace-standard/3",
+                "archive": "http://web.archive.org/web/20260310155217/https://cnr.fr/espace-standard/3"}
 
 
 def dossier(page_imprimee):
@@ -187,7 +191,18 @@ def main():
             "fournisseurs": {"citation": "La liste précise des fournisseurs de préparation de CSR et leurs implantations n'est pas arrêtée à ce stade du projet. La sélection des fournisseurs sera organisée dans le cadre d'une consultation à organiser en 2027", "source": question(46, 168716)},
             "rayon": {"citation": "Le concessionnaire est contractuellement engagé à s'approvisionner dans un rayon MAXIMAL de 300 km", "source": question(46, 168716)},
             "camions_texte": {"citation": "le trafic se stabilisera en moyenne entre 60 et 130 camions/jour selon la période", "source": dossier(87)},
-            "transport_absent": {"constat": "Le dossier ne chiffre ni les kilomètres parcourus par les camions ni leurs émissions. La question posée sur ce point est toujours sans réponse au 26/09/2026.", "source": question(228, 172454)},
+            "tour_terre": {"valeur": round(2 * 3.141592653589793 * 6378.137, 3), "calcul": "2 × π × 6 378,137 km (rayon équatorial du WGS 84)",
+                           "source": {"texte": "NGA, WGS 84 : « Semi-major Axis: a: 6378137.0 meters » (consulté le 26/09/2026)", "url": "https://earth-info.nga.mil/index.php?dir=wgs84&action=wgs84"}},
+            "duree_legale": {"valeur": 1607, "citation": "1 607 heures par an",
+                             "source": {"texte": "Service-public.gouv.fr, durée du travail d'un salarié à temps plein (vérifié le 25/09/2025, consulté le 26/09/2026)", "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F1911"}},
+            # Constantes de conversion : CNR (référentiel « régional », ensemble articulé gazole) et ADEME (Base Carbone)
+            "consommation": {"valeur": 30.0, "unite": "L/100 km", "citation": "Consommation moyenne aux 100 km : 30,0 litres", "source": CNR_REGIONAL},
+            "prix_gazole": {"valeur": 1.1809, "unite": "€/L", "citation": "Prix du gazole hors T.V.A. par litre à la pompe après remboursement des droits d'accises : 1,1809 €", "source": CNR_REGIONAL},
+            "cout_km": {"valeur": 0.496, "unite": "€/km", "citation": "Terme kilométrique (hors péages) : 0,496 €/km", "source": CNR_REGIONAL},
+            "cout_heure": {"valeur": 23.60, "unite": "€/h", "citation": "Terme horaire (CC) : 23,60 €/h", "source": CNR_REGIONAL},
+            "co2_gazole": {"valeur": 3.1, "unite": "kg CO2e/L", "citation": "Gazole routier, B7 : 3,1 kgCO2e/litre (combustion 2,49 + amont 0,609)",
+                           "source": {"texte": "ADEME, Base Carbone V23.6, élément 25775 (données ouvertes du 03/07/2025, consultées le 26/09/2026)", "url": "https://data.ademe.fr/datasets/base-carboner"}},
+            "transport_absent":{"constat": "Le dossier ne chiffre ni les kilomètres parcourus par les camions ni leurs émissions. La question posée sur ce point est toujours sans réponse au 26/09/2026.", "source": question(228, 172454)},
         },
         "points": points,
         "grille": grille,

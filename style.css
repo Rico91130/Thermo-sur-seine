@@ -125,6 +125,10 @@ main > .bloc:first-child { padding-top: 32px; }
 .hero { padding: 24px; }
 .hero-valeur { font-size: clamp(3rem, 9vw, 4.5rem); font-weight: 600; margin: 0; line-height: 1; }
 .hero-texte { margin: 12px 0 0; }
+@media (min-width: 900px) { .heros .tuiles { grid-template-columns: 1fr; } }
+.bilan-titre { font-size: 1.15rem; margin: 28px 0 12px; }
+.tuiles-bilan + .note { margin: 8px 0 0; }
+.hero-calcul { margin: 12px 0 0; font-size: 0.85rem; color: var(--encre-attenuee); }
 .tuiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
 .tuile { padding: 16px; }
 .tuile-label { margin: 0; color: var(--encre-2); font-size: 0.9rem; }

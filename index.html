@@ -39,28 +39,49 @@
       <p class="chapeau">Le combustible de la future chaufferie de Vitry-sur-Seine sera livré par camion à Ris-Orangis, puis remontera la Seine en barge. Ce site mesure, avec Google Maps, ce que coûte ce détour, et publie toutes ses données et ses sources.</p>
       <div class="heros">
         <div class="hero">
-          <p class="hero-valeur" data-lie="hero-km">…</p>
-          <p class="hero-texte">par trajet, depuis le centre de préparation de CSR du Plessis-Gassot (Val-d'Oise), au nord de Paris, pour livrer Ris-Orangis au lieu de Vitry. C'est l'hypothèse <strong>la plus favorable au projet</strong> : seul l'accès final imposé par le dossier est respecté.</p>
+          <p class="hero-valeur" data-lie="hero-km-an">…</p>
+          <p class="hero-texte">de plus chaque année pour livrer Ris-Orangis au lieu de Vitry, soit <strong data-lie="hero-tours">…</strong>, si le combustible vient du centre de préparation de CSR du Plessis-Gassot (Val-d'Oise), au nord de Paris. C'est l'hypothèse <strong>la plus favorable au projet</strong> : seul l'accès final imposé par le dossier est respecté.</p>
+          <p class="hero-calcul" id="hero-calcul"></p>
         </div>
         <div class="tuiles">
           <div class="tuile">
-            <p class="tuile-label">Par l'itinéraire décrit dans le dossier (RN104)</p>
-            <p class="tuile-valeur" data-lie="tuile-dossier">…</p>
-            <p class="tuile-note">par trajet, depuis le même point</p>
+            <p class="tuile-label">Pour chaque camion</p>
+            <p class="tuile-valeur" data-lie="tuile-camion">…</p>
+            <p class="tuile-note" data-lie="tuile-camion-note">…</p>
           </div>
           <div class="tuile">
-            <p class="tuile-label">Temps de trajet en plus, heures de livraison</p>
-            <p class="tuile-valeur" data-lie="tuile-min">…</p>
-            <p class="tuile-note">médiane, prévisions Google en voiture, à valider</p>
+            <p class="tuile-label">Au nord de Vitry</p>
+            <p class="tuile-valeur" data-lie="tuile-nord">…</p>
+            <p class="tuile-note" data-lie="tuile-nord-note">…</p>
           </div>
           <div class="tuile">
-            <p class="tuile-label">Camions par an, d'après les chiffres du dossier</p>
-            <p class="tuile-valeur" data-lie="tuile-camions">…</p>
-            <p class="tuile-note">calcul : 450 000 t ÷ 17,9 t par camion</p>
+            <p class="tuile-label">Temps de conduite en plus chaque année</p>
+            <p class="tuile-valeur" data-lie="tuile-emplois">…</p>
+            <p class="tuile-note" data-lie="tuile-emplois-note">…</p>
           </div>
         </div>
       </div>
-      <p class="encadre"><strong>À savoir :</strong> depuis le sud de l'Île-de-France (A5, A6, A10, A11, Essonne), Ris-Orangis est <em>plus proche</em> que Vitry. Tout dépend donc de l'origine du combustible, que le maître d'ouvrage ne connaîtra qu'en 2027. La <a href="carte.html">carte</a> montre le détour pour toutes les origines possibles, et le <a href="annee.html">calculateur</a> permet de tester différentes hypothèses.</p>
+      <h2 class="bilan-titre">Chaque année, ce détour représente aussi</h2>
+      <div class="tuiles tuiles-bilan">
+        <div class="tuile">
+          <p class="tuile-label">Émissions de CO<sub>2</sub></p>
+          <p class="tuile-valeur" data-lie="bilan-co2">…</p>
+          <p class="tuile-note" data-lie="bilan-co2-note">…</p>
+        </div>
+        <div class="tuile">
+          <p class="tuile-label">Gazole</p>
+          <p class="tuile-valeur" data-lie="bilan-carburant">…</p>
+          <p class="tuile-note" data-lie="bilan-carburant-note">…</p>
+        </div>
+        <div class="tuile">
+          <p class="tuile-label">Coût de transport, camion et chauffeur</p>
+          <p class="tuile-valeur" data-lie="bilan-cout">…</p>
+          <p class="tuile-note" data-lie="bilan-cout-note">…</p>
+        </div>
+      </div>
+      <p class="note" data-lie="bilan-hypotheses"></p>
+      <p class="encadre" id="encadre-sud"></p>
+      <p class="note" id="essentiel-sources"></p>
     </section>
 
     <section class="conteneur bloc">
