@@ -1,6 +1,6 @@
 'use strict';
 
-/* Le détour des camions : site statique de plusieurs pages, données dans data/donnees.json (voir build_data.py). */
+/* Thermo-sur-Seine : le trajet du combustible. Site statique de plusieurs pages, données dans data/donnees.json (voir build_data.py). */
 
 const SEUILS = [-25, -15, -5, 5, 15, 25];           // classes du détour (km), divergentes autour de 0
 const HEURES = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
@@ -273,7 +273,7 @@ function urlGoogleMaps(orig, dest, passages) {
     };
   }
 
-  /* ---------------- L'essentiel : récit à faire défiler ---------------- */
+  /* ---------------- Le grand détour (accueil) : récit à faire défiler ---------------- */
   function essentiel() {
     // Hypothèse de référence : combustible venant du Plessis-Gassot, accès final imposé (le plus favorable au projet)
     const detourRef = detour(ref, 'acces');
@@ -641,7 +641,7 @@ function urlGoogleMaps(orig, dest, passages) {
         pub(F.public_bilan),
         silence(F.public_bilan),
         faits(['Le dossier ne chiffre ni les kilomètres parcourus par les camions ni leurs émissions.']),
-        faits(['Nos calculs depuis le Plessis-Gassot : ', fort(`${fmt0(arrondi(co2Camions, 10))} t de CO₂ par an`), ' pour le seul détour des camions, et ', fort(fourchetteCo2(fl.co2.bas, fl.co2.haut)), ' pour les barges. Le détail est sur la page ', lienPage('./', 'L\'essentiel'), '.'], [F.co2_gazole.source, F.pousseur_conso.source]),
+        faits(['Nos calculs depuis le Plessis-Gassot : ', fort(`${fmt0(arrondi(co2Camions, 10))} t de CO₂ par an`), ' pour le seul détour des camions, et ', fort(fourchetteCo2(fl.co2.bas, fl.co2.haut)), ' pour les barges. Le détail est sur la page ', lienPage('./', 'Le grand détour'), '.'], [F.co2_gazole.source, F.pousseur_conso.source]),
       ] },
     ];
 

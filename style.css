@@ -118,7 +118,7 @@ h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; }
 .sommaire a { padding: 3px 0; }
 .sommaire a[aria-current="page"] { color: var(--encre); font-weight: 600; text-decoration: none; box-shadow: inset 0 -2px 0 var(--lien); }
 @media (max-width: 600px) {
-  .surtitre-suite { display: none; }
+  .surtitre-suite { display: block; margin-top: 2px; font-size: 0.8rem; }
   .sommaire { gap: 0 14px; font-size: 0.88rem; }
 }
 main h1 { font-size: clamp(1.8rem, 4.5vw, 2.5rem); margin: 0 0 0.8rem; }
@@ -219,9 +219,6 @@ main > .bloc:first-child { padding-top: 32px; }
 .diapo .etape-contenu { max-width: 880px; }
 .diapo-ouverture h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); }
 .diapo-aide { margin-top: 18px; }
-.diapo-sources { margin-top: 22px; max-width: 760px; }
-.diapo-sources summary { cursor: pointer; color: var(--lien); font-size: 0.9rem; }
-.diapo-sources .etape-note { margin-top: 8px; }
 .diapo-barre { position: sticky; bottom: 0; z-index: 10; background: var(--page); border-top: 1px solid var(--bordure); }
 .diapo-nav { display: flex; align-items: center; gap: 14px; padding-top: 10px; padding-bottom: 12px; }
 .diapo-fleche {
@@ -257,6 +254,23 @@ main > .bloc:first-child { padding-top: 32px; }
   .diapo-compte { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .diapo-barge, .diapo-point::before { transition: none; } }
+/* Accordéons « Sources » (Présentation, Le grand détour) : notes de calcul et citations repliées sous leur chiffre */
+.sources-repliees { margin-top: 20px; max-width: 760px; }
+.sources-repliees > summary {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer; list-style: none;
+  color: var(--lien); font-size: 0.9rem; font-weight: 600;
+}
+.sources-repliees > summary::-webkit-details-marker { display: none; }
+.sources-repliees > summary::before {
+  content: ""; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg); transition: transform 0.2s ease; margin-right: 2px;
+}
+.sources-repliees[open] > summary::before { transform: rotate(45deg); }
+.sources-repliees > summary:focus-visible { outline: 2px solid var(--lien); outline-offset: 3px; border-radius: 4px; }
+.sources-repliees > .etape-note, .sources-repliees > .note { margin-top: 8px; }
+.sources-repliees[open] > :not(summary) { animation: deplier 0.25s ease; }
+@keyframes deplier { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .sources-repliees > summary::before { transition: none; } .sources-repliees[open] > :not(summary) { animation: none; } }
 /* Frise chronologique (page Présentation) : --trace (0 à 1) dessine le trait ; verticale sur mobile, horizontale sur grand écran */
 .frise { --trace: 1; position: relative; list-style: none; margin: 18px 0 8px; padding: 0 0 0 30px; display: grid; gap: 18px; }
 .frise::before {

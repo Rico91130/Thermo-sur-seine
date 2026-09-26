@@ -25,7 +25,7 @@ RACINE = os.path.dirname(ICI)
 # (nom de la page pour app.js, fichier, adresse dans le menu, libellé du menu)
 MENU = [
     ("presentation", "presentation.html", "presentation.html", "Présentation"),
-    ("essentiel", "index.html", "./", "L'essentiel"),
+    ("essentiel", "index.html", "./", "Le grand détour"),
     ("dossier", "dossier.html", "dossier.html", "Questions / réponses"),
     ("itineraires", "itineraires.html", "itineraires.html", "Les itinéraires"),
     ("carte", "carte.html", "carte.html", "La carte"),

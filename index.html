@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Le détour des camions</title>
+  <title>Thermo-sur-Seine : le trajet du combustible</title>
   <meta name="description" content="Thermo-sur-Seine : ce que coûte, en kilomètres et en temps, le choix de livrer le combustible à Ris-Orangis plutôt qu'à Vitry-sur-Seine. Mesures Google, sources citées, données téléchargeables.">
   <script>
     // Anciennes adresses de la version en une seule page (#carte, #point=IDF1…) : redirection vers la bonne page
@@ -20,10 +20,10 @@
 <body data-page="essentiel">
   <header class="entete">
     <div class="conteneur">
-      <p class="surtitre"><a class="marque" href="./">Le détour des camions</a> <span class="surtitre-suite">Thermo-sur-Seine · concertation préalable jusqu'au 1er novembre 2026</span></p>
+      <p class="surtitre"><a class="marque" href="./">Thermo-sur-Seine : le trajet du combustible</a> <span class="surtitre-suite">Site citoyen indépendant · camions, barges, chiffres sourcés · concertation jusqu'au 1er novembre 2026</span></p>
       <nav class="sommaire" aria-label="Pages du site">
         <a href="presentation.html">Présentation</a>
-        <a href="./" aria-current="page">L'essentiel</a>
+        <a href="./" aria-current="page">Le grand détour</a>
         <a href="dossier.html">Questions / réponses</a>
         <a href="itineraires.html">Les itinéraires</a>
         <a href="carte.html">La carte</a>
@@ -35,12 +35,12 @@
   </header>
 
   <main>
-    <!-- Récit à faire défiler : chaque étape apparaît et ses chiffres s'animent en entrant dans l'écran (app.js, fonction essentiel).
+    <!-- Récit à faire défiler : chaque étape apparaît et ses chiffres s'animent en entrant dans l'écran (app.js, fonction essentiel ; page « Le grand détour »).
          Sans JavaScript ou avec « réduire les animations », tout s'affiche directement avec les valeurs finales. -->
     <div id="essentiel" class="recit">
       <section class="etape etape-ouverture">
         <div class="conteneur etape-contenu">
-          <h1>Le détour des camions</h1>
+          <h1>Le grand détour</h1>
           <p class="chapeau">Le combustible de la future chaufferie de Vitry-sur-Seine sera livré par camion à Ris-Orangis, puis acheminé par la Seine en barge. Ce site mesure, avec Google Maps, ce que coûte ce détour, et publie toutes ses données et ses sources.</p>
           <p class="defiler">Faites défiler pour découvrir les chiffres <span class="defiler-fleche" aria-hidden="true">↓</span></p>
           <p class="note">Vous découvrez le projet ? <a href="presentation.html">Commencez par sa présentation</a>. · <a href="#fin-du-recit">Passer directement aux liens et aux sources</a></p>
@@ -62,7 +62,7 @@
           <p class="etape-amorce">Ce trajet sera répété</p>
           <p class="etape-valeur"><span data-compteur="camions">…</span></p>
           <p class="etape-texte">fois par an : c'est le nombre de camions nécessaires pour livrer 450 000 tonnes de combustible, d'après les chiffres du dossier.</p>
-          <p class="etape-note" id="note-camions"></p>
+          <details class="sources-repliees"><summary>Calcul et sources</summary><p class="etape-note" id="note-camions"></p></details>
         </div>
       </section>
 
@@ -72,7 +72,7 @@
           <p class="etape-valeur"><span data-compteur="km-an">…</span></p>
           <p class="etape-texte">de plus, soit <strong data-lie="tours-terre">…</strong>.</p>
           <div class="pictos" id="pictos-terre" aria-hidden="true"></div>
-          <p class="etape-note" id="note-km-an"></p>
+          <details class="sources-repliees"><summary>Calcul et sources</summary><p class="etape-note" id="note-km-an"></p></details>
         </div>
       </section>
 
@@ -82,7 +82,7 @@
           <p class="etape-valeur"><span data-compteur="heures">…</span></p>
           <p class="etape-texte">de conduite en plus par an, l'équivalent de <strong data-lie="emplois">…</strong>.</p>
           <div class="pictos" id="pictos-emplois" aria-hidden="true"></div>
-          <p class="etape-note" id="note-heures"></p>
+          <details class="sources-repliees"><summary>Calcul et sources</summary><p class="etape-note" id="note-heures"></p></details>
         </div>
       </section>
 
@@ -92,7 +92,7 @@
           <p class="etape-valeur"><span data-compteur="co2">…</span></p>
           <p class="etape-texte">de CO<sub>2</sub> par an, autant qu'<strong data-lie="vols">…</strong> Paris–New York en avion.</p>
           <div class="pictos pictos-denses" id="pictos-co2" aria-hidden="true"></div>
-          <p class="etape-note" id="note-co2"></p>
+          <details class="sources-repliees"><summary>Calcul et sources</summary><p class="etape-note" id="note-co2"></p></details>
         </div>
       </section>
 
@@ -101,7 +101,7 @@
           <p class="etape-amorce">Et ce détour a un prix :</p>
           <p class="etape-valeur"><span data-compteur="cout">…</span></p>
           <p class="etape-texte">de coût de transport en plus par an, camion et chauffeur, dont <strong data-lie="carburant">…</strong> de gazole.</p>
-          <p class="etape-note" id="note-cout"></p>
+          <details class="sources-repliees"><summary>Calcul et sources</summary><p class="etape-note" id="note-cout"></p></details>
         </div>
       </section>
 
@@ -115,7 +115,7 @@
           <p class="etape-valeur"><span data-compteur="chaine">…</span></p>
           <p class="etape-texte">au lieu de <strong data-lie="chaine-directe">…</strong> s'il était livré directement à Vitry. La barge ne remplace aucun kilomètre de camion : elle s'y ajoute.</p>
           <div class="barres" id="barres-chaine"></div>
-          <p class="etape-note" id="note-chaine-complete"></p>
+          <details class="sources-repliees"><summary>Calcul et sources</summary><p class="etape-note" id="note-chaine-complete"></p></details>
         </div>
       </section>
 
@@ -124,7 +124,7 @@
           <p class="etape-amorce">Il faudra environ <strong data-lie="convois">…</strong> convois de barges par an, poussés par une flotte « majoritairement équipée de moteur thermique ». Ils émettront</p>
           <p class="etape-valeur etape-valeur-longue"><span data-compteur="co2-barges">…</span></p>
           <p class="etape-texte">de CO<sub>2</sub> par an, qui s'ajoutent aux <strong data-lie="co2-camions">…</strong> du détour des camions.</p>
-          <p class="etape-note" id="note-co2-barges"></p>
+          <details class="sources-repliees"><summary>Calcul et sources</summary><p class="etape-note" id="note-co2-barges"></p></details>
         </div>
       </section>
 
@@ -133,7 +133,7 @@
           <p class="etape-amorce">Le Plessis-Gassot n'est pas un cas isolé. Au nord de Vitry, Ris-Orangis est plus loin pour</p>
           <p class="etape-valeur"><span data-compteur="nord">…</span></p>
           <p class="etape-texte">des points de départ possibles, de <strong data-lie="nord-mediane">…</strong> en médiane par trajet.</p>
-          <p class="etape-note" id="note-nord"></p>
+          <details class="sources-repliees"><summary>Calcul et sources</summary><p class="etape-note" id="note-nord"></p></details>
         </div>
       </section>
 
@@ -145,7 +145,7 @@
             <a class="bouton" href="carte.html">Voir la carte du détour</a>
             <a class="bouton" href="annee.html">Ouvrir le simulateur</a>
           </p>
-          <p class="note" id="essentiel-sources"></p>
+          <details class="sources-repliees"><summary>Toutes les sources</summary><p class="note" id="essentiel-sources"></p></details>
         </div>
       </section>
     </div>

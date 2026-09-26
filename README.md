@@ -1,8 +1,8 @@
-# Le détour des camions — Thermo-sur-Seine
+# Thermo-sur-Seine : le trajet du combustible
 
 Site citoyen qui mesure ce que coûte, en kilomètres et en temps, le choix de livrer le combustible de la future chaufferie de Vitry-sur-Seine (projet Thermo-sur-Seine) par camion à **Ris-Orangis**, plutôt que directement à **Vitry**.
 
-- **Site** : huit pages statiques publiées avec GitHub Pages : `presentation.html` (le projet en bref et son calendrier), `index.html` (l'essentiel : le détour en chiffres), `dossier.html` (questions / réponses : questions du public, réponses du maître d'ouvrage et faits, en conversation de groupe), `itineraires.html`, `carte.html`, `heures.html`, `annee.html` et `methode.html`. Elles partagent `style.css` et `app.js`, qui n'exécute que le code de la page affichée (`<body data-page="…">`). Ces pages HTML sont **générées** : voir « Modifier les pages » ci-dessous.
+- **Site** : huit pages statiques publiées avec GitHub Pages : `presentation.html` (le projet en bref et son calendrier), `index.html` (« Le grand détour » : le détour en chiffres), `dossier.html` (questions / réponses : questions du public, réponses du maître d'ouvrage et faits, en conversation de groupe), `itineraires.html`, `carte.html`, `heures.html`, `annee.html` et `methode.html`. Elles partagent `style.css` et `app.js`, qui n'exécute que le code de la page affichée (`<body data-page="…">`). Ces pages HTML sont **générées** : voir « Modifier les pages » ci-dessous.
 - **Données et code de la mesure** : dossier [`collecte/`](collecte/).
 - **Principe** : chaque chiffre renvoie à sa source (page du dossier de concertation, question publiée sur la plateforme de la concertation), et chaque mesure peut être refaite par n'importe qui.
 

@@ -11,7 +11,7 @@ Ce dépôt est publié sous deux licences :
 - la liste des sites de préparation de CSR (`collecte/sites_csr.csv`) : sélection, géolocalisation et citations ;
 - les calculs et les agrégats réalisés à partir des mesures : détours, médianes, estimations annuelles.
 
-**Attribution demandée** : « Le détour des camions — Thermo-sur-Seine », avec un lien vers https://github.com/Rico91130/Thermo-sur-seine
+**Attribution demandée** : « Thermo-sur-Seine : le trajet du combustible », avec un lien vers https://github.com/Rico91130/Thermo-sur-seine
 
 ## Ce qu'elle ne couvre pas
 
