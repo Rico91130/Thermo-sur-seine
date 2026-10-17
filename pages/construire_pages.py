@@ -27,6 +27,7 @@ MENU = [
     ("presentation", "presentation.html", "presentation.html", "Présentation"),
     ("essentiel", "index.html", "./", "Le grand détour"),
     ("dossier", "dossier.html", "dossier.html", "Questions / réponses"),
+    ("reponses", "reponses.html", "reponses.html", "Les réponses en chiffres"),
     ("itineraires", "itineraires.html", "itineraires.html", "Les itinéraires"),
     ("carte", "carte.html", "carte.html", "La carte"),
     ("heures", "heures.html", "heures.html", "Heure par heure"),
@@ -45,6 +46,8 @@ OPTIONS = {
               '  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/MotionPathPlugin.min.js"></script>\n'),
     # Diaporama de la page Présentation : GSAP seul (pas de défilement animé)
     "diaporama": ("", '  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>\n'),
+    # Sections animées à leur apparition (page « Les réponses en chiffres ») : GSAP seul
+    "animations": ("", '  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>\n'),
     "redirection": ("""  <script>
     // Anciennes adresses de la version en une seule page (#carte, #point=IDF1…) : redirection vers la bonne page
     (function () {

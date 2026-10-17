@@ -1,0 +1,104 @@
+<!--
+titre: Les réponses en chiffres · Le trajet du combustible
+description: Thermo-sur-Seine : toutes les questions publiées pendant la concertation, et comment le maître d'ouvrage y a répondu. Chaque verdict est justifié par une citation et un lien.
+options: animations
+-->
+    <!-- Questions de la plateforme de la concertation et évaluation de chaque réponse (app.js, fonction reponses ; données dans data/questions.json,
+         voir collecte/questions/README.md). Chaque section s'anime quand elle entre dans l'écran ; sans GSAP, tout s'affiche directement. -->
+    <div id="reponses">
+      <section class="conteneur bloc rep-section">
+        <div class="etape-contenu">
+          <h1>Les réponses en chiffres</h1>
+          <p class="chapeau" id="rep-chapeau"></p>
+          <div class="rep-chiffres" id="rep-chiffres"></div>
+          <p class="rep-titre-fort" id="rep-titre-fort"></p>
+          <figure class="rep-figure">
+            <div class="rep-legende" id="rep-legende"></div>
+            <div class="rep-gaufre" id="rep-gaufre" aria-hidden="true"></div>
+            <figcaption class="note" id="rep-gaufre-legende"></figcaption>
+          </figure>
+          <details class="sources-repliees"><summary>Comment chaque réponse a été évaluée</summary><p class="note" id="note-evaluation"></p></details>
+        </div>
+      </section>
+
+      <section class="conteneur bloc rep-section" id="rep-2027">
+        <div class="etape-contenu">
+          <p class="etape-surtitre">Rendez-vous plus tard</p>
+          <p class="etape-valeur etape-valeur-longue"><span data-compteur="renvois">…</span></p>
+          <p class="etape-texte">des réponses renvoient au moins un point à plus tard : études en cours, étude d'impact, dossier d'autorisation, « concertation continue ».</p>
+          <h2 class="rep-sous-titre">Les phrases qui reviennent</h2>
+          <ul class="rep-formules" id="rep-formules"></ul>
+          <p class="note" id="rep-continue"></p>
+          <details class="sources-repliees"><summary id="rep-renvois-titre">Les réponses qui renvoient tout à plus tard</summary><ul class="rep-cartes" id="rep-renvois"></ul></details>
+        </div>
+      </section>
+
+      <section class="conteneur bloc rep-section" id="rep-refus">
+        <div class="etape-contenu">
+          <p class="etape-surtitre">Ce qui ne sera pas dit</p>
+          <p class="etape-valeur etape-valeur-longue"><span data-compteur="refus">…</span></p>
+          <p class="etape-texte" id="rep-refus-texte"></p>
+          <ul class="rep-cartes" id="rep-refus-liste"></ul>
+        </div>
+      </section>
+
+      <section class="conteneur bloc rep-section" id="rep-sujets">
+        <div class="etape-contenu">
+          <h2>Sujet par sujet</h2>
+          <p class="intro">Part des questions qui ont reçu une réponse complète, du sujet le moins bien traité au mieux traité. Une question peut porter sur plusieurs sujets.</p>
+          <div class="rep-legende" id="rep-legende-sujets"></div>
+          <div class="barres rep-barres" id="rep-barres-sujets"></div>
+          <details class="tableau-vue"><summary>Voir les données en tableau</summary><div class="tableau-defilant" id="rep-tableau-sujets"></div></details>
+        </div>
+      </section>
+
+      <section class="conteneur bloc rep-section" id="rep-rythme">
+        <div class="etape-contenu">
+          <h2>Semaine après semaine</h2>
+          <p class="intro" id="rep-rythme-intro"></p>
+          <div class="rep-legende" id="rep-legende-semaines"></div>
+          <div class="rep-semaines" id="rep-semaines"></div>
+          <p class="note" id="rep-rythme-note"></p>
+        </div>
+      </section>
+
+      <section class="conteneur bloc rep-section" id="rep-auteurs">
+        <div class="etape-contenu">
+          <h2>Qui attend le plus ?</h2>
+          <p class="intro">Attente minimale moyenne des questions de chaque auteur, depuis leur publication. Les auteurs ne sont pas nommés : chacun reçoit un numéro, du plus actif au moins actif.</p>
+          <div class="barres rep-barres" id="rep-barres-auteurs"></div>
+          <details class="sources-repliees"><summary>Comment l'attente est calculée</summary><p class="note" id="note-attente"></p></details>
+        </div>
+      </section>
+
+      <section class="conteneur bloc rep-section" id="rep-liste">
+        <div class="etape-contenu">
+          <h2>Toutes les questions</h2>
+          <div class="filtres">
+            <label>Sujet
+              <select id="rep-filtre-sujet"></select>
+            </label>
+            <label>Réponse
+              <select id="rep-filtre-verdict"></select>
+            </label>
+            <label>Mot du titre
+              <input type="search" id="rep-filtre-mot" placeholder="camions, barge, dioxines…">
+            </label>
+          </div>
+          <p class="rep-compte" id="rep-compte" aria-live="polite"></p>
+          <ol class="rep-questions" id="rep-questions"></ol>
+          <p><button type="button" class="segment" id="rep-plus" hidden>Afficher plus</button></p>
+        </div>
+      </section>
+
+      <section class="conteneur bloc" id="rep-methode">
+        <h2>Méthode et données</h2>
+        <ul class="limites" id="rep-methode-liste"></ul>
+        <ul class="telechargements">
+          <li><a href="data/questions.json">questions.json</a> : toutes les questions et leur évaluation (auteurs non nommés)</li>
+          <li><a href="collecte/questions/grille.md">grille.md</a> : la grille d'évaluation, telle qu'elle a été appliquée</li>
+          <li><a href="collecte/questions/contre_evaluation.json">contre_evaluation.json</a> : la contre-évaluation à l'aveugle</li>
+          <li><a href="collecte/questions/README.md">README</a> et <a href="collecte/questions/collecte_questions.py">script du relevé</a></li>
+        </ul>
+      </section>
+    </div>

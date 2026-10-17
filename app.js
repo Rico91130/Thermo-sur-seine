@@ -160,7 +160,7 @@ function urlGoogleMaps(orig, dest, passages) {
     return { compteurs, compteur };
   };
 
-  const PAGES = { presentation, essentiel, dossier: confrontation, itineraires, carte: carteDuDetour, heures: heureParHeure, annee: surUneAnnee, methode };
+  const PAGES = { presentation, essentiel, dossier: confrontation, reponses, itineraires, carte: carteDuDetour, heures: heureParHeure, annee: surUneAnnee, methode };
   const recolorer = PAGES[page] ? PAGES[page]() : null;
   // Recolorer si le thème du système change
   if (recolorer) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolorer);
@@ -620,7 +620,6 @@ function urlGoogleMaps(orig, dest, passages) {
     const pub = f => ({ qui: 'public', cite: f.citation, sources: [f.source] });
     const mo = f => ({ qui: 'mo', cite: f.citation, sources: [f.source] });
     const faits = (contenu, sources) => ({ qui: 'faits', contenu, sources });
-    const silence = f => ({ qui: 'systeme', contenu: [`Toujours sans réponse du maître d'ouvrage au ${f.sans_reponse} :`], sources: [f.source] });
 
     const fils = [
       { titre: 'Combien de camions ?', messages: [
@@ -648,9 +647,10 @@ function urlGoogleMaps(orig, dest, passages) {
         mo(F.mo_plateforme),
         mo(F.foncier),
         faits(['La parcelle EDF de Vitry fait 38 ha, dont 6,7 ha pour la chaufferie.'], [F.parcelle.source]),
-        faits(['Ce que ce choix coûte en kilomètres n\'est chiffré nulle part. Or, avec ', `${fmt0(arrondi(camionsDossier, 100))} camions par an, chaque kilomètre de détour moyen représente `, fort(`${fmt0(arrondi(kmParKmDetour, 100))} km de plus par an`), ', aller et retour.']),
         pub(F.public_vitry),
-        silence(F.public_vitry),
+        mo(F.mo_vitry),
+        faits(['Sa première phrase reprend mot pour mot la réponse à la question n° 119, plus haut.'], [F.mo_plateforme.source]),
+        faits(['Et ce que ce choix coûte en kilomètres n\'est toujours chiffré nulle part. Or, avec ', `${fmt0(arrondi(camionsDossier, 100))} camions par an, chaque kilomètre de détour moyen représente `, fort(`${fmt0(arrondi(kmParKmDetour, 100))} km de plus par an`), ', aller et retour.']),
       ] },
       { titre: 'La barge, c\'est plus écologique ?', messages: [
         pub(F.public_fluvial),
@@ -661,7 +661,8 @@ function urlGoogleMaps(orig, dest, passages) {
         mo(F.pousseurs_thermiques),
         faits([`Ces ${fmt0(arrondi(fl.convois, 10))} convois par an émettraient `, fort(`${fourchetteCo2(fl.co2.bas, fl.co2.haut)} de CO₂`), `, en plus des ${fmt0(arrondi(co2Camions, 10))} t du détour des camions.`], [F.pousseur_conso.source]),
         faits([`Depuis le sud, en revanche, la barge remplace une partie de la route : depuis Écharcon, ${fmt1(SUD.km.acces_impose + KM_SEINE)} km par Ris-Orangis, contre ${fmt1(SUD.km.vitry)} km directement.`]),
-        silence(F.public_fluvial),
+        mo(F.mo_fluvial),
+        faits(['La « concertation continue » viendra après la concertation actuelle, close le 1er novembre : ', fort('le public donne son avis sans ce bilan.')], [F.participation_continue.source]),
       ] },
       { titre: 'D\'où viendront les déchets ?', messages: [
         pub(F.public_origine),
@@ -673,7 +674,9 @@ function urlGoogleMaps(orig, dest, passages) {
       ] },
       { titre: 'Et la pollution du transport ?', messages: [
         pub(F.public_bilan),
-        silence(F.public_bilan),
+        mo(F.mo_bilan),
+        mo(F.mo_bilan_quand),
+        faits(['La question portait sur la pollution : la réponse ne parle que des gaz à effet de serre, pas des polluants de l\'air (oxydes d\'azote, particules) émis par les camions et les pousseurs.']),
         faits(['Le dossier ne chiffre ni les kilomètres parcourus par les camions ni leurs émissions.']),
         faits(['Nos calculs depuis le Plessis-Gassot : ', fort(`${fmt0(arrondi(co2Camions, 10))} t de CO₂ par an`), ' pour le seul détour des camions, et ', fort(fourchetteCo2(fl.co2.bas, fl.co2.haut)), ' pour les barges. Le détail est sur la page ', lienPage('./', 'Le grand détour'), '.'], [F.co2_gazole.source, F.pousseur_conso.source]),
       ] },
@@ -742,6 +745,258 @@ function urlGoogleMaps(orig, dest, passages) {
       jouer(e.target);
     }), { rootMargin: '0px 0px -15% 0px' });
     document.querySelectorAll('.fil').forEach(f => observateur.observe(f));
+  }
+
+  /* ---------------- Les réponses en chiffres : toutes les questions de la concertation et l'évaluation de chaque réponse ---------------- */
+  // Données : data/questions.json (collecte/questions/, voir son README). Les auteurs n'y sont jamais nommés, seulement numérotés.
+  // Cinq classes, de la réponse la plus favorable au maître d'ouvrage à la moins favorable, puis les questions sans réponse.
+  function reponses() {
+    fetch('data/questions.json').then(r => r.json()).then(pageReponses).catch(e => {
+      console.error(e);
+      document.getElementById('reponses').prepend(el('p', { class: 'conteneur encadre' }, 'Les questions n\'ont pas pu être chargées.'));
+    });
+  }
+
+  function pageReponses(QD) {
+    const Q = QD.questions, MQ = QD.meta, PUB = 'Réponse publiée';
+    const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    const dateLongue = (iso, annee = true) => {
+      const [a, m, j] = iso.split('-').map(Number);
+      return `${j === 1 ? '1er' : j} ${MOIS[m - 1]}${annee ? ` ${a}` : ''}`;
+    };
+    const MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+    const dateCourte = iso => { const [, m, j] = iso.split('-').map(Number); return `${j === 1 ? '1er' : j} ${MOIS_COURTS[m - 1]}`; };
+    const jours = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
+    const CLASSES = [
+      { cle: 'repond', nom: 'Réponse complète', court: 'Complète', verdicts: ['REPOND'] },
+      { cle: 'partiel', nom: 'Réponse partielle', court: 'Partielle', verdicts: ['PARTIEL'] },
+      { cle: 'renvoi', nom: 'Renvoi à plus tard', court: 'Renvoi à plus tard', verdicts: ['REPORT'] },
+      { cle: 'refus', nom: 'Refus ou réponse à côté', court: 'Refus ou à côté', verdicts: ['REFUS', 'A_COTE'] },
+      { cle: 'attente', nom: `Sans réponse au ${dateLongue(MQ.releve, false)}`, court: 'Sans réponse', verdicts: ['SANS_REPONSE'] },
+    ];
+    const SUJETS = {
+      TRANSPORT_ROUTE: 'Transport routier', FLUVIAL: 'Transport fluvial', COMBUSTIBLE: 'Combustible', AIR_SANTE: 'Air et santé',
+      CLIMAT_GES: 'Climat et CO₂', NUISANCES: 'Bruit, odeurs, paysage', RESIDUS: 'Résidus de combustion', RISQUES: 'Risques industriels',
+      EAU_SEINE: 'Eau et Seine', SITE_FONCIER: 'Choix des sites', ALTERNATIVES: 'Alternatives au projet', RESEAU_CHALEUR: 'Réseau de chaleur',
+      ECONOMIE_COUT: 'Coûts et emplois', GOUVERNANCE: 'Gouvernance et décision', POLITIQUE_DECHETS: 'Politique des déchets',
+      CONCERTATION: 'La concertation', CALENDRIER: 'Calendrier', AUTRE: 'Autres sujets',
+    };
+    const classeDe = q => CLASSES.find(c => c.verdicts.includes(q.verdict));
+    const pct = (a, b) => Math.round(100 * a / b);
+    const compter = liste => Object.fromEntries(CLASSES.map(c => [c.cle, liste.filter(q => classeDe(q) === c).length]));
+    const repondues = Q.filter(q => q.statut === PUB), nb = compter(Q);
+    const lienQ = q => el('a', { href: q.url, target: '_blank', rel: 'noopener' }, `n° ${q.numero}`);
+    const liensQ = liste => liste.map((q, i) => [i ? (i === liste.length - 1 ? ' et ' : ', ') : '', lienQ(q)]);
+    const carte = q => el('li', { class: 'rep-carte' }, el('strong', {}, q.resume), el('blockquote', {}, `« ${q.citation} »`),
+      el('span', { class: 'conf-source' }, 'Réponse à la question ', lienQ(q)));
+    const { compteurs, compteur } = nouveauxCompteurs();
+
+    // Légende des cinq classes ; les boutons filtrent la liste des questions, en bas de page
+    const legende = (id, cliquable) => document.getElementById(id).replaceChildren(...CLASSES.map(c => {
+      // Dans la grille, « sans réponse » est une case vide ; dans les barres et les colonnes, un segment gris plein
+      const contenu = [el('span', { class: `rep-pastille rep-v-${c.cle}${cliquable ? '' : ' rep-plein'}`, 'aria-hidden': 'true' }), c.nom, ' ', el('strong', {}, fmt0(nb[c.cle]))];
+      return cliquable
+        ? el('button', { type: 'button', class: 'rep-cle', onclick: () => filtrer(c.cle) }, contenu, el('span', { class: 'sr-only' }, ' : voir ces questions'))
+        : el('span', { class: 'rep-cle' }, contenu);
+    }));
+
+    /* En tête : les chiffres clés, et une case par question */
+    document.getElementById('rep-chapeau').replaceChildren(`Au ${dateLongue(MQ.releve)}, ${fmt0(Q.length)} questions sont publiées sur la `,
+      lien({ texte: 'plateforme de la concertation', url: MQ.source.url }), '. Le maître d\'ouvrage « s’engage à y répondre dans les meilleurs délais » (',
+      lien({ texte: 'plateforme', url: F.engagement_reponse.source.url }), '). Voici ce qu\'il en est.');
+    const TUILES = [
+      ['questions', 'Questions publiées', Q.length, 'sur la plateforme'],
+      ['repondues', 'Avec une réponse', repondues.length, `${pct(repondues.length, Q.length)} % des questions`],
+      ['completes', 'Réponse complète', nb.repond, `${pct(nb.repond, Q.length)} % des questions`],
+      ['attente', 'Toujours sans réponse', nb.attente, `au ${dateLongue(MQ.releve)}`],
+    ];
+    document.getElementById('rep-chiffres').replaceChildren(...TUILES.map(([cle, label, , sous]) => el('div', { class: 'tuile' },
+      el('p', { class: 'tuile-label' }, label), el('p', { class: 'tuile-valeur' }, el('span', { 'data-compteur': cle }, '…')), el('p', { class: 'tuile-note' }, sous))));
+    TUILES.forEach(([cle, , valeur]) => compteur(cle, valeur, v => fmt0(v)));
+    const partComplete = nb.repond / Q.length;
+    document.getElementById('rep-titre-fort').textContent = partComplete < 0.5
+      ? 'Moins d\'une question sur deux a reçu une réponse complète.' : `${pct(nb.repond, Q.length)} % des questions ont reçu une réponse complète.`;
+    legende('rep-legende', true);
+    const ordre = [...Q].sort((a, b) => CLASSES.indexOf(classeDe(a)) - CLASSES.indexOf(classeDe(b)) || a.numero - b.numero);
+    document.getElementById('rep-gaufre').replaceChildren(...ordre.map(q => el('span', { class: `rep-case rep-v-${classeDe(q).cle}` })));
+    note('rep-gaufre-legende', `Chaque carré est une question (${fmt0(Q.length)}). Touchez une catégorie de la légende pour voir ses questions.`);
+    const ce = MQ.contre_evaluation;
+    note('note-evaluation', 'Chaque réponse a été lue en entier et classée selon une grille écrite : « complète » si elle traite au moins 80 % des demandes, dont la principale ; « partielle » ; « renvoi à plus tard » si elle ne traite aucune demande et renvoie aux études ou aux procédures à venir ; « à côté » ; « refus ». On juge si la réponse répond à la question, jamais si elle est vraie. ',
+      el('strong', {}, 'En cas de doute, le verdict le plus favorable au maître d\'ouvrage l\'emporte.'),
+      ` Chaque verdict est justifié par une citation exacte de la réponse. Une contre-évaluation à l'aveugle de ${ce.n} réponses tirées au hasard donne le même verdict dans ${fmt0(100 * ce.accord)} % des cas ; dans ${ce.premiere_plus_favorable} des ${ce.desaccords} désaccords, la première évaluation était la plus favorable au maître d'ouvrage. Voir `,
+      el('a', { href: '#rep-methode' }, 'la méthode'), '.');
+
+    /* Les renvois à plus tard, et les phrases qui reviennent mot pour mot */
+    const avecRenvoi = repondues.filter(q => q.renvoi);
+    compteur('renvois', pct(avecRenvoi.length, repondues.length), v => `${fmt0(v)} %`);
+    const memes = {};
+    avecRenvoi.forEach(q => (memes[q.citation] = memes[q.citation] || []).push(q));
+    const formules = Object.entries(memes).filter(([, l]) => l.length > 1).sort((a, b) => b[1].length - a[1].length || a[1][0].numero - b[1][0].numero);
+    document.getElementById('rep-formules').replaceChildren(...formules.map(([texte, liste]) => el('li', { class: 'rep-formule' },
+      el('blockquote', {}, `« ${texte} »`),
+      el('span', { class: 'rep-formule-compte' }, el('strong', {}, `${liste.length} fois`), ' : réponses aux questions ', liensQ(liste)))));
+    note('rep-continue', 'La « concertation continue » est la phase qui suivra la concertation actuelle, close le 1er novembre 2026 : ', ...citation(F.participation_continue), '.');
+    const toutRenvoye = repondues.filter(q => q.verdict === 'REPORT');
+    document.getElementById('rep-renvois-titre').textContent = `Les ${toutRenvoye.length} réponses qui renvoient tout à plus tard`;
+    document.getElementById('rep-renvois').replaceChildren(...toutRenvoye.map(carte));
+
+    /* Les refus */
+    const refus = repondues.filter(q => q.verdict === 'REFUS');
+    const secret = refus.filter(q => /confidenti|communica|publiques/i.test(q.citation));
+    compteur('refus', refus.length, v => fmt0(v));
+    document.getElementById('rep-refus-texte').textContent = `refus de répondre, dont ${secret.length} au nom de la confidentialité du contrat ou du secret des affaires.`;
+    document.getElementById('rep-refus-liste').replaceChildren(...refus.map(carte));
+
+    /* Sujet par sujet : une barre empilée par sujet, du moins bien traité au mieux traité */
+    legende('rep-legende-sujets', false);
+    const sujets = Object.keys(SUJETS).map(cle => {
+      const liste = Q.filter(q => q.sujets.includes(cle));
+      return { cle, liste, n: compter(liste) };
+    }).filter(s => s.liste.length >= 10).sort((a, b) => a.n.repond / a.liste.length - b.n.repond / b.liste.length);
+    const pile = n => el('span', { class: 'barre-piste barre-piste-empilee rep-piste' },
+      CLASSES.filter(c => n[c.cle]).map(c => el('span', { class: `rep-segment rep-v-${c.cle}`, style: `flex: ${n[c.cle]} 1 0` })));
+    document.getElementById('rep-barres-sujets').replaceChildren(...sujets.map(s => el('div', { class: 'barre rep-barre' },
+      el('span', { class: 'barre-libelle' }, el('strong', {}, SUJETS[s.cle]), `${fmt0(s.liste.length)} questions`),
+      pile(s.n),
+      el('span', { class: 'rep-barre-valeur' }, el('strong', {}, `${pct(s.n.repond, s.liste.length)} %`), 'complètes'))));
+    const tableau = (entetes, lignes) => el('table', { class: 'tableau-donnees' },
+      el('thead', {}, el('tr', {}, entetes.map(t => el('th', { scope: 'col' }, t)))),
+      el('tbody', {}, lignes.map(l => el('tr', {}, l.map((v, i) => el(i ? 'td' : 'th', i ? {} : { scope: 'row' }, v))))));
+    document.getElementById('rep-tableau-sujets').replaceChildren(tableau(
+      ['Sujet', 'Questions', ...CLASSES.map(c => c.nom), '% complètes'],
+      sujets.map(s => [SUJETS[s.cle], s.liste.length, ...CLASSES.map(c => s.n[c.cle]), `${pct(s.n.repond, s.liste.length)} %`])));
+
+    /* Semaine après semaine : les questions publiées chaque semaine, selon la réponse reçue */
+    const lundi = iso => { const d = new Date(`${iso}T12:00:00Z`); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return d.toISOString().slice(0, 10); };
+    const semaines = [...new Set(Q.map(q => lundi(q.publiee_le)))].sort().map(s => {
+      const liste = Q.filter(q => lundi(q.publiee_le) === s);
+      return { s, liste, n: compter(liste) };
+    });
+    const maxSemaine = Math.max(...semaines.map(s => s.liste.length));
+    const avecRep = s => s.liste.length - s.n.attente;
+    note('rep-rythme-intro', `Questions publiées chaque semaine, selon la réponse reçue au ${dateLongue(MQ.releve)}. Sous chaque semaine, la part des questions qui ont une réponse.`);
+    legende('rep-legende-semaines', false);
+    document.getElementById('rep-semaines').replaceChildren(...semaines.map(s => el('div', { class: 'rep-colonne' },
+      el('span', { class: 'rep-colonne-total' }, fmt0(s.liste.length)),
+      el('span', { class: 'rep-colonne-pile', style: `height: ${(100 * s.liste.length / maxSemaine).toFixed(1)}%` },
+        CLASSES.filter(c => s.n[c.cle]).map(c => el('span', { class: `rep-segment rep-v-${c.cle}`, style: `flex: ${s.n[c.cle]} 1 0` }))),
+      el('span', { class: 'rep-colonne-date' }, dateCourte(s.s)),
+      el('span', { class: 'rep-colonne-part' }, `${pct(avecRep(s), s.liste.length)} %`))));
+    const publieesEntre = Q.filter(q => q.statut === PUB && q.statut_26_09 !== PUB).length;
+    const semainesEntre = jours(MQ.releve_precedent, MQ.releve) / 7;
+    note('rep-rythme-note', `Les questions récentes attendent forcément un peu. Entre le ${dateLongue(MQ.releve_precedent, false)} et le ${dateLongue(MQ.releve, false)}, le maître d'ouvrage a publié ${fmt0(publieesEntre)} réponses, soit environ ${fmt0(arrondi(publieesEntre / semainesEntre, 5))} par semaine. À la clôture, le bilan des garants de la CNDP devra lister les questions restées sans réponse : « `,
+      F.bilan_garants.citation, ' » (', lien(F.bilan_garants.source), ').');
+
+    /* Qui attend le plus ? Attente minimale (borne basse, voir la note) des questions de chaque auteur */
+    const attenteMin = q => q.statut_26_09 === PUB ? 0
+      : q.statut === PUB ? (q.statut_26_09 ? Math.max(0, jours(q.publiee_le, MQ.releve_precedent)) : 0)
+      : jours(q.publiee_le, MQ.releve);
+    const parAuteur = {};
+    Q.forEach(q => (parAuteur[q.auteur ?? 'ns'] = parAuteur[q.auteur ?? 'ns'] || []).push(q));
+    const groupes = Object.entries(parAuteur).map(([a, liste]) => ({
+      a, liste, attente: liste.reduce((s, q) => s + attenteMin(q), 0) / liste.length, enAttente: liste.filter(q => q.statut !== PUB).length }));
+    const principaux = groupes.filter(g => g.a !== 'ns').sort((x, y) => y.liste.length - x.liste.length || x.a - y.a).slice(0, 12);
+    const nonSignees = groupes.find(g => g.a === 'ns');
+    const lignesAuteurs = [...principaux, nonSignees].filter(Boolean).sort((x, y) => y.attente - x.attente);
+    const maxAttente = Math.max(...lignesAuteurs.map(g => g.attente));
+    document.getElementById('rep-barres-auteurs').replaceChildren(...lignesAuteurs.map(g => el('div', { class: 'barre rep-barre' },
+      el('span', { class: 'barre-libelle' }, el('strong', {}, g.a === 'ns' ? 'Questions non signées' : `Auteur n° ${g.a}`),
+        `${fmt0(g.liste.length)} questions · ${fmt0(g.enAttente)} en attente`),
+      el('span', { class: 'barre-piste rep-piste' }, el('span', { class: 'rep-segment rep-attente-barre', style: `width: ${(100 * g.attente / maxAttente).toFixed(1)}%` })),
+      el('span', { class: 'rep-barre-valeur' }, el('strong', {}, `${fmt1(g.attente)} j`), 'au moins'))));
+    const plusLong = [...principaux].sort((x, y) => y.enAttente - x.enAttente)[0];
+    note('note-attente', `La plateforme n'affiche pas la date des réponses. L'attente minimale se déduit de deux relevés, le ${dateLongue(MQ.releve_precedent, false)} et le ${dateLongue(MQ.releve, false)} : 0 jour si la réponse était déjà publiée le ${dateLongue(MQ.releve_precedent, false)} ; le temps écoulé jusqu'au ${dateLongue(MQ.releve_precedent, false)} si elle est arrivée entre les deux relevés ; jusqu'au ${dateLongue(MQ.releve, false)} si la question attend encore. C'est donc une borne basse. Seuls les ${principaux.length} auteurs qui ont posé le plus de questions sont montrés. `,
+      plusLong && plusLong.enAttente > 10 ? `L'auteur n° ${plusLong.a} attend une réponse pour ${plusLong.enAttente} de ses ${plusLong.liste.length} questions : pour l'essentiel une série de questions numérotées, que son auteur a modifiée le 5 octobre (la plateforme affiche depuis cette date de modification ; nous gardons la date de première publication). ` : null,
+      `Depuis le ${dateLongue(MQ.releve, false)}, les statuts sont relevés trois fois par jour : le délai exact de chaque nouvelle réponse sera publié.`);
+
+    /* Toutes les questions : filtres par sujet, par réponse et par mot du titre ; affichage par paquets */
+    const PAQUET = 25;
+    const choixSujet = document.getElementById('rep-filtre-sujet'), choixVerdict = document.getElementById('rep-filtre-verdict');
+    const champMot = document.getElementById('rep-filtre-mot'), boutonPlus = document.getElementById('rep-plus');
+    choixSujet.replaceChildren(el('option', { value: '' }, 'Tous les sujets'),
+      ...Object.entries(SUJETS).sort((a, b) => a[1].localeCompare(b[1], 'fr')).map(([cle, nom]) => el('option', { value: cle }, nom)));
+    choixVerdict.replaceChildren(el('option', { value: '' }, 'Toutes'), ...CLASSES.map(c => el('option', { value: c.cle }, c.nom)));
+    const sansAccent = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    let visibles = [], montrees = 0;
+    const question = q => {
+      const c = classeDe(q), repondue = q.statut === PUB;
+      return el('li', { class: 'rep-question' }, el('details', {},
+        el('summary', {}, el('span', { class: `rep-pastille rep-v-${c.cle}`, 'aria-hidden': 'true' }),
+          el('span', { class: 'rep-q-titre' }, el('span', { class: 'rep-q-num' }, `n° ${q.numero}`), q.titre),
+          el('span', { class: 'rep-q-verdict' }, c.court)),
+        el('div', { class: 'rep-q-corps' },
+          el('p', { class: 'rep-q-meta' }, `Publiée le ${dateLongue(q.publiee_le)} · ${q.auteur ? `auteur n° ${q.auteur}` : 'non signée'} · ${q.sujets.map(s => SUJETS[s]).join(', ')}`),
+          repondue ? el('p', {}, el('strong', {}, 'Demandes traitées : '), `${q.demandes_repondues} sur ${q.demandes}`) : el('p', {}, `Toujours sans réponse au ${dateLongue(MQ.releve)}, ${fmt0(jours(q.publiee_le, MQ.releve))} jours après sa publication.`),
+          repondue && q.manque ? el('p', {}, el('strong', {}, 'Ce qui manque : '), q.manque) : null,
+          repondue ? el('blockquote', { class: 'rep-q-citation' }, `« ${q.citation} »`) : null,
+          el('a', { href: q.url, target: '_blank', rel: 'noopener' }, repondue ? 'Lire la question et la réponse sur la plateforme' : 'Lire la question sur la plateforme'))));
+    };
+    const afficher = () => {
+      const liste = document.getElementById('rep-questions');
+      liste.append(...visibles.slice(montrees, montrees + PAQUET).map(question));
+      montrees = Math.min(visibles.length, montrees + PAQUET);
+      boutonPlus.hidden = montrees >= visibles.length;
+      boutonPlus.textContent = `Afficher ${Math.min(PAQUET, visibles.length - montrees)} questions de plus`;
+    };
+    const rafraichir = () => {
+      const mot = sansAccent(champMot.value.trim());
+      visibles = Q.filter(q => (!choixSujet.value || q.sujets.includes(choixSujet.value))
+        && (!choixVerdict.value || classeDe(q).cle === choixVerdict.value)
+        && (!mot || sansAccent(`${q.titre} ${q.resume}`).includes(mot)));
+      montrees = 0;
+      document.getElementById('rep-questions').replaceChildren();
+      document.getElementById('rep-compte').textContent = visibles.length === Q.length ? `${fmt0(Q.length)} questions, de la plus récente à la plus ancienne.`
+        : `${fmt0(visibles.length)} question${visibles.length > 1 ? 's' : ''} sur ${fmt0(Q.length)}.`;
+      afficher();
+    };
+    Q.sort((a, b) => b.numero - a.numero);
+    [choixSujet, choixVerdict].forEach(c => c.addEventListener('change', rafraichir));
+    champMot.addEventListener('input', rafraichir);
+    boutonPlus.addEventListener('click', afficher);
+    function filtrer(cle) {
+      choixSujet.value = ''; champMot.value = ''; choixVerdict.value = cle;
+      rafraichir();
+      document.getElementById('rep-liste').scrollIntoView();
+    }
+    rafraichir();
+
+    /* Méthode */
+    const nonSigneesN = Q.filter(q => q.auteur === null).length;
+    document.getElementById('rep-methode-liste').replaceChildren(...[
+      [el('strong', {}, 'Relevé.'), ` Toutes les questions publiées sur la `, lien({ texte: 'plateforme de la concertation', url: MQ.source.url }),
+        ` au ${dateLongue(MQ.releve)}, avec leur statut (« Réponse publiée » ou « Réponse en cours »), comparées au relevé du ${dateLongue(MQ.releve_precedent)}.`],
+      [el('strong', {}, 'Évaluation.'), ' Chaque réponse est lue en entier et classée selon une grille publiée. On juge si elle répond à ce qui est demandé, jamais si elle est vraie ; en cas de doute, le verdict le plus favorable au maître d\'ouvrage l\'emporte. Chaque verdict est justifié par une citation exacte de la réponse, vérifiée automatiquement.'],
+      [el('strong', {}, 'Qui a évalué.'), ' Six instances d\'un modèle d\'intelligence artificielle (Claude, d\'Anthropic), chacune sur une question sur six, avec la même grille.'],
+      [el('strong', {}, 'Contre-évaluation.'), ` ${ce.n} réponses tirées au hasard ont été réévaluées à l'aveugle par une septième instance : même verdict dans ${fmt0(100 * ce.accord)} % des cas (kappa de Cohen ${fmt2(ce.kappa)}, un accord fort). Dans ${ce.premiere_plus_favorable} des ${ce.desaccords} désaccords, la première évaluation était la plus favorable au maître d'ouvrage.`],
+      [el('strong', {}, 'Limites.'), ` Le nombre de demandes par question est une estimation : les longs questionnaires numérotés reçoivent presque toujours une réponse partielle, même longue et chiffrée. ${fmt0(nonSigneesN)} questions sont publiées sans nom d'auteur. Une évaluation reste un jugement : le lien de chaque question permet de la contrôler. Une erreur ? `,
+        el('a', { href: 'https://github.com/Rico91130/Thermo-sur-seine/issues' }, 'Signalez-la'), '.'],
+    ].map(contenu => el('li', {}, contenu)));
+
+    animerReponses(compteurs);
+  }
+
+  // Chaque section se joue en entier quand elle entre dans l'écran : cascade, compteurs, cases, barres et colonnes.
+  // Sans GSAP ou avec « réduire les animations », tout reste affiché avec les valeurs finales.
+  function animerReponses(compteurs) {
+    const G = window.gsap;
+    if (!G || !('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const compter = compteurAnime(G, compteurs);
+    const observateur = new IntersectionObserver(entrees => entrees.forEach(e => {
+      if (!e.isIntersecting) return;
+      observateur.unobserve(e.target);
+      e.target.repTimeline.play();
+    }), { rootMargin: '0px 0px -15% 0px' });
+    document.querySelectorAll('#reponses .rep-section').forEach(s => {
+      const tl = animationEtape(G, s, compter);
+      const cases = s.querySelectorAll('.rep-case');
+      if (cases.length) tl.from(cases, { scale: 0, opacity: 0, duration: 0.3, ease: 'back.out(2)', stagger: 2 / cases.length }, 0.4);
+      const pistes = s.querySelectorAll('.rep-piste');
+      if (pistes.length) tl.from(pistes, { scaleX: 0, transformOrigin: 'left center', duration: 1, stagger: 0.05, ease: 'power2.out' }, 0.3);
+      const colonnes = s.querySelectorAll('.rep-colonne-pile');
+      if (colonnes.length) tl.from(colonnes, { scaleY: 0, transformOrigin: 'center bottom', duration: 0.8, stagger: 0.1, ease: 'power2.out' }, 0.3);
+      s.repTimeline = tl;
+      observateur.observe(s);
+    });
   }
 
   /* ---------------- Les règles des itinéraires ---------------- */

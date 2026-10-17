@@ -3,3 +3,5 @@
 __pycache__/
 *.pyc
 .~lock*
+# Relevé brut des questions de la concertation (peut contenir des données personnelles) : seule l'évaluation est publiée
+collecte/questions/releve_*.json

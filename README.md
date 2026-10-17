@@ -2,8 +2,8 @@
 
 Site citoyen qui présente le projet Thermo-sur-Seine et mesure ce que coûte, en kilomètres, en temps et en CO₂, le choix de livrer le combustible de la future chaufferie de Vitry-sur-Seine par camion à **Ris-Orangis**, puis par barge sur la Seine, plutôt que directement à **Vitry**.
 
-- **Site** : huit pages statiques publiées avec GitHub Pages : `presentation.html` (le projet en bref : diaporama, carte du trajet du combustible, calendrier), `index.html` (« Le grand détour » : le détour des camions puis des barges, en chiffres), `dossier.html` (« Questions / réponses » : questions du public, réponses du maître d'ouvrage et faits, en conversation de groupe), `itineraires.html` (les règles des itinéraires, scénario par scénario sur une carte), `carte.html` (le détour pour toutes les origines possibles), `heures.html` (heure par heure), `annee.html` (simulateur) et `methode.html` (méthode et sources). Elles partagent `style.css` et `app.js`, qui n'exécute que le code de la page affichée (`<body data-page="…">`). Ces pages HTML sont **générées** : voir « Modifier les pages » ci-dessous.
-- **Données et code de la mesure** : dossier [`collecte/`](collecte/).
+- **Site** : neuf pages statiques publiées avec GitHub Pages : `presentation.html` (le projet en bref : diaporama, carte du trajet du combustible, calendrier), `index.html` (« Le grand détour » : le détour des camions puis des barges, en chiffres), `dossier.html` (« Questions / réponses » : questions du public, réponses du maître d'ouvrage et faits, en conversation de groupe), `reponses.html` (« Les réponses en chiffres » : toutes les questions de la concertation et l'évaluation de chaque réponse), `itineraires.html` (les règles des itinéraires, scénario par scénario sur une carte), `carte.html` (le détour pour toutes les origines possibles), `heures.html` (heure par heure), `annee.html` (simulateur) et `methode.html` (méthode et sources). Elles partagent `style.css` et `app.js`, qui n'exécute que le code de la page affichée (`<body data-page="…">`). Ces pages HTML sont **générées** : voir « Modifier les pages » ci-dessous.
+- **Données et code de la mesure** : dossier [`collecte/`](collecte/) ; questions de la concertation et évaluation des réponses : [`collecte/questions/`](collecte/questions/README.md).
 - **Principe** : chaque chiffre renvoie à sa source (page du dossier de concertation, question publiée sur la plateforme de la concertation), et chaque mesure peut être refaite par n'importe qui.
 
 ## Ce qui est mesuré
@@ -58,7 +58,8 @@ python collecte/collecte_v2.py distances               # affiche le nombre de re
 python collecte/collecte_v2.py distances --go          # lance la collecte
 python collecte/collecte_v2.py previsions --semaine 2026-10-05 --go
 python collecte/seine_ign.py                           # tracé de la Seine entre Ris-Orangis et Vitry (IGN, BD TOPO), pour la carte de la présentation
-python collecte/build_data.py                          # régénère data/donnees.json pour le site
+python collecte/questions/collecte_questions.py        # relevé des questions de la concertation (voir collecte/questions/README.md)
+python collecte/build_data.py                          # régénère data/donnees.json et data/questions.json pour le site
 ```
 
 Sans l'option `--go`, rien n'est envoyé à Google : le script affiche seulement le nombre de requêtes et leur coût estimé. Chaque requête envoyée est journalisée, sans la clé, dans `collecte/donnees/requetes_*.jsonl`.
@@ -73,7 +74,7 @@ L'en-tête, le menu et le pied de page ne sont écrits qu'une fois. Les pages HT
 Après une modification de ces fichiers :
 
 ```bash
-python pages/construire_pages.py              # régénère les huit pages
+python pages/construire_pages.py              # régénère les neuf pages
 python pages/construire_pages.py --verifier   # avant un commit : vérifie qu'aucune page n'a été modifiée à la main ou oubliée
 ```
 

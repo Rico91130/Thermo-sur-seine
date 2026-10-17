@@ -11,7 +11,7 @@ import os
 import csv
 import json
 import statistics
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 COLLECTE = os.path.dirname(os.path.abspath(__file__))
 RACINE = os.path.dirname(COLLECTE)
@@ -29,6 +29,13 @@ ESSENTIEL_PROJET = {"texte": "L'essentiel du projet (juillet 2026), p. 3",
 # Seule source officielle donnant la consommation des pousseurs par km de convoi (la Base Carbone ne donne plus que des t.km)
 GUIDE_GES = {"texte": "Ministère de la Transition écologique, « Information GES des prestations de transport », guide méthodologique, septembre 2018, p. 50, tableaux 11 et 12 (consulté le 26/09/2026)",
              "url": "https://www.ecologie.gouv.fr/sites/default/files/publications/Info%20GES_Guide%20m%C3%A9thodo.pdf#page=52"}
+# Questions du public et réponses du maître d'ouvrage (page « Les réponses en chiffres ») : voir collecte/questions/README.md
+QUESTIONS = os.path.join(COLLECTE, "questions")
+RELEVE_QUESTIONS, RELEVE_PRECEDENT = "2026-10-17", "2026-09-26"
+PLATEFORME = {"texte": "Plateforme de la concertation, « Posez vos questions » (consultée le 17/10/2026)",
+              "url": "https://www.thermo-sur-seine-concertation.fr/posez-vos-questions-3893"}
+LETTRE_CNDP = {"texte": "CNDP, lettre de mission des garants, 16 février 2026, p. 4",
+               "url": "https://www.debatpublic.fr/sites/default/files/2026-02/LM_THERMO_SUR_SEINE%20Sign%C3%A9%20MP.pdf#page=4"}
 
 
 def dossier(page_imprimee):
@@ -200,15 +207,24 @@ def main():
                 {"annee": "2034", "texte": "3e ligne : la chaufferie à pleine puissance", "citation": "puis la 3e ligne de production en 2034", "source": dossier(97)},
             ]},
             # Conversation de groupe (page « Questions / réponses ») : questions réelles du public, publiées sans nom d'auteur,
-            # et réponses du maître d'ouvrage, citées mot pour mot. Statut des réponses vérifié le 26/09/2026.
+            # et réponses du maître d'ouvrage, citées mot pour mot. Statut des réponses vérifié le 17/10/2026.
             "public_camions": {"citation": "Combien de camions en plus pour alimenter le monstre ?", "source": question(36, 168047)},
             "public_a86": {"citation": "Quel sera l'impact sur le trafic, la pollution co2 et la saturation de l'A86 des camions qui ne manqueront pas d'apporter leurs déchets jusqu'à Vitry ?", "source": question(36, 168047)},
             "public_ris": {"citation": "Comment allez-vous acheminer les déchets au niveau de ris orangis ? Par camion avec tout ce que cela engendrera en terme de circulation , de pollution et de gêne", "source": question(63, 169499)},
             "public_plateforme": {"citation": "Le projet de chaufferie peut-il fonctionner sans cette plateforme ?", "source": question(119, 170649)},
-            "public_vitry": {"citation": "Pourquoi l'alternative d'une livraison directe des déchets à Vitry-sur-Seine n'est -elle pas présentée ?", "source": question(195, 172449), "sans_reponse": "26/09/2026"},
-            "public_fluvial": {"citation": "Le transport fluvial réduit-il réellement les nuisances routières, ou ne fait-il que les déplacer ?", "source": question(95, 170113), "sans_reponse": "26/09/2026"},
+            "public_vitry": {"citation": "Pourquoi l'alternative d'une livraison directe des déchets à Vitry-sur-Seine n'est -elle pas présentée ?", "source": question(195, 172449)},
+            "public_fluvial": {"citation": "Le transport fluvial réduit-il réellement les nuisances routières, ou ne fait-il que les déplacer ?", "source": question(95, 170113)},
             "public_origine": {"citation": "Quelles seront les installations et leurs implantations précises qui fourniront les CSR incinérés à Vitry-sur-Seine", "source": question(46, 168716)},
-            "public_bilan": {"citation": "Pourquoi le transport des déchets n'est-il pas pris en compte dans le bilan de pollution ?", "source": question(228, 172454), "sans_reponse": "26/09/2026"},
+            "public_bilan": {"citation": "Pourquoi le transport des déchets n'est-il pas pris en compte dans le bilan de pollution ?", "source": question(228, 172454)},
+            # Réponses publiées entre le 26/09 et le 17/10/2026
+            "mo_vitry": {"citation": "Le projet de chaufferie de Vitry ne peut pas fonctionner sans une plateforme logistique fluviale capable d'accueillir et de rassembler les combustibles. Ce choix est dicté par l'impossibilité, sur le foncier de Vitry, d'accueillir une surface supplémentaire pour la réception des combustibles, que ce soit par voie routière ou par voie ferrée.", "source": question(195, 172449)},
+            "mo_fluvial": {"citation": "Le bilan carbone du projet Thermo-sur-Seine est en cours de réalisation, il comprendra les émissions liées à la construction des nouvelles installations, les émissions associées à la combustion et celles associées au transport du combustible depuis les plateformes de tri et de production du CSR jusqu'à la chaufferie. Ces données seront intégrées dans l'étude d'impact, et pourront être présentées au cours de la concertation continue.", "source": question(95, 170113)},
+            "mo_bilan": {"citation": "Le bilan des émissions de gaz à effet de serre intègrera bien l'impact des transports (routiers et fluviaux), ainsi que la préparation des CSR, les manutentions, la construction, les consommations auxiliaires et le traitement des résidus.", "source": question(228, 172454)},
+            "mo_bilan_quand": {"citation": "Ce bilan fera partie du dossier d'autorisation environnemental et sera partagé lors de la concertation continue.", "source": question(228, 172454)},
+            # Ce qui encadre les réponses : l'engagement affiché sur la plateforme, le bilan des garants, la phase qui suivra la concertation
+            "engagement_reponse": {"citation": "Le maître d’ouvrage s’engage à y répondre dans les meilleurs délais, dans le respect des principes de transparence et d’information du public.", "source": PLATEFORME},
+            "bilan_garants": {"citation": "Il doit intégrer la liste des questions du public restées sans réponse", "source": LETTRE_CNDP},
+            "participation_continue": {"citation": "la CNDP désignera un.e garant.e pour garantir la bonne information et participation du public entre la réponse à votre bilan et l’ouverture de l’enquête publique", "source": LETTRE_CNDP},
             "mo_camions": {"citation": "Le trafic moyen est estimé entre 60 et 130 camions par jour selon la période de l'année, une fois les trois chaudières de Vitry en service.", "source": question(36, 168047)},
             "mo_itineraire": {"citation": "les camions emprunteront la RN104, l'A6 et la D310, puis 900 mètres sur la RN7 à Grigny dans la zone industrielle de la Plaine Basse avant de rejoindre le site par le chemin latéral, à l'écart de toute zone résidentielle. Aucun camion ne traversera Ris-Orangis.", "source": question(63, 169499)},
             "mo_barge": {"citation": "Une barge peut transporter l'équivalent d'environ 28 camions, ce qui permet de limiter les circulations routières jusqu'au site de Vitry.", "source": question(36, 168047)},
@@ -257,7 +273,7 @@ def main():
             "avion_paris_new_york": {"valeur": 2.06, "unite": "t CO2e par passager, aller-retour", "citation": "A/R Paris - New-York en avion : 2,06 t CO₂e (11 600 km)",
                                      "source": {"texte": "ADEME, Impact CO₂, « A/R Paris - New-York en avion » (consulté le 26/09/2026)",
                                                 "url": "https://impactco2.fr/outils/caspratiques/avion-pny"}},
-            "transport_absent":{"constat": "Le dossier ne chiffre ni les kilomètres parcourus par les camions ni leurs émissions. La question posée sur ce point est toujours sans réponse au 26/09/2026.", "source": question(228, 172454)},
+            "transport_absent":{"constat": "Le dossier ne chiffre ni les kilomètres parcourus par les camions ni leurs émissions. Interrogé, le maître d'ouvrage renvoie à un bilan qui « sera partagé lors de la concertation continue », après la concertation actuelle.", "source": question(228, 172454)},
         },
         "points": points,
         "grille": grille,
@@ -269,6 +285,35 @@ def main():
     print(f"donnees.json : {len(points)} points détaillés, {len(grille)} cellules de grille, {taille:.0f} Ko")
     print(f"masquées : {len(masques)} cellules ({donnees['meta']['grille_masque']['en_mer']} en mer, "
           f"{donnees['meta']['grille_masque']['royaume_uni']} au Royaume-Uni)")
+    questions_concertation()
+
+
+def questions_concertation():
+    """data/questions.json : les questions évaluées (collecte/questions/) et l'accord entre les deux évaluations."""
+    with open(os.path.join(QUESTIONS, f"questions_{RELEVE_QUESTIONS}.json"), encoding="utf-8") as f:
+        questions = json.load(f)
+    with open(os.path.join(QUESTIONS, "contre_evaluation.json"), encoding="utf-8") as f:
+        contre = json.load(f)
+    paires = [(c["verdict_premiere"], c["verdict_contre"]) for c in contre]
+    n = len(paires)
+    accord = sum(a == b for a, b in paires) / n
+    ca, cb = Counter(a for a, _ in paires), Counter(b for _, b in paires)
+    hasard = sum(ca[k] * cb[k] for k in set(ca) | set(cb)) / n / n
+    # Du plus favorable au maître d'ouvrage au moins favorable
+    rang = {"REPOND": 0, "PARTIEL": 1, "REPORT": 2, "A_COTE": 2, "REFUS": 2}
+    desaccords = [(a, b) for a, b in paires if a != b]
+    donnees = {
+        "meta": {
+            "releve": RELEVE_QUESTIONS, "releve_precedent": RELEVE_PRECEDENT, "source": PLATEFORME,
+            "contre_evaluation": {"n": n, "accord": round(accord, 3), "kappa": round((accord - hasard) / (1 - hasard), 2),
+                                  "desaccords": len(desaccords), "premiere_plus_favorable": sum(rang[a] < rang[b] for a, b in desaccords)},
+        },
+        "questions": questions,
+    }
+    with open(os.path.join(OUT, "questions.json"), "w", encoding="utf-8") as f:
+        json.dump(donnees, f, ensure_ascii=False, separators=(",", ":"))
+    c = donnees["meta"]["contre_evaluation"]
+    print(f"questions.json : {len(questions)} questions ; contre-évaluation : accord {c['accord']:.0%}, kappa {c['kappa']}")
 
 
 if __name__ == "__main__":
